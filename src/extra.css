@@ -280,3 +280,12 @@ body.tview .mbar{bottom:auto;top:12px;right:calc(var(--cw) + 34px)}
 .mcard.es-leg button{flex-wrap:wrap}.es-ld{flex-basis:100%;padding-left:19px;font-size:10.5px;color:var(--muted);margin-top:-2px}
 .mcard.es-leg button[aria-pressed="true"] .es-ld{color:#D5E6E5}
 .es-gen{padding:6px 10px}.es-gen b{font-size:15px}
+
+.es-pick{gap:4px}.es-pick>span{font:700 12.5px var(--d);color:var(--strong)}
+.es-goal .gh{font:700 13px var(--d);color:#fff}
+.es-goal .pb{margin:18px 0 2px}.es-goal .pb s u{position:absolute;top:-16px;left:50%;transform:translateX(-50%);text-decoration:none;font-size:10px;color:#9FC4C1;white-space:nowrap}
+.es-goal .gn{font-size:11.5px;color:#D5E6E5}.es-goal .gn b{color:#fff;font-variant-numeric:tabular-nums}
+.es-goal .gr{display:flex;justify-content:space-between;gap:10px;border-top:1px solid rgba(255,255,255,.12);padding-top:6px}
+.es-goal .gr span{display:block;font-size:12.5px;font-weight:700;color:#fff}.es-goal .gr small{font-size:10.5px;color:#9FC4C1}
+.es-goal .gv{text-align:right}.es-goal .gv b{display:block;font:800 17px var(--d);color:#fff;font-variant-numeric:tabular-nums}
+.es-goal .gv em{font-style:normal;font-size:11px;font-weight:700}.es-goal .gv em.ok{color:#8FE3DD}.es-goal .gv em.no{color:#FFB3C1}
