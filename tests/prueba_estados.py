@@ -97,7 +97,8 @@ async def probar(b, url, cab):
                 await js(f"document.querySelector('[data-elv=\"{lv}\"]').click()", f'est {par} {o} {lv}'); await pg.wait_for_timeout(200)
                 await js("const b=document.querySelector('.es-ul button[data-eu]:not([data-eu=\"\"])'); if(b) b.click()", f'est unidad {o} {lv}'); await pg.wait_for_timeout(250)
                 await ver(f'estrategia {par} {o} {lv}')
-            for sc in ['s1', 's2', 's3']:
+            for sc in ['x']:
+                await js("document.querySelectorAll('[data-esa]').forEach(b=>b.click())", 'escenarios'); await js("document.querySelectorAll('[data-erv]').forEach(b=>b.click())", 'rivales')
                 await js(f"const b=document.querySelector('[data-esc=\"{sc}\"]'); if(b) b.click()", f'escenario {sc}'); await pg.wait_for_timeout(150)
             await js("const b=document.querySelector('[data-eal]'); if(b) b.click()", 'alianza'); await pg.wait_for_timeout(150)
             await js("document.querySelector('#col [data-eseg=\"rt\"]').click()", 'recuadro ruta'); await pg.wait_for_timeout(200)
