@@ -830,3 +830,44 @@ body.tview .mbar{bottom:auto;top:12px;right:calc(var(--cw) + 34px)}
 .es-sec em{font-style:normal;font-size:12px;font-weight:700;color:#1C7F79;font-variant-numeric:tabular-nums}
 .es-sec u{text-decoration:none;font-size:11px;color:var(--muted);text-align:right;font-variant-numeric:tabular-nums}
 .es-f{margin:4px 0 0;font-size:10.5px;color:var(--muted);line-height:1.45}
+/* colorear por: otras capas como menú flotante, la tarjeta no crece */
+#metric .mcard{position:relative}
+.mcard .ms .mxb[aria-pressed="true"]{background:var(--strong);color:#fff;border-style:solid}
+.mxp{position:absolute;left:12px;right:12px;top:calc(100% + 6px);z-index:30;background:var(--card);border-radius:14px;box-shadow:0 10px 30px rgba(20,40,40,.18);padding:10px 12px;margin:0;border-top:0}
+.wlr{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin:6px 0 2px}
+.wlr span{font-size:11px;color:var(--muted);margin-right:2px}
+.wlr button{border:0;background:var(--hair);border-radius:11px;height:22px;padding:0 9px;font:inherit;font-size:11px;color:var(--strong);cursor:pointer}
+.wlr button[aria-pressed="true"]{background:var(--strong);color:#fff}
+
+.es-back{border:0;background:var(--strong);color:#fff;border-radius:999px;padding:6px 12px;font:600 12px var(--b,inherit);cursor:pointer}
+.es-back:hover{background:#1C7F79}
+.es-tg{display:flex;gap:4px;margin:0 0 6px;background:var(--hair);border-radius:999px;padding:3px}
+.mcard.es-leg .es-tg button{flex:1;justify-content:center;padding:4px 8px;font-size:11px;border-radius:999px}
+.es-li{display:flex;align-items:center;gap:8px;font-size:12px;padding:3px 8px}
+.es-li i{width:11px;height:11px;border-radius:3px}.es-li b{margin-left:auto}
+.es-al{margin-top:4px;padding:6px;border:1px dashed var(--line);border-radius:10px}
+.es-cmpw{margin-top:10px;border-top:1px solid rgba(255,255,255,.18);padding-top:8px;display:flex;flex-direction:column;gap:3px}
+.es-cmpw small{font-size:10.5px;color:#B9D6D4}
+.es-cmp{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:#D5E6E5;padding:2px 6px;border-radius:6px}
+.es-cmp.on{background:rgba(255,255,255,.12);color:#fff}
+.es-cmp b{font-variant-numeric:tabular-nums;white-space:nowrap}.es-cmp b.dn{color:#FFB3C1}.es-cmp b.up{color:#8FE3DD}
+.es-tb{border:0;background:#4CC1BA;color:#fff;font:700 13px var(--d);border-radius:12px;padding:10px;cursor:pointer}
+.es-tb:hover{background:#1C7F79}
+.es-d{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px;vertical-align:middle}
+.estm{position:fixed;inset:0;background:rgba(30,42,42,.45);display:none;align-items:center;justify-content:center;z-index:60;padding:16px}
+.estm.on{display:flex}
+.estm-b{background:var(--card,#fff);border-radius:18px;width:min(1180px,100%);max-height:calc(100vh - 32px);display:flex;flex-direction:column;padding:16px 18px;gap:10px;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.estm-h{display:flex;align-items:flex-start;gap:12px}.estm-h h3{margin:0;font:800 18px var(--d);color:var(--strong)}.estm-h p{margin:2px 0 0;font-size:12px;color:var(--muted)}
+.estm-h .x{margin-left:auto;border:0;background:var(--hair);border-radius:50%;width:32px;height:32px;cursor:pointer}
+.estm-t{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.estm-t input{flex:1;min-width:180px;border:1px solid var(--line);border-radius:10px;padding:7px 10px;font-size:13px}
+.estm-t .es-x{margin-left:0}
+.estm-w{overflow:auto;border:1px solid var(--hair);border-radius:12px;min-height:120px}
+.estm-w table{border-collapse:collapse;width:100%;font-size:12.5px}
+.estm-w th{position:sticky;top:0;background:var(--card,#fff);text-align:left;font-weight:700;color:var(--strong);padding:8px 6px;border-bottom:2px solid var(--line);cursor:pointer;white-space:normal;min-width:44px;max-width:110px;vertical-align:bottom;line-height:1.25}
+.estm-w th.r{text-align:right}
+.estm-w td{padding:6px 6px;border-bottom:1px solid var(--hair);white-space:nowrap}
+.estm-w .r{text-align:right;font-variant-numeric:tabular-nums}
+.estm-w tr.inr td{background:rgba(76,193,186,.10)}
+.estm-w tbody tr{cursor:pointer}.estm-w tbody tr:hover td{background:var(--hair)}
+.estm-w .dn{color:#C2405C;font-weight:700}.estm-w .up{color:#1C7F79;font-weight:700}

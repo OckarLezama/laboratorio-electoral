@@ -78,14 +78,16 @@ from shapely.geometry import box
 bb=box(minx-(maxx-minx)*.6,miny-(maxy-miny)*.6,maxx+(maxx-minx)*.6,maxy+(maxy-miny)*.6)
 ctx=[];lab=[]
 namecol=[c for c in st_all.columns if c.lower() in ('name','nombre','state_name','nom_ent')][0]
+# todo México: detalle fino cerca del estado y trazo simple lejos, para que al alejar o mover el mapa el país se vea completo
 for r in st_all.itertuples():
-    g=r.geometry.buffer(0).intersection(bb)
-    if g.is_empty: continue
-    nm=getattr(r,namecol)
+    G=r.geometry.buffer(0); nm=getattr(r,namecol)
     if tcase(nm).startswith(tcase(EN.nombre.iloc[0])[:6]): continue
-    ctx.append({'n':nm,'d':path(g,TOL*3,3)})
-    c=g.representative_point(); x,y=pj((c.x,c.y))
-    if -100<x<Wd+100 and -100<y<Hd+100: lab.append({'n':re.sub(r'(?i) de (Ignacio de la Llave|Zaragoza|Ocampo)$','',nm).replace('Distrito Federal','Ciudad de México'),'x':x,'y':y,'r':0})
+    near=not G.intersection(bb).is_empty
+    d=path(G,TOL*3 if near else max(TOL*3,0.02),3)
+    if not d: continue
+    ctx.append({'n':nm,'d':d})
+    c=G.representative_point(); x,y=pj((c.x,c.y))
+    if True: lab.append({'n':re.sub(r'(?i) de (Ignacio de la Llave|Zaragoza|Ocampo)$','',nm).replace('Distrito Federal','Ciudad de México'),'x':x,'y':y,'r':0})
 geo['ctx']=ctx
 
 # ---------- resultados ----------
