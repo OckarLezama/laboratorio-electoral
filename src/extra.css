@@ -301,3 +301,12 @@ body.tview .mbar{bottom:auto;top:12px;right:calc(var(--cw) + 34px)}
 .es-lv2{display:flex;flex-direction:column;gap:9px}
 .es-mt small i{font-style:normal;font-weight:700}.es-mt small i.ok{color:#8FE3DD}.es-mt small i.no{color:#FFB3C1}
 .es-big.sm b{font-size:30px}
+.mxp{left:0;right:0;width:auto;box-sizing:border-box;padding:10px 14px}
+
+.tback{display:none}
+@media (max-width:860px){
+  .tbl,.tbl.wide{position:fixed;left:8px;right:8px;top:60px;bottom:8px;z-index:41}
+  .tback{display:block;position:sticky;top:0;z-index:3;width:100%;border:0;background:var(--strong);color:#fff;font:700 13px var(--d);padding:10px;text-align:left;cursor:pointer}
+  .es-big b{font-size:36px}.es-big.sm b{font-size:26px}
+  .es-scs{grid-template-columns:1fr 1fr}
+}

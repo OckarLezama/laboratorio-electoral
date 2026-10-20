@@ -1,0 +1,15 @@
+{
+  "_nota": "Registro de partidos para 2027 por estado. 'conservan': partidos que no son nacionales o perdieron el registro nacional pero tienen registro local confirmado. 'nuevos': partidos sin historial electoral en el estado. Los partidos locales que no aparecen en 'conservan' se mantienen solo si sacaron 3% o más de la votación en la última elección de diputados locales o gubernatura (regla legal general); si no, se quitan. Actualizar cuando los institutos locales publiquen la lista oficial.",
+  "nacionales": ["MORENA", "PAN", "PRI", "PVEM", "PT", "MC"],
+  "nacionales_nuevos": ["Somos México", "PAZ"],
+  "ex_nacionales": ["PRD", "PES", "RSP", "FXM"],
+  "estados": {
+    "camp": {"conservan": [], "nuevos": [], "fuentes": []},
+    "chis": {"conservan": [], "nuevos": ["Fuerza Chiapaneca", "Movimiento de Esperanza", "Partido Conciencia Humana"], "fuentes": ["Excélsior, nuevos partidos locales rumbo a 2027"]},
+    "oax": {"conservan": ["PRD"], "nuevos": [], "fuentes": ["IEEPCO, registro del PRD Oaxaca como partido local, enero 2025"]},
+    "qroo": {"conservan": [], "nuevos": ["2 partidos locales nuevos (IEQROO, sep-2026)"], "fuentes": ["TEPJF Sala Xalapa: PRD sin registro local (dic-2024)", "IEQROO: 10 partidos para 2027"]},
+    "tab": {"conservan": ["PRD"], "nuevos": [], "fuentes": ["IEPCT, registro del PRD Tabasco como partido local, octubre 2024"]},
+    "ver": {"conservan": [], "nuevos": ["Bienestar y Justicia Social", "Partido Veracruzano Antipopulista"], "fuentes": ["Excélsior, nuevos partidos locales rumbo a 2027 (registro condicionado)"]},
+    "yuc": {"conservan": ["NA"], "nuevos": ["Alianza Social de Yucatán"], "fuentes": ["El Universal, Alianza Social Yucatán obtiene registro"]}
+  }
+}

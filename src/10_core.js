@@ -54,7 +54,8 @@ const BASE=M0.base;
 const EXPT=(()=>{const t=BASE.split('_')[0],eks=YEARS.filter(y=>D.E[t+'_'+y]).slice(-2).map(y=>t+'_'+y),a=ALL.map(i=>{const ts=eks.map(e=>row(e,i)).filter(r=>r&&r.ln).map(r=>100*r.t/r.ln); return ts.length?ts.reduce((x,y)=>x+y,0)/ts.length:null;}),mm={};
   ALL.forEach(i=>{if(a[i]!=null){(mm[S[i].m]=mm[S[i].m]||[]).push(a[i]);}}); return a.map((v,i)=>v!=null?v:(mm[S[i].m]?mm[S[i].m].reduce((x,y)=>x+y,0)/mm[S[i].m].length:60));})();
 /* alternancia: cambió el ganador en las últimas elecciones locales */
-const SW=(()=>{const eks=YEARS.flatMap(y=>['GOB','DIPL','AYU'].map(t=>t+'_'+y)).filter(e=>D.E[e]).slice(-4); return ALL.map(i=>{const ws=eks.map(e=>winner(e,[i])).filter(Boolean).map(w=>w.lead); return new Set(ws).size>1;});})();
+/* switcher: cambió de partido ganador entre las dos últimas elecciones del mismo cargo en al menos 2 cargos (calibrado con 2018-2021 → 2024) */
+const SW=(()=>{const pr=['DIPL','DIPF','AYU','GOB'].map(t=>YEARS.filter(y=>D.E[t+'_'+y]).slice(-2).map(y=>t+'_'+y)).filter(x=>x.length===2); return ALL.map(i=>{let n=0,c=0; pr.forEach(([a,b])=>{const A=winner(a,[i]),B=winner(b,[i]); if(A&&B){n++; if(A.lead!==B.lead) c++;}}); return n>=2&&c>=2;});})();
 function balance(idx,p){const d={}; MAIN.forEach(q=>d[q]=wavg(V2.duro[q],idx)||0); const expT=wavg(EXPT,idx)||0,maxT=Math.max(expT,wavg(V2.maxT,idx)||expT),own=p?d[p]:0,riv=MAIN.filter(q=>q!==p).reduce((a,q)=>a+d[q],0),dur=p?own+riv:riv;
   return {d,own,riv,vol:Math.max(0,expT-dur),mov:Math.max(0,maxT-expT),est:Math.max(0,100-maxT)};}
 const DST={d:demo(ALL),t:ageTurn(ALL),vol:wavg(V2.vol,ALL),ab:0}; DST.ab=100-(wavg(V2.maxT,ALL)||0);

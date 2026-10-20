@@ -59,3 +59,6 @@ function statePop(an){let p=$('stp'); if(p){p.remove(); return;} p=document.crea
 $('rMx').onclick=()=>statePop($('rMx')); $('toMx').onclick=()=>statePop($('toMx'));
 $('rPa').onclick=()=>{$('party').focus();};
 
+
+/* en celular la tabla cubre la pantalla: botón para volver al mapa */
+{const _rT=renderTbl; renderTbl=function(i){_rT(i); const B=$('tbl'); if(!B.querySelector('.tback')){const b=document.createElement('button'); b.className='tback'; b.textContent='← Volver al mapa'; b.onclick=()=>setView2('map'); B.prepend(b);}};}

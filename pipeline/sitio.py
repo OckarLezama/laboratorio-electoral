@@ -54,7 +54,7 @@ function APP(DATA){{
 (async()=>{{const msg=t=>{{const b=document.getElementById('bootm'); if(b) b.textContent=t;}};
   try{{const r0=await fetch('data/estados.json',{{cache:'no-cache'}}); AVAIL=await r0.json(); try{{const r1=await fetch('data/capas.json',{{cache:'no-cache'}}); if(r1.ok) CAPAS=await r1.json();}}catch(e){{}}}}catch(e){{msg('No se pudo cargar la lista de estados.'); console.error(e); return;}}
   const cab=(location.hash||'').slice(1),a=AVAIL.find(x=>x.cab===cab)||AVAIL[0];
-  try{{const r=await fetch('data/'+a.cab+'.json'); if(!r.ok) throw new Error(r.status); const DATA=await r.json(); APP(DATA); document.getElementById('boot').remove();}}
+  try{{const r=await fetch('data/'+a.cab+'.json'); if(!r.ok) throw new Error(r.status); let DATA; const tot=+r.headers.get('content-length')||0; if(r.body&&r.body.getReader){{const rd=r.body.getReader(),ch=[]; let got=0; for(;;){{const x=await rd.read(); if(x.done) break; ch.push(x.value); got+=x.value.length; msg('Cargando '+a.estado+'… '+(got/1e6).toFixed(1)+' MB'+(tot&&tot>=got?' de '+(tot/1e6).toFixed(1)+' MB':''));}} const u=new Uint8Array(got); let o=0; ch.forEach(c=>{{u.set(c,o); o+=c.length;}}); DATA=JSON.parse(new TextDecoder().decode(u));}} else DATA=await r.json(); APP(DATA); document.getElementById('boot').remove();}}
   catch(e){{msg('No se pudieron cargar los datos de '+a.estado+'. Recarga la página.'); console.error(e);}}}})();
 """
     (REPO / 'js' / 'app.js').write_text(js, encoding='utf-8')

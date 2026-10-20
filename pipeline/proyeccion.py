@@ -258,6 +258,34 @@ def regla_mov(c):
     return out
 
 
+def registro(c, d):
+    """Partidos que no tendrían registro en 2027 en el estado (ver pipeline/insumos/registro_2027.json)."""
+    cf = json.load(open(ROOT / 'pipeline' / 'insumos' / 'registro_2027.json', encoding='utf-8'))
+    ec = cf['estados'].get(c, {}); P = d['P8']; NP = len(P); E = d['E']
+    ks = [k for k, e in E.items() if e['type'] in ('DIPL', 'GOB')]
+    ym = max(E[k]['year'] for k in ks); ks = [k for k in ks if E[k]['year'] == ym]
+    sh = {}
+    for k in ks:
+        t = [0] * NP
+        for r in E[k]['r']:
+            if r:
+                for q in range(NP):
+                    t[q] += r[q]
+        for j, p in enumerate(P):
+            sh[p] = max(sh.get(p, 0), 100 * t[j] / (sum(t) or 1))
+    sin, conf, est = [], [], []
+    for p in P:
+        if p in cf['nacionales'] or p in ('OTROS', 'IND'):
+            continue
+        if p in ec.get('conservan', []):
+            conf.append(p)
+        elif p in cf['ex_nacionales'] or sh.get(p, 0) < 3:
+            sin.append(p)
+        else:
+            est.append(p)
+    return {'sin': sin, 'conf': conf, 'por_confirmar': est, 'nuevos': ec.get('nuevos', []) + cf['nacionales_nuevos'], 'fuentes': ec.get('fuentes', []), 'año': ym}
+
+
 def main():
     cabs = sorted(p.stem for p in DATA.glob('*.json') if p.stem not in ('estados', 'capas'))
     todos, tr = {}, []
@@ -276,7 +304,8 @@ def main():
     rmed = round(stt.median(rs), 2) if rs else 1.0
     rq = (round(q(rs, .25), 2), round(q(rs, .75), 2)) if rs else (1, 1)
     for c, (d, pr) in todos.items():
-        pr.update({'r': rmed, 'r_q': rq, 'r_n': len(rs), 'mov': mov})
+        pr.update({'r': rmed, 'r_q': rq, 'r_n': len(rs), 'mov': mov, 'reg': registro(c, d)})
+        print(c, 'registro', pr['reg']['sin'], 'conservan', pr['reg']['conf'], 'por confirmar', pr['reg']['por_confirmar'])
         d['meta']['proy'] = pr
         json.dump(d, open(DATA / f'{c}.json', 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
         print(c, pr['a'], pr['sw'], 'estado', pr['est'], {t: (v['hist'] or {}).get('mae') for t, v in pr['tipos'].items()}, 'con encuesta', {t: ((v['enc'] or {}).get('mae'), (v['enc'] or {}).get('hit')) for t, v in pr['tipos'].items()}, pr['tp'], pr['tp_err'])

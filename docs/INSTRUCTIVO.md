@@ -143,3 +143,9 @@ Botón "Estrategia" junto a Tabla y Mapa. Solo muestra los cargos que se eligen 
 **Metas:** mínima (un voto más que el rival estimado) y segura (gana aunque la estimación falle el error medido).
 **Meta:** voto proyectado del rival más uno. **Secciones a ganar:** las perdidas más cerradas hasta sumar los votos que faltan (supone votos nuevos).
 **¿Qué alianza ganaría?:** prueba todas las combinaciones de hasta 3 aliados (sin el bloque rival) con el rendimiento medido.
+
+
+### Voto duro, switcher y registro de partidos (calibración oct-2026)
+- **Voto duro (sección):** aun en su peor elección desde 2018, el partido sacó al menos 30% de los votos esperados en la sección. Prueba con 2018-2021 como entrenamiento: 85% de las secciones así marcadas las ganó el partido en 2024 (umbral 25%: 79%; 35%: 90%). Sustituye al "tercio más alto", que por construcción siempre marcaba un tercio de las secciones.
+- **Switcher:** cambió de partido ganador entre las dos últimas elecciones del mismo cargo en al menos 2 cargos (diputación local, federal, ayuntamiento, gubernatura). Prueba 2018→2021 contra 2024: estas secciones cambiaron de ganador 1.5 a 6 veces más que las demás (antes, en Quintana Roo, la definición anterior no distinguía: 21.6% contra 19.3%). En estados con ola en 2024 (Yucatán, Campeche) muchas secciones salen switcher porque realmente cambiaron.
+- **Registro 2027:** `pipeline/insumos/registro_2027.json`. Nacionales: Morena, PAN, PRI, PVEM, PT, MC (Somos México y PAZ sin historial). PRD con registro local confirmado en Tabasco (IEPCT, oct-2024) y Oaxaca (IEEPCO, ene-2025); Nueva Alianza en Yucatán. Los demás partidos locales se conservan solo con 3% o más en la última elección de diputados o gubernatura. Actualizar con la lista oficial de cada instituto local.
