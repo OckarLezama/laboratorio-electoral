@@ -1,0 +1,255 @@
+"""Calibración del modelo de proyección 2027 (se guarda en data/<clave>.json, meta.proy).
+
+Método
+1. Votación por sección: mezcla de la última elección del mismo cargo y del promedio de las elecciones
+   del año más reciente, con o sin oscilación proporcional estatal (la última elección del mismo cargo
+   se ajusta al cambio que cada partido tuvo en todo el estado). Se prueban 10 combinaciones.
+2. Prueba contra el pasado: cada combinación "pronostica" las elecciones de 2021 y 2024 (después del cambio
+   de 2018 en el sistema de partidos) usando solo
+   datos anteriores, y se compara contra el resultado real (error en la diferencia entre 1.º y 2.º lugar
+   y acierto del ganador, por estado y por municipio o distrito). Se elige la de menor error.
+3. Participación: se prueban tres reglas (misma elección de hace 6 años, mismo ciclo electoral; la última
+   elección; el promedio) y se elige la de menor error por sección.
+4. Rendimiento de alianzas: en elecciones del mismo día en las que unos partidos fueron juntos en una y
+   separados en otra, se mide qué parte de los votos de los aliados llega a la alianza:
+   r = (votos de la alianza − votos del partido principal) / votos de los demás aliados. Se usa la mediana
+   de todos los casos de las entidades cargadas.
+5. Rango: el 80 % de los errores de la prueba fue menor a este valor; se muestra como ± en la diferencia.
+
+Uso: python pipeline/proyeccion.py   (procesa todos los data/*.json)
+"""
+import json
+import os
+import statistics as stt
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+DATA = ROOT / 'data'
+NIV = {'GOB': 'est', 'SEN': 'est', 'PRE': 'est', 'DIPL': 'dl', 'DIPF': 'df', 'AYU': 'mun'}
+DESDE = 2021  # el sistema de partidos cambió en 2018 (llegada de Morena); se prueba con 2021 y 2024
+GRID = [(a, sw) for sw in (0, 1) for a in (0, .25, .5, .75, 1)]
+
+
+def q(v, p):
+    v = sorted(v)
+    if not v:
+        return None
+    k = (len(v) - 1) * p
+    f = int(k)
+    return v[f] + (v[min(f + 1, len(v) - 1)] - v[f]) * (k - f)
+
+
+def carga(c):
+    d = json.load(open(DATA / f'{c}.json', encoding='utf-8'))
+    P = d['P8']; NP = len(P); S = d['S']; E = {}
+    for ek, e in d['E'].items():
+        sh, tp, val = {}, {}, {}
+        for i, r in enumerate(e['r']):
+            if not r:
+                continue
+            v = sum(r[:NP])
+            if v <= 0:
+                continue
+            sh[i] = [x / v for x in r[:NP]]
+            val[i] = v
+            if r[NP + 1]:
+                tp[i] = r[NP] / r[NP + 1]
+        E[ek] = {'t': e['type'], 'y': int(e['year']), 'sh': sh, 'tp': tp, 'val': val, 'bl': [[P.index(m) for m in b['members'] if m in P] for b in e['blocs']]}
+    return d, P, S, E
+
+
+def estatal(E, ek):
+    e = E[ek]; tot = None; V = 0
+    for i, s in e['sh'].items():
+        w = e['val'][i]; V += w
+        tot = [w * x for x in s] if tot is None else [a + w * x for a, x in zip(tot, s)]
+    return [x / V for x in tot] if tot else None
+
+
+def reciente(E, y):
+    ks = [k for k, e in E.items() if e['y'] == y]
+    out = {}
+    for k in ks:
+        for i, s in E[k]['sh'].items():
+            a = out.setdefault(i, [[0] * len(s), 0])
+            a[0] = [p + x for p, x in zip(a[0], s)]; a[1] += 1
+    return {i: [x / n for x in v] for i, (v, n) in out.items()}, ks
+
+
+def predice(E, L, R, Rks, a, sw):
+    """Votación prevista por sección (lista de proporciones por partido)."""
+    base = E[L]['sh']
+    if sw:
+        sL = estatal(E, L)
+        rs = [estatal(E, k) for k in Rks]
+        sR = [sum(x[j] for x in rs) / len(rs) for j in range(len(sL))]
+        f = [min(5, max(.2, sR[j] / sL[j])) if sL[j] > 1e-4 else 0 for j in range(len(sL))]
+    out = {}
+    for i in set(base) | set(R):
+        b = base.get(i) or R.get(i); r = R.get(i) or b
+        if sw:
+            b = [x * f[j] for j, x in enumerate(b)]; t = sum(b) or 1; b = [x / t for x in b]
+        p = [a * x + (1 - a) * y for x, y in zip(b, r)]; t = sum(p) or 1
+        out[i] = [x / t for x in p]
+    return out
+
+
+def margen(sh_by_i, val, ii, bl):
+    tot = None; V = 0
+    for i in ii:
+        s = sh_by_i.get(i)
+        if s is None or i not in val:
+            continue
+        w = val[i]; V += w
+        tot = [w * x for x in s] if tot is None else [a + w * x for a, x in zip(tot, s)]
+    if not V:
+        return None
+    b = sorted(((sum(tot[j] for j in m) / V, k) for k, m in enumerate(bl)), reverse=True)
+    return b
+
+
+def unidades(S, niv):
+    g = {}
+    for i, s in enumerate(S):
+        k = 0 if niv == 'est' else s[1] if niv == 'mun' else s[2] if niv == 'dl' else s[3]
+        g.setdefault(k, []).append(i)
+    return g
+
+
+def objetivos(E):
+    """Elecciones que se pueden pronosticar con datos anteriores."""
+    out = []
+    for ek, e in E.items():
+        prev_same = sorted([k for k, x in E.items() if x['t'] == e['t'] and x['y'] < e['y']], key=lambda k: E[k]['y'])
+        prev_years = sorted({x['y'] for x in E.values() if x['y'] < e['y']})
+        if prev_same and prev_years and e['y'] >= DESDE:
+            out.append((ek, prev_same[-1], prev_years[-1]))
+    return out
+
+
+def ajusta(pr, act):
+    """Ajuste proporcional al resultado estatal conocido (equivale a tener una encuesta estatal exacta)."""
+    sA = estatal_d(act['sh'], act['val']); sP = estatal_d(pr, act['val'])
+    f = [sA[j] / sP[j] if sP[j] > 1e-6 else 0 for j in range(len(sA))]
+    out = {}
+    for i, s in pr.items():
+        v = [x * f[j] for j, x in enumerate(s)]; t = sum(v) or 1; out[i] = [x / t for x in v]
+    return out
+
+
+def estatal_d(sh, val):
+    tot = None; V = 0
+    for i, s in sh.items():
+        w = val.get(i, 0); V += w
+        tot = [w * x for x in s] if tot is None else [a + w * x for a, x in zip(tot, s)]
+    return [x / V for x in tot]
+
+
+def errores(S, act, pr, niv):
+    e, h = [], []
+    for k, ii in unidades(S, niv).items():
+        A = margen(act['sh'], act['val'], ii, act['bl']); B = margen(pr, act['val'], ii, act['bl'])
+        if not A or not B or len(A) < 2:
+            continue
+        w1, w2 = A[0][1], A[1][1]; pb = dict((kk, v) for v, kk in B)
+        e.append(abs((pb[w1] - pb[w2]) - (A[0][0] - A[1][0])) * 100); h.append(1 if B[0][1] == w1 else 0)
+    return e, h
+
+
+def resumen(e, h=None):
+    if not e:
+        return None
+    o = {'n': len(e), 'mae': round(stt.mean(e), 1), 'q80': round(q(e, .8), 1)}
+    if h:
+        o['hit'] = round(100 * stt.mean(h))
+    return o
+
+
+def prueba(d, P, S, E):
+    objs = objetivos(E); res = {}
+    for a, sw in GRID:
+        est, uni = [], []
+        for ek, L, Ry in objs:
+            R, Rks = reciente(E, Ry); pr = predice(E, L, R, Rks, a, sw); act = E[ek]
+            est += errores(S, act, pr, 'est')[0]
+            if NIV[act['t']] != 'est':
+                uni += errores(S, act, pr, NIV[act['t']])[0]
+        res[(a, sw)] = stt.mean(est) + (stt.mean(uni) if uni else 0)
+    best = min(res, key=res.get)
+    est, tipos = [], {}
+    for ek, L, Ry in objs:
+        R, Rks = reciente(E, Ry); pr = predice(E, L, R, Rks, *best); act = E[ek]; t = act['t']; niv = NIV[t]
+        est += errores(S, act, pr, 'est')[0]
+        if niv != 'est':
+            T = tipos.setdefault(t, {'e': [], 'h': [], 'ee': [], 'eh': []})
+            e, h = errores(S, act, pr, niv); T['e'] += e; T['h'] += h
+            e, h = errores(S, act, ajusta(pr, act), niv); T['ee'] += e; T['eh'] += h
+    # participación
+    tpr = {'ciclo': [], 'ultima': [], 'prom': []}
+    for ek, L, Ry in objs:
+        e = E[ek]
+        c6 = [k for k, x in E.items() if x['t'] == e['t'] and x['y'] == e['y'] - 6] or [k for k, x in E.items() if x['y'] == e['y'] - 6]
+        lr = [k for k, x in E.items() if x['y'] == Ry]
+        for i, t in e['tp'].items():
+            def av(ks):
+                v = [E[k]['tp'][i] for k in ks if i in E[k]['tp']]
+                return sum(v) / len(v) if v else None
+            a6, al = av(c6), av(lr)
+            if a6 is not None:
+                tpr['ciclo'].append(abs(a6 - t))
+            if al is not None:
+                tpr['ultima'].append(abs(al - t))
+            if a6 is not None and al is not None:
+                tpr['prom'].append(abs((a6 + al) / 2 - t))
+    tsel = min((k for k in tpr if tpr[k]), key=lambda k: stt.mean(tpr[k]))
+    return {'a': best[0], 'sw': best[1], 'objs': [o[0] for o in objs], 'est': resumen(est),
+            'tipos': {t: {'hist': resumen(v['e'], v['h']), 'enc': resumen(v['ee'], v['eh'])} for t, v in tipos.items()},
+            'tp': tsel, 'tp_err': round(100 * stt.mean(tpr[tsel]), 1)}
+
+
+def transferencias(P, E):
+    """Rendimiento de alianzas en elecciones del mismo día (estatal)."""
+    out = []
+    years = {e['y'] for e in E.values()}
+    for y in years:
+        ks = [k for k, e in E.items() if e['y'] == y]
+        for A in ks:
+            for B in ks:
+                if A == B:
+                    continue
+                sA, sB = estatal(E, A), estatal(E, B)
+                for m in E[A]['bl']:
+                    m = [j for j in m if sA[j] > 0]
+                    if len(m) < 2:
+                        continue
+                    sep = all(any(set(b) == {j} for b in E[B]['bl']) for j in m)
+                    if not sep:
+                        continue
+                    sb = sorted((sB[j] for j in m), reverse=True)
+                    if sb[0] <= 0 or sum(sb[1:]) < .01:
+                        continue
+                    coal = sum(sA[j] for j in m)
+                    out.append(((coal - sb[0]) / sum(sb[1:]), A, B, [P[j] for j in m]))
+    return out
+
+
+def main():
+    cabs = sorted(p.stem for p in DATA.glob('*.json') if p.stem not in ('estados', 'capas'))
+    todos, tr = {}, []
+    for c in cabs:
+        d, P, S, E = carga(c)
+        todos[c] = (d, prueba(d, P, S, E))
+        tr += [(c,) + t for t in transferencias(P, E)]
+    rs = [max(0, min(1.3, t[1])) for t in tr]
+    rmed = round(stt.median(rs), 2) if rs else 1.0
+    rq = (round(q(rs, .25), 2), round(q(rs, .75), 2)) if rs else (1, 1)
+    for c, (d, pr) in todos.items():
+        pr.update({'r': rmed, 'r_q': rq, 'r_n': len(rs)})
+        d['meta']['proy'] = pr
+        json.dump(d, open(DATA / f'{c}.json', 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
+        print(c, pr['a'], pr['sw'], 'estado', pr['est'], {t: (v['hist'] or {}).get('mae') for t, v in pr['tipos'].items()}, 'con encuesta', {t: ((v['enc'] or {}).get('mae'), (v['enc'] or {}).get('hit')) for t, v in pr['tipos'].items()}, pr['tp'], pr['tp_err'])
+    print(f'Rendimiento de alianzas: mediana {rmed} (25-75%: {rq}) en {len(rs)} casos')
+
+
+if __name__ == '__main__':
+    main()

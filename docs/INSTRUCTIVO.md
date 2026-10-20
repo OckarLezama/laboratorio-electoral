@@ -36,6 +36,7 @@ python pipeline/lab.py estados           # lista las claves (chis, oax, ver…)
 python pipeline/lab.py preparar chis     # paso 1: extrae lo del estado a "Resultados INE/LAB_POLITICO_DATOS/_tmp/chis"
 python pipeline/lab.py construir chis    # paso 2: genera data/chis.json
 python pipeline/lab.py capas chis        # paso 2b: genera las bases adicionales (pipeline/capas.json)
+python pipeline/lab.py proyeccion        # paso 2c: calibra la proyección 2027 (usa todos los data/*.json)
 python pipeline/lab.py sitio             # paso 3: arma index.html, css/, js/ y data/estados.json
 python pipeline/lab.py todo chis oax     # los tres pasos para uno o varios estados
 python tests/prueba_estados.py           # prueba automática de todos los estados
@@ -119,19 +120,23 @@ Agrega su nombre corto en el diccionario `NMX` al inicio de `src/10_core.js`. Si
 - **"Evolución del voto":** solo muestra los 7 partidos nacionales.
 - **Bases municipales:** si una base es municipal (como CONAPO), todas las secciones de un municipio comparten el valor; la plataforma lo indica.
 
-## 6. Vista Estrategia
-Botón "Estrategia" junto a Tabla y Mapa. Para un partido y una elección objetivo (gubernatura, congreso local, ayuntamientos, diputación federal o Senado), usando la elección más reciente de ese tipo:
-- **Tipos de sección** (cada sección en uno solo, en este orden):
-  - bastión propio: voto duro del partido en el tercio más alto y ganó la sección;
-  - territorio adverso: voto duro del rival en el tercio más alto y más de 15 puntos de desventaja;
-  - competida: margen menor a 5 puntos;
-  - persuadible: voto volátil en el tercio más alto;
-  - movilizable: votantes ocasionales en el tercio más alto;
-  - sin prioridad: el resto.
-- **Meta:** votos que faltan frente a la fuerza más votada en cada unidad en disputa: estado (gubernatura y Senado), distrito local, municipio o distrito federal.
-- **Votos alcanzables por sección** = votantes ocasionales × % de movilización + voto volátil × % de persuasión. Los dos porcentajes se ajustan con los controles.
-- **Ruta para ganar:**
-  - secciones bastión, competidas, persuadibles y movilizables, ordenadas por votos alcanzables por cada 100 electores;
-  - se suman hasta cubrir la meta;
-  - la lista completa se descarga en CSV.
-- **Es una estimación** para priorizar el trabajo territorial, no un pronóstico.
+## 6. Vista Estrategia 2027
+Botón "Estrategia" junto a Tabla y Mapa. Solo muestra los cargos que se eligen en 2027 en el estado (catálogo `pipeline/insumos/catalogo_eleccion_2027.csv` más diputaciones federales). Todo se calcula sobre una proyección por sección; el resultado anterior se muestra solo como referencia. Cada cálculo tiene un botón **i** con el método y su justificación.
+
+**Proyección (pipeline/proyeccion.py, se guarda en `meta.proy` de cada data/<clave>.json):**
+- Votación por sección = a × última elección del mismo cargo (opcionalmente con oscilación proporcional estatal) + (1 − a) × promedio de las elecciones del año más reciente.
+- Se prueban 10 combinaciones (a = 0, 0.25, 0.5, 0.75, 1; con y sin oscilación) "pronosticando" 2021 y 2024 con datos anteriores. Se elige la de menor error en la diferencia entre 1.º y 2.º lugar (estado y unidades).
+- Participación: se prueban tres reglas (misma elección de hace 6 años, la última, el promedio) y se usa la de menor error por sección, aplicada a la lista nominal vigente.
+- Alianzas: rendimiento medido en elecciones del mismo día en que los mismos partidos fueron juntos y separados; el partido más fuerte aporta todo y los aliados la mediana medida (≈84 %, con mucha variación).
+- Partidos sin registro (PRD, PES, RSP, FxM) se quitan y sus votos se reparten en proporción. Somos México y PAZ no tienen historial y no entran.
+- Rango: error que cubrió 8 de cada 10 casos en la prueba. Si incluye el cero, se marca empate técnico. Confiabilidad: alta (≤ 8 pts), media (≤ 15), baja (> 15).
+- Encuesta (opcional): con el porcentaje estatal por partido, cada sección se ajusta en la misma proporción (oscilación proporcional). El rango estatal pasa a ser el doble del margen de error.
+
+**Hallazgos de la prueba (con los datos actuales):**
+- Solo con historial, el resultado estatal se desvía en promedio entre 9 y 32 puntos: el historial no anticipa olas como la de 2024. Por eso la confiabilidad sin encuesta es baja.
+- Con el resultado estatal conocido, el modelo acierta al ganador en 70 % a 100 % de los distritos locales y federales.
+- En ayuntamientos acierta poco (pesan mucho los candidatos): error de 20 a 30 puntos.
+
+**Situación por sección:** ganaría con ventaja (+5 o más), en disputa (±5), se pueden ganar (pierde por 5 a 10), difíciles (pierde por más de 10). Voto duro y switcher como en el resto de la plataforma.
+**Meta:** voto proyectado del rival más uno. **Secciones a ganar:** las perdidas más cerradas hasta sumar los votos que faltan (supone votos nuevos).
+**¿Qué alianza ganaría?:** prueba todas las combinaciones de hasta 3 aliados (sin el bloque rival) con el rendimiento medido.
