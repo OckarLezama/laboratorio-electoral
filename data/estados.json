@@ -1,0 +1,37 @@
+[
+ {
+  "cab": "camp",
+  "estado": "Campeche",
+  "info": "13 municipios · 555 secciones"
+ },
+ {
+  "cab": "chis",
+  "estado": "Chiapas",
+  "info": "124 municipios · 2,296 secciones"
+ },
+ {
+  "cab": "oax",
+  "estado": "Oaxaca",
+  "info": "570 municipios · 2,564 secciones"
+ },
+ {
+  "cab": "qroo",
+  "estado": "Quintana Roo",
+  "info": "11 municipios · 1,151 secciones"
+ },
+ {
+  "cab": "tab",
+  "estado": "Tabasco",
+  "info": "17 municipios · 1,191 secciones"
+ },
+ {
+  "cab": "ver",
+  "estado": "Veracruz",
+  "info": "212 municipios · 5,004 secciones"
+ },
+ {
+  "cab": "yuc",
+  "estado": "Yucatán",
+  "info": "106 municipios · 1,240 secciones"
+ }
+]

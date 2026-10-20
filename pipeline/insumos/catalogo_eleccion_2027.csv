@@ -1,0 +1,33 @@
+﻿ID_ESTADO,ESTADO,GUBERNATURA_2027,CONGRESO_2027,DIP_MR,DIP_RP,DIP_TOTAL,UMBRAL_RP,METODO_RP_CONGRESO,TOPE_CURULES_PARTIDO,AYUNTAMIENTOS_2027,N_AYUNTAMIENTOS_2027,REGIDURIAS_SISTEMA,CERTEZA,PENDIENTES
+1,AGUASCALIENTES,SI,SI,18,9,27,3% VVE,Porcentaje mínimo + cociente electoral (restando 3%) + resto mayor; ±8,No hay; ganador de todos los MR excluido,SI,11,MR+RP; umbral regidurías 2.5%,Alta,Armonización: 2 síndicos en capital
+2,BAJA CALIFORNIA,SI,SI,17,8,25,3% VVE,±8 (pasos no confirmados),No confirmado,SI,7,RP: 1 por umbral 3% + enteros; ganador excluido,Media-baja,Fórmula congreso; armonización
+3,BAJA CALIFORNIA SUR,SI,SI,16,5,21,3% VVE,1 por partido elegible por orden de votación; luego cociente,No confirmado,SI,5,RP por prelación; ganador excluido,Baja-media,Tabla regidurías; reforma may-2026
+4,CAMPECHE,SI,SI,21,14,35,3% VVE,3% garantiza 1; resto no confirmado; ±8,21,SI,13 + 22 juntas,MR+RP; umbral 4%; juntas municipales,Alta/Media,Fórmula detallada; sindicaturas
+5,COAHUILA,NO,NO,16,9,25,n/a 2027,Votación depurada (SCJN AI 82/2025),n/a,SI,38,MR+RP + síndico 1a minoría (reformado jun-2026),Media,Nueva tabla post reforma
+6,COLIMA,SI,SI,16,9,25,3% votación emitida,Porcentaje mínimo + cociente + resto mayor; ±8,16,SI,10,"RP: 3%, ganador descontado, cociente+resto",Alta/Media,Tabla regidurías
+7,CHIAPAS,NO,SI,24,16,40,3% VVE,Directa 3% + votación modificada + cociente + resto; ±8,24,SI,124,MR+RP; 3%; ganador excluido; cociente unidad,Alta,Usos y costumbres
+8,CHIHUAHUA,SI,SI,22,11,33,3% VVE,Rondas 3/5/9/20% y luego por votación; lista alterna mejores perdedores; ±8,22,SI,67,Nueva tabla jun-2026 (máx 15); regiduría indígena,Alta/Media,AI 96/2026 pendiente
+9,CIUDAD DE MEXICO,NO,SI,34,32,66,3% VVE,Cociente natural + ajuste + cociente distribución + resto; listas A/B,33 (verificar 40),SI,16,Alcaldías: concejo 10/12/15; 60% ganador / 40% RP,Media-alta,Tope 33 vs 40
+10,DURANGO,NO,SI,15,10,25,3% VVE (solo da derecho),Cociente natural + resto mayor,No confirmado,NO,0,Todas RP (siguiente elección 2028),Alta/Baja,Tope congreso
+11,GUANAJUATO,NO,SI,22,14,36,3% VVE,Directa 3% + cociente + resto; ±8; listas a/b 3x3,22,SI,46,Todas RP; 3%; ganador participa,Media-alta,Armonización 2 síndicos
+12,GUERRERO,SI,SI,28,18,46,3% VVE,Mínimo + cociente + resto; ±8 con reajuste; 1 migrante,No confirmado,SI,85,Todas RP: 15/12/10/8/6 por población; máx 50%,Alta/Media,Planilla ganadora en reparto
+13,HIDALGO,NO,SI,18,12,30,Presunto 3%,Listas A/B; reformada 14-sep-2026,No confirmado,SI,84,"Máx 15, 1 síndico (reforma sep-2026)",Media/Baja,Fórmula y tabla nuevas
+14,JALISCO,NO,SI,20,18,38,3% directa / 3.5% cociente,Directa + cociente + resto + compensación + paridad,No confirmado,SI,125,Ganador toma MR y queda excluido de RP,Media/Baja,Tabla municipal
+15,MEXICO,NO,SI,45,30,75,3% VVE,Mínimo + cociente distribución + resto + ±8 + cociente rectificado,No confirmado,SI,125,4+3 / 5+4 / 7+5; ganador excluido,Alta,Tope absoluto
+16,MICHOACAN,SI,SI,24,16,40,3% VVE,Cociente sobre efectiva (sin asignación directa) + resto; ±8; compensación,24,SI,113,No confirmada; Cherán usos y costumbres,Alta/Baja,Tabla municipal
+17,MORELOS,NO,SI,12,8,20,3% VVE,Directa 3% + cociente natural + resto; ±8 (Decreto 433 invalidado),12 (no confirmado),SI,36,Todas RP; 3% municipal,Alta/Media,Tabla por población
+18,NAYARIT,SI,SI,18,12,30,3% VVE,Mínimo + cociente + resto (art 22 Bis),No confirmado,SI,20,MR por demarcación + RP (en disputa),Media/Baja,Demarcaciones vs planilla
+19,NUEVO LEON,SI,SI,26,16,42,3% VVE (3%/6% = 1/2 curules),Mínimo + cociente + resto; recalcula sin sobrerrepresentado,26 total / 14 RP,SI,51,RP ≤40% de MR; tope 15 por acuerdo IEEPCNL,Alta/Media-alta,Ley no armonizada
+20,OAXACA,NO,SI,25,17,42,3% VVE (2% partidos indígenas),Cociente natural + resto; ±8,25,SI,152 (+~418 SNI),Tabla IEEPCO 2023 (verificar tope),Alta/Media-baja,Fórmula municipal
+21,PUEBLA,NO,SI,26,15,41,3% votación emitida,No confirmado (CIPEEP ~art 320),26,SI,217,11+4 / 8+4 / 8+3 / 6+2; RP minoritarios ≥2%,Alta/Media-alta,AI 109/2026
+22,QUERETARO,SI,SI,15,10,25,3% VVE,No confirmado,No confirmado,SI,18,7+6 / 6+5 / 5+4 / 4+3; 1 síndico,Alta/Media,Fórmula congreso
+23,QUINTANA ROO,SI,SI,15,10,25,No confirmado,"Lista única de 10 (Decreto 251, may-2026)",No confirmado,SI,11,RP desde lista de planilla (AI 72/2026),Media,"Umbral, fórmula, tabla"
+24,SAN LUIS POTOSI,SI,SI,15,12,27,3.7% VVE,Mínimo + cociente + resto + ±8 + paridad,15 (jurisprudencia),SI,59,1 MR + hasta 14 RP capital; 1 síndico,Media-alta/Media,Tramos y fórmula municipal
+25,SINALOA,SI,SI,24,16,40,3% votación emitida,Mínimo + cociente + límites + cociente ajustado + resto,24,SI,20,7+5 / 5+4 / 3+3,Media,Texto ley a 2017
+26,SONORA,SI,SI,21,12,33,Presunto 3%,Cociente + resto con verificación; ±8,No confirmado,SI,72,3+2 / 6+4 / 12+8 (+ étnico); tope 15 no confirmado,Media-baja,Armonización tope 15
+27,TABASCO,NO,SI,21,14,35,3% VVE,Cociente + resto; 2 circunscripciones; ±8,21,SI,17,Cabildo de 5 (1 MR + 2 RP),Media,Umbral municipal
+28,TAMAULIPAS,NO,SI,22,14,36,Presunto 3%,Directa + cociente + resto + ajustes; ±8,22,SI,43,4+2 / 5+3 / 8+4 / 10+5,Alta/Media,Fórmula municipal
+29,TLAXCALA,SI,SI,15,10,25,3.125% VTV,Cociente + resto; ±8,15,SI,60 + 299 pres. comunidad,Todas RP; 3.125%; coaligados no suman,Media,Decreto 273
+30,VERACRUZ,NO,SI,30,20,50,3%,Cociente + resto; deducción >30 o +8; nuevo cociente,30,NO,0,Electos 2025,Media-alta,Listas
+31,YUCATAN,NO,SI,21,14,35,3% emitida depurada,Mínimo + cociente unidad + resto; lista alterna 7 RP / 7 mejores perdedores,Sin tope (±8),SI,106,a 1+2 / b 3+3 / c 5+4 / Mérida 8+7,Alta,Fórmula municipal
+32,ZACATECAS,SI,SI,18,12,30,3% VVE,Cociente + resto; 2 migrantes; listas A/B (Decreto 372 impugnado),18,SI,58,4+3 / 6+4 / 7+5 / 8+6; 3%,Alta/Media,AI 116/2026

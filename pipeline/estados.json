@@ -1,0 +1,229 @@
+{
+ "_nota": "clave = nombre del archivo data/<clave>.json y del #enlace; carpeta_local = carpeta en 02_LOCAL; conteos = sufijo del CSV dentro de los ZIP de Conteos Censales",
+ "estados": [
+  {
+   "ent": 1,
+   "clave": "ags",
+   "nombre": "Aguascalientes",
+   "carpeta_local": "AGS",
+   "conteos": "ags"
+  },
+  {
+   "ent": 2,
+   "clave": "bc",
+   "nombre": "Baja California",
+   "carpeta_local": "BC",
+   "conteos": "bc"
+  },
+  {
+   "ent": 3,
+   "clave": "bcs",
+   "nombre": "Baja California Sur",
+   "carpeta_local": "BCS",
+   "conteos": "bcs"
+  },
+  {
+   "ent": 4,
+   "clave": "camp",
+   "nombre": "Campeche",
+   "carpeta_local": "CAMP",
+   "conteos": "camp"
+  },
+  {
+   "ent": 5,
+   "clave": "coah",
+   "nombre": "Coahuila",
+   "carpeta_local": "COAH",
+   "conteos": "coah"
+  },
+  {
+   "ent": 6,
+   "clave": "col",
+   "nombre": "Colima",
+   "carpeta_local": "COL",
+   "conteos": "col"
+  },
+  {
+   "ent": 7,
+   "clave": "chis",
+   "nombre": "Chiapas",
+   "carpeta_local": "CHIS",
+   "conteos": "chis"
+  },
+  {
+   "ent": 8,
+   "clave": "chih",
+   "nombre": "Chihuahua",
+   "carpeta_local": "CHIH",
+   "conteos": "chih"
+  },
+  {
+   "ent": 9,
+   "clave": "cdmx",
+   "nombre": "Ciudad de México",
+   "carpeta_local": "CDMX",
+   "conteos": "cdmx"
+  },
+  {
+   "ent": 10,
+   "clave": "dgo",
+   "nombre": "Durango",
+   "carpeta_local": "DGO",
+   "conteos": "dgo"
+  },
+  {
+   "ent": 11,
+   "clave": "gto",
+   "nombre": "Guanajuato",
+   "carpeta_local": "GTO",
+   "conteos": "gto"
+  },
+  {
+   "ent": 12,
+   "clave": "gro",
+   "nombre": "Guerrero",
+   "carpeta_local": "GRO",
+   "conteos": "gro"
+  },
+  {
+   "ent": 13,
+   "clave": "hgo",
+   "nombre": "Hidalgo",
+   "carpeta_local": "HGO",
+   "conteos": "hgo"
+  },
+  {
+   "ent": 14,
+   "clave": "jal",
+   "nombre": "Jalisco",
+   "carpeta_local": "JAL",
+   "conteos": "jal"
+  },
+  {
+   "ent": 15,
+   "clave": "mex",
+   "nombre": "Estado de México",
+   "carpeta_local": "MEX",
+   "conteos": "mex"
+  },
+  {
+   "ent": 16,
+   "clave": "mich",
+   "nombre": "Michoacán",
+   "carpeta_local": "MICH",
+   "conteos": "mich"
+  },
+  {
+   "ent": 17,
+   "clave": "mor",
+   "nombre": "Morelos",
+   "carpeta_local": "MOR",
+   "conteos": "mor"
+  },
+  {
+   "ent": 18,
+   "clave": "nay",
+   "nombre": "Nayarit",
+   "carpeta_local": "NAY",
+   "conteos": "nay"
+  },
+  {
+   "ent": 19,
+   "clave": "nl",
+   "nombre": "Nuevo León",
+   "carpeta_local": "NL",
+   "conteos": "nl"
+  },
+  {
+   "ent": 20,
+   "clave": "oax",
+   "nombre": "Oaxaca",
+   "carpeta_local": "OAX",
+   "conteos": "oax"
+  },
+  {
+   "ent": 21,
+   "clave": "pue",
+   "nombre": "Puebla",
+   "carpeta_local": "PUE",
+   "conteos": "pue"
+  },
+  {
+   "ent": 22,
+   "clave": "qro",
+   "nombre": "Querétaro",
+   "carpeta_local": "QRO",
+   "conteos": "qro"
+  },
+  {
+   "ent": 23,
+   "clave": "qroo",
+   "nombre": "Quintana Roo",
+   "carpeta_local": "QROO",
+   "conteos": "qroo"
+  },
+  {
+   "ent": 24,
+   "clave": "slp",
+   "nombre": "San Luis Potosí",
+   "carpeta_local": "SLP",
+   "conteos": "slp"
+  },
+  {
+   "ent": 25,
+   "clave": "sin",
+   "nombre": "Sinaloa",
+   "carpeta_local": "SIN",
+   "conteos": "sin"
+  },
+  {
+   "ent": 26,
+   "clave": "son",
+   "nombre": "Sonora",
+   "carpeta_local": "SON",
+   "conteos": "son"
+  },
+  {
+   "ent": 27,
+   "clave": "tab",
+   "nombre": "Tabasco",
+   "carpeta_local": "TAB",
+   "conteos": "tab"
+  },
+  {
+   "ent": 28,
+   "clave": "tam",
+   "nombre": "Tamaulipas",
+   "carpeta_local": "TAMPS",
+   "conteos": "tam"
+  },
+  {
+   "ent": 29,
+   "clave": "tlax",
+   "nombre": "Tlaxcala",
+   "carpeta_local": "TLAX",
+   "conteos": "tlax"
+  },
+  {
+   "ent": 30,
+   "clave": "ver",
+   "nombre": "Veracruz",
+   "carpeta_local": "VER",
+   "conteos": "ver"
+  },
+  {
+   "ent": 31,
+   "clave": "yuc",
+   "nombre": "Yucatán",
+   "carpeta_local": "YUC",
+   "conteos": "yuc"
+  },
+  {
+   "ent": 32,
+   "clave": "zac",
+   "nombre": "Zacatecas",
+   "carpeta_local": "ZAC",
+   "conteos": "zac"
+  }
+ ]
+}

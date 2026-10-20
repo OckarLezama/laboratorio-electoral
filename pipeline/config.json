@@ -1,0 +1,18 @@
+{
+  "base": "C:/Users/benig/OneDrive/Documentos/ESTADOS/Resultados INE",
+  "rutas": {
+    "federal": "LAB_POLITICO_DATOS/01_FEDERAL",
+    "local": "LAB_POLITICO_DATOS/02_LOCAL",
+    "temporal": "LAB_POLITICO_DATOS/_tmp",
+    "bgd": "CARTO/BGD",
+    "padron": "PADRÓN ELECTORAL/Copia-de-DatosAbiertos-derfe-pdln_edms_re_20261008.xlsx",
+    "conteos": "FUENTES_COMPLEMENTARIAS/INE_CONTEOS_CENSALES_PARTICIPACION",
+    "conapo": "FUENTES_COMPLEMENTARIAS/CONAPO_MARGINACION_2020/CONAPO_imm_2020-3.csv"
+  },
+  "cortes": {
+    "padron": "8-oct-2026",
+    "cartografia": "dic-2025"
+  },
+  "anio_minimo": 2015,
+  "conteos_desde": 2018
+}

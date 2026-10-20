@@ -1,0 +1,41 @@
+
+
+<div class="app">
+  <nav class="rail" aria-label="Navegación">
+    <div class="logo" aria-hidden="true"></div>
+    <button class="ri" aria-pressed="false" id="rMx"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18"/></svg><b>Cambiar estado</b></button>
+    <button class="ri" aria-pressed="true" id="rEd"><svg viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg><b>Estado</b></button>
+    <button class="ri" aria-pressed="false" id="rPa"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><b>Análisis de partido</b></button>
+    <button class="ri" aria-pressed="false" id="rTb"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M3 15h18M9 4v16"/></svg><b>Tabla de secciones</b></button>
+    <div class="sp"></div>
+    <div class="av">O</div>
+  </nav>
+  <div class="main">
+    <header class="top">
+      <div class="ttl"><small><button id="toMx" title="Cambiar estado">México ▾</button>›<span id="crumb"></span></small><h1><span id="ttl"></span><span class="pin" id="pin"></span></h1><div class="ctxbar" id="ctxbar"></div></div>
+      <div class="ctl"><div class="ac"><svg class="mg" viewBox="0 0 12 12"><circle cx="5" cy="5" r="3.6"/><path d="M8 8l3 3"/></svg><div class="box"><input id="ac" autocomplete="off" placeholder="Ir a municipio, distrito o sección" role="combobox" aria-expanded="false" aria-controls="acl"><kbd>/</kbd></div><div class="acl" id="acl" role="listbox"></div></div>
+        <select id="elec" hidden aria-hidden="true"></select>
+        <div class="fld dd p"><small>Analizar como</small><i class="dot" id="pdot"></i><select class="sel" id="party"></select></div>
+      </div>
+    </header>
+    <main class="stage" id="stage">
+      <div id="mapw">
+        <svg id="map" role="img" aria-label="Mapa por sección"><g class="ctx" id="gctx"></g><g class="secs" id="gsec"></g><g class="mun" id="gmun"></g><g class="lay df" id="gldf"></g><g class="lay dl" id="gldl"></g><g class="div" id="gdiv"></g><path class="ent" id="gent"/><g class="bub" id="gbub"></g><g class="lab" id="glab"></g></svg>
+        <aside class="fp" id="fp" aria-label="Filtros">
+          <div class="fph"><h2>Explorar <button id="clr">Limpiar filtros</button></h2>
+            <div class="tabs2" id="ftabs"><button data-ft="t" aria-pressed="true">Territorio y votantes</button><button data-ft="c" aria-pressed="false">Comportamiento</button></div></div>
+          <div class="fpb" id="fpb"></div>
+          <div class="fpf"><span>Secciones en la selección</span><b class="num" id="fcount" style="margin-left:auto"></b></div>
+        </aside>
+        <button class="tog" id="tog" aria-label="Mostrar u ocultar filtros"><svg viewBox="0 0 10 10"><path d="M6.5 1.5L3 5l3.5 3.5"/></svg></button>
+        <div class="metric" id="metric"></div>
+        <div class="zoom" id="zoom"><button id="zi" aria-label="Acercar"><svg viewBox="0 0 12 12"><path d="M6 2v8M2 6h8"/></svg></button><button id="zo" aria-label="Alejar"><svg viewBox="0 0 12 12"><path d="M2 6h8"/></svg></button><button id="zl" aria-label="Capas" title="Capas del mapa"><svg viewBox="0 0 12 12"><path d="M6 1.5 11 4 6 6.5 1 4z"/><path d="M1 6.6 6 9.1l5-2.5"/></svg></button><button id="zf" aria-label="Encuadrar"><svg viewBox="0 0 12 12"><path d="M1 4V1h3M11 4V1H8M1 8v3h3M11 8v3H8"/></svg></button><div class="lyp" id="lyp" hidden></div></div>
+        <div class="mbar"><div class="pill"><button id="vT" aria-pressed="false"><svg viewBox="0 0 12 12"><path d="M1 2h10v8H1zM1 5h10M4.5 2v8"/></svg>Tabla</button><button id="vM" aria-pressed="true"><svg viewBox="0 0 12 12"><path d="M1 3l3-1.5 4 1.5 3-1.5v8L8 11 4 9.5 1 11z"/></svg>Mapa</button></div></div>
+        <section class="tbl hide" id="tbl" aria-label="Tabla de secciones"></section>
+        <aside class="col" id="col" aria-label="Resumen"></aside>
+        <div class="tip" id="tip"></div>
+      </div>
+    </main>
+  </div>
+</div>
+
