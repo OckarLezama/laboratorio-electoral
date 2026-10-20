@@ -74,15 +74,30 @@ async def probar(b, url, cab):
         await js(f"LAB.st.f['x_{x}']=['a']; LAB.render(true)", 'filtro ' + x); await ver('filtro ' + x)
         await js(f"LAB.st.f['x_{x}']=[]; LAB.render(true)", 'filtro ' + x)
     await js("const s=document.getElementById('party'); s.value='MORENA'; s.onchange(); LAB.st.metric=Object.keys(LAB.XV||{}).length?'x_'+Object.keys(LAB.XV)[0]:LAB.st.metric; LAB.setView2('tbl')", 'tabla')
-    await pg.wait_for_timeout(900)   # la tabla termina de abrirse antes de medir
+    await pg.wait_for_timeout(2000)   # la tabla termina de abrirse antes de medir
     for tg in ['sec', 'mun', 'dl', 'df']:
         for tv in ['all', 'def', 'dis', 'rec', 'bas']:
             await js(f"LAB.st.tg='{tg}'; LAB.st.tv='{tv}'; LAB.renderTbl(LAB.scope())", f'tabla {tg} {tv}')
             await ver(f'tabla {tg} {tv}')
+            await pg.wait_for_timeout(150)
             ancho = await pg.evaluate("(()=>{const t=document.querySelector('.tbl table'); return t?[t.offsetWidth,t.parentElement.clientWidth]:[0,0];})()")
             if ancho[0] > ancho[1] + 2:
                 prob.append((f'tabla {tg} {tv}', 'tabla más ancha que su espacio', ancho))
     await js("LAB.setView2('map')", 'mapa')
+    # Estrategia: cada elección objetivo y cada nivel, para dos partidos
+    for par in ['MORENA', 'PAN']:
+        await js(f"const s=document.getElementById('party'); s.value='{par}'; s.onchange(); LAB.setView2('est')", 'estrategia')
+        await pg.wait_for_timeout(300)
+        objs = await pg.evaluate("[...document.querySelectorAll('[data-eobj]')].map(b=>b.dataset.eobj)")
+        for o in objs:
+            await js(f"document.querySelector('[data-eobj=\"{o}\"]').click()", f'est {par} {o}'); await pg.wait_for_timeout(250)
+            await ver(f'estrategia {par} {o}')
+            lvs = await pg.evaluate("[...document.querySelectorAll('[data-elv]')].map(b=>b.dataset.elv)")
+            for lv in lvs:
+                await js(f"document.querySelector('[data-elv=\"{lv}\"]').click()", f'est {par} {o} {lv}'); await pg.wait_for_timeout(200)
+                await js("const b=document.querySelector('.es-ul button[data-eu]:not([data-eu=\"\"])'); if(b) b.click()", f'est unidad {o} {lv}'); await pg.wait_for_timeout(250)
+                await ver(f'estrategia {par} {o} {lv}')
+        await js("LAB.setView2('map')", 'mapa')
     await js("document.querySelector('[data-res]').click()", 'resultados'); await pg.wait_for_timeout(500); await ver('ventana resultados')
     await js("LAB.closeRes()", 'cerrar')
     await js("document.querySelector('[data-big]').click()", 'evolución'); await pg.wait_for_timeout(500); await ver('ventana evolución')

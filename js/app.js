@@ -109,17 +109,17 @@ const CEN=paths.map(p=>{const b=p.getBBox(); return [b.x+b.width/2,b.y+b.height/
 const labs=GEO.lab.filter(l=>l.r===1||l.r===0).map(l=>{const t=mk('text',{x:l.x,y:l.y,'text-anchor':'middle'},$('glab')); t.textContent=l.n; if(!l.r) t.classList.add('c'); t._r=l.r; return t;});
 const BKEY=MANY?'df':'m',BUBS=(MANY?DFS.map(String):Object.keys(MUN)).map(m=>{const ii=ALL.filter(i=>S[i][BKEY]===+m); let x=0,y=0,w=0; ii.forEach(i=>{const q=S[i].ln||1; x+=CEN[i][0]*q; y+=CEN[i][1]*q; w+=q;}); const g=mk('g',{},$('gbub')); g.dataset.m=m; const c=mk('circle',{},g),t=mk('text',{'text-anchor':'middle'},g); return {m,g,c,t,x0:x/w,y0:y/w,ln:lnOf(ii)};});
 const BMX=Math.max(...BUBS.map(b=>b.ln));
-function setView(v){view=v; svg.setAttribute('viewBox',v.map(x=>x.toFixed(2)).join(' ')); const px=Math.max(v[2]/Math.max(1,svg.clientWidth),v[3]/Math.max(1,svg.clientHeight)),bOn=!st.terr&&v[2]>350&&!(st.L&&(st.L.dl||st.L.df));
+function setView(v){view=v; svg.setAttribute('viewBox',v.map(x=>x.toFixed(2)).join(' ')); const px=Math.max(v[2]/Math.max(1,svg.clientWidth),v[3]/Math.max(1,svg.clientHeight)),bOn=st.view!=='est'&&!st.terr&&v[2]>350&&!(st.L&&(st.L.dl||st.L.df));
   document.querySelectorAll('#gldl text,#gldf text').forEach(t=>{t.setAttribute('font-size',(11*px).toFixed(2)); t.style.strokeWidth=(3*px)+'px';});
   $('gdiv').querySelectorAll('text').forEach(t=>{t.setAttribute('font-size',(12*px).toFixed(2)); t.style.strokeWidth=(3.5*px)+'px';});
-  labs.forEach(t=>{t.style.display=(t._r===0?v[2]>700:!bOn)?'':'none'; t.setAttribute('font-size',((t._r?11:10)*px).toFixed(2)); t.style.strokeWidth=(3*px)+'px';});
+  labs.forEach(t=>{t.style.display=(t._r===0?v[2]>700:st.view==='est'?(!!st.terr||v[2]<450):!bOn)?'':'none'; t.setAttribute('font-size',((t._r?11:10)*px).toFixed(2)); t.style.strokeWidth=(3*px)+'px';});
   $('gbub').style.display=bOn?'':'none'; if(!bOn) return; const sc=scope(),cnt={}; sc.forEach(i=>cnt[S[i][BKEY]]=(cnt[S[i][BKEY]]||0)+1);
   BUBS.forEach(b=>{b.n=cnt[b.m]||0; b.r=(MANY?7+11*Math.sqrt(b.ln/BMX):9+Math.sqrt(b.ln)/30)*px; b.x=b.x0; b.y=b.y0;});
   const VB2=BUBS.filter(b=>b.n); for(let it=0;it<300;it++){let mv=0; for(let a=0;a<VB2.length;a++) for(let c=a+1;c<VB2.length;c++){const A=VB2[a],B=VB2[c],dx=B.x-A.x,dy=B.y-A.y,d=Math.hypot(dx,dy)||.01,need=A.r+B.r+10*px; if(d<need-.01){const p=(need-d)/2*1.02,ux=dx/d,uy=dy/d; A.x-=ux*p; A.y-=uy*p; B.x+=ux*p; B.y+=uy*p; mv=1;}} if(!mv) break;}
   BUBS.forEach(b=>{b.g.style.display=b.n?'':'none'; b.c.setAttribute('cx',b.x); b.c.setAttribute('cy',b.y); b.c.setAttribute('r',b.r); b.t.setAttribute('x',b.x); b.t.setAttribute('y',b.y); b.t.setAttribute('dy',(4*px).toFixed(2)); b.t.setAttribute('font-size',(11.5*px).toFixed(2)); b.t.textContent=b.n;});}
 let anim=null;
 function animateTo(t){cancelAnimationFrame(anim); const f=[...view],t0=performance.now(),dur=matchMedia('(prefers-reduced-motion: reduce)').matches?0:750; const step=now=>{const q=dur?Math.min(1,(now-t0)/dur):1,e=q<.5?4*q*q*q:1-Math.pow(-2*q+2,3)/2; setView(f.map((x,j)=>x+(t[j]-x)*e)); if(q<1) anim=requestAnimationFrame(step);}; anim=requestAnimationFrame(step);}
-function free(){const W=svg.clientWidth,H=svg.clientHeight; if(innerWidth<=860) return {l:10,t:50,r:W-10,b:H-70}; const mb=svg.getBoundingClientRect(),cl=$('col').getBoundingClientRect(); const mbr=document.querySelector('.mbar'),mt=mbr&&mbr.offsetParent?mbr.getBoundingClientRect().bottom-mb.top+14:90; return {l:st.fp?$('fp').getBoundingClientRect().right-mb.left+30:70,t:Math.max(90,Math.min(mt,H*.4)),r:cl.left-mb.left-30,b:H-30};}
+function free(){const W=svg.clientWidth,H=svg.clientHeight; if(innerWidth<=860) return {l:10,t:50,r:W-10,b:H-70}; const mb=svg.getBoundingClientRect(),cl=$('col').getBoundingClientRect(); const mc=st.view==='est'?null:$('metric'),mr=mc&&mc.offsetParent?mc.getBoundingClientRect():null,mt=mr?mr.bottom-mb.top+14:90,pb=document.querySelector('.mbar'),pr=pb&&pb.offsetParent?pb.getBoundingClientRect():null,bt=pr&&pr.top>mb.top+H*.5?pr.top-mb.top-12:H-30; return {l:st.fp?$('fp').getBoundingClientRect().right-mb.left+30:70,t:Math.max(60,Math.min(mt,H*.38)),r:cl.left-mb.left-30,b:Math.max(bt,H*.6)};}
 function fit(idx,a=true){let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9; (idx.length?idx:ALL).forEach(i=>{const b=paths[i].getBBox(); x0=Math.min(x0,b.x); y0=Math.min(y0,b.y); x1=Math.max(x1,b.x+b.width); y1=Math.max(y1,b.y+b.height);}); const mw=120; if(x1-x0<mw){const c=(x0+x1)/2; x0=c-mw/2; x1=c+mw/2;} if(y1-y0<mw){const c=(y0+y1)/2; y0=c-mw/2; y1=c+mw/2;}
   const F=free(),W=svg.clientWidth,H=svg.clientHeight,u=Math.max((x1-x0)/Math.max(100,F.r-F.l),(y1-y0)/Math.max(100,F.b-F.t))*(MANY?1.1:1.04),cx=(x0+x1)/2,cy=(y0+y1)/2,v=[cx-((F.l+F.r)/2)*u,cy-((F.t+F.b)/2)*u,W*u,H*u]; a?animateTo(v):setView(v);}
 const refit=()=>fit(ALL.filter(munScope));
@@ -169,12 +169,13 @@ function rankHTML(){const Rw=RAW[st.metric]; if(!Rw) return ''; const bySec=!!st
   return `<div class="rk"><div class="rkh"><span>${L.length} ${bySec?'secciones':'municipios'} · ${asc?'de menor a mayor':'de mayor a menor'}</span><button id="rkr" title="Invertir orden">⇅</button></div><div class="rkl ${st.rkall?'all':''}">${L.slice(0,lim).map((u,j)=>`<div data-rk="${bySec?'s'+u.i:u.m}"><em>${j+1}</em><span>${esc(u.k)}</span><u><i style="width:${(100*u.v/mx).toFixed(1)}%;background:${RP}"></i></u><b class="num">${Rw[1](u.v)}</b></div>`).join('')}</div>${L.length>5?`<button class="sm" id="rkall">${st.rkall?'Ver sólo 5':'Ver los '+L.length}</button>`:''}</div>`;}
 function bindRank(){const box=$('metric'); if($('rkb')) $('rkb').onclick=()=>{st.rk=!st.rk; paint();}; if($('rkr')) $('rkr').onclick=()=>{st.rkr=!st.rkr; paint();}; if($('rkall')) $('rkall').onclick=()=>{st.rkall=!st.rkall; paint();};
   box.querySelectorAll('[data-rk]').forEach(r=>{const v=r.dataset.rk,ii=v[0]==='s'?[+v.slice(1)]:ALL.filter(i=>S[i].m===+v&&passF(i)); r.onmouseenter=()=>hotL(ii); r.onmouseleave=()=>hotL([]); r.onclick=()=>{if(v[0]==='s'){st.sel=+v.slice(1); paint(); fit([st.sel]);} else setTerr(v);};});}
-function paint(){if(METRICS[st.metric].needE&&!st.elec) st.metric=st.party?'duro':'par'; const M=METRICS[st.metric],sc=new Set(scope()),useP=M.party,RP=M.needP&&st.party?t=>mix(C[st.party],.07+.93*Math.max(0,Math.min(1,t))):TEAL;
-  paths.forEach((p,i)=>{const inT=munScope(i); let v=M.f([i]); if(useP) p.style.fill=v?mix(v.c,v.t):'var(--land)'; else p.style.fill=v==null?'#E4ECEB':RP(v); if(v==null&&st.elec&&st.elec.startsWith('AYU_')&&UYC.has(S[i].m)) p.style.fill='var(--peachxl)'; p.classList.toggle('off',!sc.has(i)||!inT); p.classList.toggle('sel',st.sel===i); p.style.display=inT||!st.terr?'':'';});
+function paint(){if(st.view==='est') st.metric='seg'; else if(st.metric==='seg') st.metric='mar'; if(METRICS[st.metric].needE&&!st.elec) st.metric=st.party?'duro':'par'; const M=METRICS[st.metric],sc=new Set(scope()),useP=M.party,RP=M.needP&&st.party?t=>mix(C[st.party],.07+.93*Math.max(0,Math.min(1,t))):TEAL;
+  paths.forEach((p,i)=>{const inT=munScope(i); let v=M.f([i]); if(useP) p.style.fill=v?mix(v.c,v.t):'var(--land)'; else p.style.fill=v==null?'#E4ECEB':RP(v); if(v==null&&st.elec&&st.elec.startsWith('AYU_')&&UYC.has(S[i].m)) p.style.fill='var(--peachxl)'; p.classList.toggle('off',!sc.has(i)||!inT); p.classList.toggle('sel',st.sel===i); p.classList.toggle('rt',st.view==='est'&&ERT.has(i)); p.style.display=inT||!st.terr?'':'';});
   applyLayers(); drawDiv(); setView(view);
-  const ms=Object.entries(METRICS).filter(([key,x])=>!x.ext&&(!x.needP||st.party)&&(!x.needE||st.elec)).map(([key,x])=>`<button data-m="${key}" aria-pressed="${st.metric===key}">${x.lab?NM[st.party]+' '+x.n:x.n+(x.needP?' '+NM[st.party]:'')}</button>`).join('')+(XB.length?`<button data-mx="1" class="mxb" aria-expanded="${!!(st.mx||xCur())}">Otras capas · ${Object.keys(XV).length}</button>`:'')+(XB.length&&(st.mx||xCur())?`<div class="mxp">${XB.map(b=>`<div class="mxg"><small>${esc(b.nombre)}</small><div class="ms">${b.variables.map(v=>`<button data-m="x_${v.id}" aria-pressed="${st.metric==='x_'+v.id}">${esc(v.nombre)}</button>`).join('')}</div></div>`).join('')}</div>`:'');
+  const ms=Object.entries(METRICS).filter(([key,x])=>!x.ext&&!x.est&&(!x.needP||st.party)&&(!x.needE||st.elec)).map(([key,x])=>`<button data-m="${key}" aria-pressed="${st.metric===key}">${x.lab?NM[st.party]+' '+x.n:x.n+(x.needP?' '+NM[st.party]:'')}</button>`).join('')+(XB.length?`<button data-mx="1" class="mxb" aria-expanded="${!!(st.mx||xCur())}">Otras capas · ${Object.keys(XV).length}</button>`:'')+(XB.length&&(st.mx||xCur())?`<div class="mxp">${XB.map(b=>`<div class="mxg"><small>${esc(b.nombre)}</small><div class="ms">${b.variables.map(v=>`<button data-m="x_${v.id}" aria-pressed="${st.metric==='x_'+v.id}">${esc(v.nombre)}</button>`).join('')}</div></div>`).join('')}</div>`:'');
   const leg=useP?`<div class="ramp">${(()=>{const T2=totals(st.elec,[...sc]),cn={}; sc.forEach(i=>{const w=winner(st.elec,[i]); if(w) cn[w.lead]=(cn[w.lead]||0)+1;}); return T2.bl.filter(b=>cn[b.lead]).sort((x,y)=>cn[y.lead]-cn[x.lead]).slice(0,8).map(b=>({...b,name:NM[b.lead]+(b.members.filter(m=>m!=='OTROS').length>1?'+':'')}));})().map(b=>`<span style="width:auto;height:auto;gap:5px;align-items:center;display:inline-flex;overflow:visible"><i style="width:9px;height:9px;border-radius:50%;background:${b.c};flex:none"></i>${esc(b.name)}</span>`).join('')}</div>`:`<div class="ramp">${M.inv?M.hi:M.lo}<span>${[0,.2,.4,.6,.8,1].map(t=>`<i style="background:${RP(t)}"></i>`).join('')}</span>${st.metric==='pv'?PVMX()+'% o más':st.metric==='pen'?PNMX()+' votos o más':st.metric==='nul'?NUMX()+'% o más':M.inv?M.lo:M.hi}</div>`;
   $('metric').innerHTML=`<div class="mcard"><small>Colorear el mapa por</small><div class="ms">${ms}</div>${leg}<div style="font-size:10.5px;color:var(--muted);margin-top:4px">${esc(M.d)}${st.metric==='mar'||st.metric==='win'||st.metric==='pv'||st.metric==='pen'||st.metric==='nul'?' · '+esc(eLabel(st.elec)):''}</div>${RAW[st.metric]?`<button class="rkb" id="rkb" aria-expanded="${!!st.rk}">${st.rk?'Ocultar ranking':'Ver ranking de mayor a menor'}</button>${st.rk?rankHTML():''}`:''}${st.party&&st.elec&&st.metric==='par'?`<div class="mnote">La participación no se puede separar por partido: el voto es secreto. Para ver dónde ${NM[st.party]} moviliza más votos, usa <button data-m="pen">${NM[st.party]} por cada 100 electores</button></div>`:''}</div>`;
+  if(st.view==='est'){$('metric').innerHTML=eLegendHTML(); $('metric').querySelectorAll('[data-eseg]').forEach(b=>b.onclick=()=>{st.es.seg=st.es.seg===b.dataset.eseg?null:b.dataset.eseg; render();}); return;}
   $('metric').querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{st.metric=b.dataset.m; xEnsure(st.metric,paint);}); const mx=$('metric').querySelector('[data-mx]'); if(mx) mx.onclick=()=>{st.mx=!(st.mx||xCur()); if(!st.mx&&xCur()) st.metric='mar'; paint();}; bindRank();}
 
 /* ficha flotante */
@@ -551,6 +552,7 @@ function render(fresh){TARJ.forEach(c=>{if(!CAT.find(x=>x[0]===c.id)) CAT.push([
   C2.querySelectorAll('[data-res]').forEach(b=>b.onclick=openRes); C2.querySelectorAll('[data-qe]').forEach(b=>b.onclick=()=>setElec(b.dataset.qe));
   ctxBar();
   if(fresh) C2.querySelectorAll('.gg b,.kv b').forEach(el=>{const t=el.firstChild; if(!t||t.nodeType!==3) return; const m=t.nodeValue.match(/^([\d,]+(?:\.\d+)?)(.*)$/); if(!m) return; const to=parseFloat(m[1].replace(/,/g,'')),dec=(m[1].split('.')[1]||'').length,suf=m[2],t0=performance.now(); const f=x=>x.toLocaleString('es-MX',{minimumFractionDigits:dec,maximumFractionDigits:dec})+suf; const step=now=>{const q2=Math.min(1,(now-t0)/900),e=1-Math.pow(1-q2,3); t.nodeValue=f(to*e); if(q2<1) requestAnimationFrame(step);}; requestAnimationFrame(step);});
+  if(st.view==='est') estRender();
   renderFP(); paint(); if(st.view==='tbl') renderTbl(idx); if($('res')) updRes(); if($('big')) updBig();}
 function setTerr(m){st.terr=m; st.sel=null; render(true); setTimeout(refit,30);}
 
@@ -619,8 +621,8 @@ function renderTbl(idx){const B=$('tbl'); if(!st.elec){B.innerHTML='<div class="
 /* descarga con permiso del visor */
 let DLNS; async function saveFile(name,data,btn){const o=btn?btn.textContent:''; try{if(DLNS===undefined) DLNS=window.claude&&window.claude.use?await window.claude.use('downloads'):null; if(!DLNS){const b=data instanceof Blob?data:new Blob([data],{type:/\.csv$/i.test(name)?'text/csv;charset=utf-8':'application/octet-stream'}),u=URL.createObjectURL(b),a=document.createElement('a'); a.href=u; a.download=name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(u),4000); toast('Archivo descargado: '+name); return;} if(btn) btn.textContent='Preparando…'; await DLNS.save({filename:name,data}); toast('Archivo listo: '+name);}catch(e){toast(e&&e.code==='declined'?'Descarga cancelada.':'No se pudo descargar ('+((e&&e.code)||'error')+').');} finally{if(btn) btn.textContent=o;}}
 function toast(t){let el=$('toast'); if(!el){el=document.createElement('div'); el.id='toast'; el.className='toast'; document.body.appendChild(el);} el.textContent=t; el.classList.add('on'); clearTimeout(el._t); el._t=setTimeout(()=>el.classList.remove('on'),3200);}
-function setView2(v){if(v==='tbl'&&st.view!=='tbl'){st.fpWas=st.fp; st.fp=false; layout();} else if(v!=='tbl'&&st.view==='tbl'&&st.fpWas!=null){st.fp=st.fpWas; st.fpWas=null; layout();} st.view=v; $('vM').setAttribute('aria-pressed',v==='map'); $('vT').setAttribute('aria-pressed',v==='tbl'); $('rTb').setAttribute('aria-pressed',v==='tbl'); $('tbl').classList.toggle('hide',v!=='tbl'); document.body.classList.toggle('tview',v==='tbl'); $('metric').style.display=v==='tbl'?'none':''; if(v==='tbl') renderTbl(scope());}
-$('vM').onclick=()=>setView2('map'); $('vT').onclick=()=>setView2('tbl'); $('rTb').onclick=()=>setView2(st.view==='tbl'?'map':'tbl');
+function setView2(v){if(v==='est'&&st.view!=='est'){st.elec=eRef(); $('elec').value=st.elec; } if(v!=='est'&&st.view==='est'){st.es.seg=null;} const wide=x=>x==='tbl'||x==='est'; if(wide(v)&&!wide(st.view)){st.fpWas=st.fp; st.fp=false; layout(); setTimeout(refit,160);} else if(!wide(v)&&wide(st.view)&&st.fpWas!=null){st.fp=st.fpWas; st.fpWas=null; layout(); setTimeout(refit,160);} st.view=v; $('vM').setAttribute('aria-pressed',v==='map'); if($('vE')) $('vE').setAttribute('aria-pressed',v==='est'); document.body.classList.toggle('eview',v==='est'); $('vT').setAttribute('aria-pressed',v==='tbl'); $('rTb').setAttribute('aria-pressed',v==='tbl'); $('tbl').classList.toggle('hide',v!=='tbl'); document.body.classList.toggle('tview',v==='tbl'); $('metric').style.display=v==='tbl'?'none':''; if(v==='tbl') renderTbl(scope()); else render(true);}
+$('vM').onclick=()=>setView2('map'); $('vT').onclick=()=>setView2('tbl'); if($('vE')) $('vE').onclick=()=>setView2('est'); $('rTb').onclick=()=>setView2(st.view==='tbl'?'map':'tbl');
 function statePop(an){let p=$('stp'); if(p){p.remove(); return;} p=document.createElement('div'); p.id='stp'; p.className='epop stp'; p.innerHTML=`<small>Estado a consultar</small>${AVAIL.map(x=>`<button data-cab="${x.cab}" aria-pressed="${x.cab===M0.cab}"><b>${esc(x.estado)}</b><span>${x.info}</span></button>`).join('')}<p class="hint">La carga de datos ya funciona para los 32 estados; aquí están los que ya se procesaron.</p>`; document.body.appendChild(p);
   const r=an.getBoundingClientRect(); p.style.left=Math.min(r.right+8,innerWidth-p.offsetWidth-8)+'px'; p.style.top=Math.max(8,r.top)+'px';
   p.querySelectorAll('[data-cab]').forEach(b=>b.onclick=()=>{if(b.dataset.cab===M0.cab){p.remove(); return;} location.hash=b.dataset.cab; location.reload();});
@@ -628,6 +630,92 @@ function statePop(an){let p=$('stp'); if(p){p.remove(); return;} p=document.crea
 $('rMx').onclick=()=>statePop($('rMx')); $('toMx').onclick=()=>statePop($('toMx'));
 $('rPa').onclick=()=>{$('party').focus();};
 
+
+/* ===== Estrategia territorial =====
+   Para un partido y una elección objetivo: tipos de sección (bastión, competida, persuadible,
+   movilizable, sin prioridad, adversa), meta de votos por unidad en disputa y ruta para ganar
+   (secciones ordenadas por votos alcanzables por elector hasta cubrir la brecha). */
+const ESEG=[['bas','Bastión propio','ganó y tiene voto duro alto: cuidar y movilizar','#1C7F79'],
+  ['com','Competida','se decidió por menos de 5 puntos','#F46883'],
+  ['per','Persuadible','mucho voto que cambia de partido entre elecciones','#F5A47C'],
+  ['mov','Movilizable','muchos votantes ocasionales que no salieron a votar','#4CC1BA'],
+  ['res','Sin prioridad','margen amplio sin rasgos de oportunidad','#C9D3D3'],
+  ['adv','Territorio adverso','el rival tiene voto duro alto y más de 15 puntos de ventaja','#595959']];
+const ESC=Object.fromEntries(ESEG.map(g=>[g[0],g]));
+const EOBJ=[['GOB','Gubernatura','est'],['DIPL','Congreso local','dl'],['AYU','Ayuntamientos','mun'],['DIPF','Diputación federal','df'],['SEN','Senado','est']].filter(o=>lastOf(o[0]));
+const ELV={est:'Estado',mun:'Municipio',dl:'Distrito local',df:'Distrito federal'};
+if(!st.es) st.es={obj:(EOBJ.find(o=>o[0]===(CFG.gob2027?'GOB':'DIPL'))||EOBJ[0])[0],lv:null,u:null,a:20,b:15,seg:null};
+const ECACHE={};
+const eRef=()=>lastOf(st.es.obj);
+const eNat=()=>(EOBJ.find(o=>o[0]===st.es.obj)||EOBJ[0])[2];
+const eLv=()=>st.es.lv||eNat();
+const eKey=(lv,i)=>lv==='mun'?S[i].m:lv==='dl'?S[i].dl:lv==='df'?S[i].df:0;
+const eName=(lv,k)=>lv==='mun'?MUN[k]:lv==='dl'?'Distrito local '+k+(CABDL[k]?' · '+CABDL[k]:''):lv==='df'?'Distrito federal '+k+(CABDF[k]?' · '+CABDF[k]:''):EST;
+/* rival = la fuerza más votada distinta a la del partido, dentro de las secciones dadas */
+function eDuel(ek,ii,p){const T=totals(ek,ii); if(!T.val) return null; const mine=T.bl.find(b=>b.members.includes(p)); if(!mine) return null; const riv=T.bl.find(b=>b!==mine); return {T,mine,riv,gap:riv?Math.round(riv.votes-mine.votes):-Math.round(mine.votes),mg:mine.pct-(riv?riv.pct:0)};}
+/* datos por sección para (elección, partido): tipo, ocasionales, volátiles */
+function eSecs(){const ek=eRef(),p=st.party,key=ek+'|'+p; if(ECACHE[key]) return ECACHE[key];
+  const L=[]; ALL.forEach(i=>{const r=row(ek,i); if(!r||!r.val) return; const du=eDuel(ek,[i],p); if(!du) return;
+    const oc=Math.max(0,(V2.maxT[i]||0)-(EXPT[i]||0))/100*(S[i].ln||0);
+    L.push({i,mg:du.mg,riv:du.riv?du.riv.lead:null,dp:V2.duro[p]?V2.duro[p][i]:null,dr:du.riv&&V2.duro[du.riv.lead]?V2.duro[du.riv.lead][i]:null,vol:V2.vol[i],oc,emit:r.t,ln:S[i].ln||0});});
+  const q=(a,f)=>{a=a.filter(x=>x!=null).sort((x,y)=>x-y); return a.length?a[Math.floor(f*a.length)]:Infinity;};
+  const tP=q(L.map(x=>x.dp),2/3),tR=q(L.map(x=>x.dr),2/3),tV=q(L.map(x=>x.vol),2/3),tO=q(L.map(x=>x.ln?x.oc/x.ln:null),2/3);
+  L.forEach(x=>{x.seg=x.dp!=null&&x.dp>=tP&&x.mg>0?'bas':x.dr!=null&&x.dr>=tR&&x.mg<-15?'adv':Math.abs(x.mg)<5?'com':x.vol!=null&&x.vol>=tV?'per':x.ln&&x.oc/x.ln>=tO?'mov':'res';});
+  const by={}; L.forEach(x=>by[x.i]=x); return ECACHE[key]={L,by};}
+const ePot=x=>x.oc*st.es.a/100+(x.vol||0)/100*x.emit*st.es.b/100;
+/* ruta: secciones (no adversas) ordenadas por votos alcanzables por elector hasta cubrir la brecha */
+function eRoute(ii,gap){const E=eSecs(),c=ii.map(i=>E.by[i]).filter(x=>x&&x.seg!=='adv'&&x.seg!=='res'&&(!st.es.seg||x.seg===st.es.seg)).map(x=>({x,p:ePot(x)})).sort((a,b)=>b.p/(b.x.ln||1)-a.p/(a.x.ln||1));
+  let acc=0,n=0,ln=0; const tot=c.reduce((t,y)=>t+y.p,0); for(const y of c){if(gap>0&&acc>=gap) break; if(gap<=0&&n>=12) break; acc+=y.p; ln+=y.x.ln; n++; y.acc=acc;}
+  return {c,n,acc,ln,tot,ok:gap<=0||acc>=gap};}
+/* unidades en disputa (o agrupación elegida) con su meta */
+function eUnits(){const lv=eLv(),ek=eRef(),p=st.party; if(lv==='est') return [{k:0,ii:ALL}];
+  const g={}; ALL.forEach(i=>{const k=eKey(lv,i); (g[k]=g[k]||[]).push(i);});
+  return Object.entries(g).map(([k,ii])=>({k:+k,ii})).filter(u=>eDuel(ek,u.ii,p));}
+function eSelII(){const lv=eLv(); return st.es.u==null||lv==='est'?ALL:ALL.filter(i=>String(eKey(lv,i))===String(st.es.u));}
+function eLegendHTML(){const E=st.party?eSecs():null,ii=eSelII(),cnt={}; if(E) ii.forEach(i=>{const x=E.by[i]; if(x) cnt[x.seg]=(cnt[x.seg]||0)+1;});
+  return `<div class="mcard es-leg"><small>Tipos de sección${st.party?' · '+esc(NM[st.party]):''}</small>${ESEG.map(g=>`<button data-eseg="${g[0]}" aria-pressed="${st.es.seg===g[0]}" title="${esc(g[2])}"><i style="background:${g[3]}"></i>${g[1]}<b>${cnt[g[0]]||0}</b></button>`).join('')}<div class="es-n">${esc(eLabel(eRef()))} · contorno oscuro: secciones de la ruta</div></div>`;}
+METRICS.seg={party:1,est:1,n:'Tipo de sección',d:'',f:ii=>{if(!st.party) return null; const x=eSecs().by[ii[0]]; if(!x) return null; const dim=st.es.seg&&x.seg!==st.es.seg; return {c:ESC[x.seg][3],t:dim?.18:1};}};
+let ERT=new Set();
+function estPanel(){const C2=$('col'),p=st.party,ek=eRef(),lv=eLv(),nat=eNat(),o=EOBJ.find(x=>x[0]===st.es.obj)||EOBJ[0];
+  const chips=(L,cur,attr)=>L.map(x=>`<button data-${attr}="${x[0]}" aria-pressed="${cur===x[0]}">${x[1]}</button>`).join('');
+  let h=`<div class="colh"><b>Estrategia</b></div><div class="cd es">`;
+  h+=`<div class="es-row"><span>Elección objetivo</span><div class="es-ch">${chips(EOBJ.map(x=>[x[0],x[1]]),st.es.obj,'eobj')}</div></div>`;
+  h+=`<div class="es-row"><span>Analizar por</span><div class="es-ch">${chips(Object.entries(ELV).filter(([k])=>k==='est'?nat==='est':true),lv,'elv')}</div></div>`;
+  if(!p){h+=`<p class="es-p">Elige el partido para el que quieres armar la estrategia:</p><div class="es-ch">${MAIN.map(q=>`<button data-epar="${q}"><i style="background:${C[q]}"></i>${NM[q]}</button>`).join('')}</div></div>`; ERT=new Set(); return h;}
+  const units=eUnits(),ii=eSelII(),du=eDuel(ek,ii,p);
+  if(!du){h+=`<p class="es-p">${esc(NM[p])} no compitió en ${esc(eLabel(ek).toLowerCase())} en este territorio.</p></div>`; ERT=new Set(); return h;}
+  const R=eRoute(ii,du.gap),where=st.es.u!=null&&lv!=='est'?eName(lv,st.es.u):EST,rv=du.riv?du.riv.name:'',me=du.mine.name;
+  ERT=new Set(R.c.slice(0,R.n).map(y=>y.x.i));
+  let head,big,sub;
+  if(nat!=='est'&&lv===nat&&st.es.u==null){const st2=units.map(u=>{const d=eDuel(ek,u.ii,p),r=eRoute(u.ii,d.gap); return {u,d,r};}),won=st2.filter(z=>z.d.gap<=0).length,can=st2.filter(z=>z.d.gap>0&&z.r.ok),secs=can.reduce((t,z)=>t+z.r.n,0);
+    head=`${esc(me)} gana ${won} de ${units.length} ${{mun:'municipios',dl:'distritos locales',df:'distritos federales'}[lv]} con los resultados de ${D.E[ek].year}.`;
+    const NN={mun:['municipio','municipios'],dl:['distrito local','distritos locales'],df:['distrito federal','distritos federales']}[lv];
+    if(won===units.length){big='Defender'; sub=`Gana todos. Elige uno abajo para ver dónde ampliar su ventaja.`;}
+    else if(!can.length){big='+0'; sub=`Con los supuestos actuales ningún ${NN[0]} perdido se alcanza. Sube los supuestos o revisa cada uno abajo.`;}
+    else {big=`+${can.length}`; sub=`${can.length===1?NN[0]+' más se puede':NN[1]+' más se pueden'} ganar con la ruta, trabajando ${fmt(secs)} ${secs===1?'sección':'secciones'}. Elige uno abajo para ver su ruta.`;}}
+  else if(du.gap>0){head=lv===nat||lv==='est'?`${esc(me)} necesita ${fmt(du.gap)} votos más que ${esc(rv)} para ganar ${esc(where)}.`:`En ${esc(where)}, ${esc(me)} está ${fmt(du.gap)} votos detrás de ${esc(rv)}.`; big=R.ok?fmt(R.n):'No alcanza'; sub=R.ok?`${R.n===1?'sección cubre':'secciones cubren'} la brecha: ${(()=>{const v=100*R.ln/lnOf(ii); return v<1?'menos de 1%':Math.round(v)+'%';})()} de la lista nominal de ${esc(where)}.`:`Aun sumando todas las secciones con oportunidad se llega a ${fmt(R.tot)} votos. Sube los supuestos o revisa la meta.`;}
+  else {head=`${esc(me)} ya gana ${esc(where)} por ${fmt(-du.gap)} votos sobre ${esc(rv)}.`; big='Defender'; sub='La lista muestra dónde se pueden sumar más votos por elector para ampliar la ventaja.';}
+  const prog=du.gap>0?Math.min(100,100*Math.min(R.acc,du.gap)/Math.max(du.gap,R.tot)):100,pot=du.gap>0?Math.max(0,100*(R.tot-Math.min(R.acc,du.gap))/Math.max(du.gap,R.tot)):0;
+  h+=`<div class="es-meta"><p>${head}</p><div class="es-big"><b>${big}</b></div><p class="es-sub">${sub}</p>${du.gap>0&&!(nat!=='est'&&lv===nat&&st.es.u==null)?`<div class="es-bar"><i style="width:${prog.toFixed(1)}%"></i><u style="width:${pot.toFixed(1)}%"></u></div><div class="es-bl"><span>meta ${fmt(du.gap)}</span><span>potencial ${fmt(R.tot)}</span></div>`:''}</div>`;
+  h+=`<label class="es-sl">Ocasionales que logras movilizar <b>${st.es.a}%</b><input type="range" min="5" max="50" step="5" value="${st.es.a}" data-esl="a"></label><label class="es-sl">Volátiles que logras convencer <b>${st.es.b}%</b><input type="range" min="5" max="40" step="5" value="${st.es.b}" data-esl="b"></label>`;
+  if(lv!=='est'){const rows=units.map(u=>{const d=eDuel(ek,u.ii,p),r=eRoute(u.ii,d.gap); return {u,d,r};}).sort((a,b)=>(a.d.gap>0?0:1)-(b.d.gap>0?0:1)||Math.abs(a.d.gap)-Math.abs(b.d.gap));
+    h+=`<div class="es-h">${lv===nat?'Dónde está en juego':'Contribución por '+ELV[lv].toLowerCase()}${st.es.u!=null?` <button class="es-x" data-eu="">Ver todo</button>`:''}</div><div class="es-ul">${rows.map(z=>`<button data-eu="${z.u.k}" aria-pressed="${String(st.es.u)===String(z.u.k)}"><span>${esc(eName(lv,z.u.k))}</span><em class="${z.d.gap>0?'dn':'up'}">${z.d.gap>0?'faltan '+fmt(z.d.gap):'gana +'+fmt(-z.d.gap)}</em><small>${z.d.gap>0?(z.r.ok?z.r.n+(z.r.n===1?' sección':' secciones'):'no alcanza con los supuestos actuales'):''}</small></button>`).join('')}</div>`;}
+  const list=R.c.slice(0,du.gap>0?Math.min(R.n,15):12);
+  h+=`<div class="es-h">Secciones de la ruta${R.n>15?` · primeras 15 de ${R.n}`:''}<button class="es-x" id="ecsv">Descargar CSV</button></div><div class="es-sec">${list.map(y=>`<button data-esec="${y.x.i}"><b>${S[y.x.i].s}</b><span>${esc(MUN[S[y.x.i].m])}<small><i style="background:${ESC[y.x.seg][3]}"></i>${ESC[y.x.seg][1]}</small></span><em>+${fmt(y.p)}</em><u>${du.gap>0?Math.min(100,Math.round(100*(y.acc||0)/du.gap))+'%':''}</u></button>`).join('')||'<p class="es-p">Sin secciones con este filtro.</p>'}</div>`;
+  h+=`<p class="es-f">Fuente: INE, SEE ${D.E[ek].year}; ${esc(SRC.pad||'')}. Votos alcanzables = ocasionales × ${st.es.a}% + voto volátil × ${st.es.b}%. La ruta usa bastiones, competidas, persuadibles y movilizables. Estimación propia: indica dónde conviene trabajar, no garantiza votos.</p></div>`;
+  return h;}
+function estRender(){const C2=$('col'); C2.innerHTML=estPanel();
+  const re=()=>{const lv=eLv(); if(st.es.u!=null&&lv!=='est') applyScope(lv,st.es.u); else applyScope('all',0);};
+  C2.querySelectorAll('[data-eobj]').forEach(b=>b.onclick=()=>{st.es.obj=b.dataset.eobj; st.es.lv=null; st.es.u=null; st.elec=eRef(); $('elec').value=st.elec; applyScope('all',0);});
+  C2.querySelectorAll('[data-elv]').forEach(b=>b.onclick=()=>{st.es.lv=b.dataset.elv; st.es.u=null; applyScope('all',0);});
+  C2.querySelectorAll('[data-epar]').forEach(b=>b.onclick=()=>{st.party=b.dataset.epar; $('party').value=st.party; render(true);});
+  C2.querySelectorAll('[data-eu]').forEach(b=>b.onclick=()=>{const v=b.dataset.eu; st.es.u=v===''?null:+v; if(st.es.u==null) applyScope('all',0); else re();});
+  C2.querySelectorAll('[data-esl]').forEach(r=>r.oninput=()=>{st.es[r.dataset.esl]=+r.value; const t=r.previousElementSibling; if(t) t.textContent=r.value+'%';});
+  C2.querySelectorAll('[data-esl]').forEach(r=>r.onchange=()=>{st.es[r.dataset.esl]=+r.value; render();});
+  C2.querySelectorAll('[data-esec]').forEach(b=>b.onclick=()=>{const i=+b.dataset.esec; st.sel=i; paint(); fit([i]);});
+  if($('ecsv')) $('ecsv').onclick=()=>{const ii=eSelII(),du=eDuel(eRef(),ii,st.party); if(!du) return; const R=eRoute(ii,du.gap),q=x=>'"'+String(x).replace(/"/g,'""')+'"';
+    const lines=[['Orden','Sección','Municipio','Distrito local','Distrito federal','Tipo','Lista nominal','Votantes ocasionales','Voto volátil (%)','Votos alcanzables','Acumulado de la meta (%)'].map(q).join(',')].concat(R.c.slice(0,du.gap>0?R.n:R.c.length).map((y,j)=>[j+1,S[y.x.i].s,q(MUN[S[y.x.i].m]),S[y.x.i].dl,S[y.x.i].df,q(ESC[y.x.seg][1]),y.x.ln,Math.round(y.x.oc),(y.x.vol||0).toFixed(1),Math.round(y.p),du.gap>0?Math.min(100,100*(y.acc||0)/du.gap).toFixed(1):''].join(',')));
+    saveFile(('Ruta_'+norm(EST)+'_'+st.es.obj+'_'+st.party+(st.es.u!=null?'_'+eLv()+st.es.u:'')).replace(/[^\w]+/g,'_')+'.csv','﻿'+lines.join('\n'),$('ecsv'));};}
 
 /* ===== informe PDF de la vista actual ===== */
 function cssVars(){const cs=getComputedStyle(document.documentElement),o={}; ['--teal','--teal2','--teal3','--tealxl','--coral','--coralxl','--peach','--peachxl','--gray','--ink','--strong','--muted','--faint','--line','--hair','--card','--land','--landl','--sea','--bg','--acc'].forEach(v=>o[v]=cs.getPropertyValue(v).trim()); o['--acc']=o['--acc']||o['--teal']; o['--f']='Inter, Arial, sans-serif'; o['--d']='Manrope, Inter, Arial, sans-serif'; return o;}

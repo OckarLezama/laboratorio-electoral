@@ -118,3 +118,20 @@ Agrega su nombre corto en el diccionario `NMX` al inicio de `src/10_core.js`. Si
 - **Escaños de mayoría relativa:** cuando gana una coalición, se asignan al partido que la encabeza (marcado con "+"). Las plurinominales son una estimación, con umbral y tope de sobrerrepresentación de 8 puntos.
 - **"Evolución del voto":** solo muestra los 7 partidos nacionales.
 - **Bases municipales:** si una base es municipal (como CONAPO), todas las secciones de un municipio comparten el valor; la plataforma lo indica.
+
+## 6. Vista Estrategia
+Botón "Estrategia" junto a Tabla y Mapa. Para un partido y una elección objetivo (gubernatura, congreso local, ayuntamientos, diputación federal o Senado), usando la elección más reciente de ese tipo:
+- **Tipos de sección** (cada sección en uno solo, en este orden):
+  - bastión propio: voto duro del partido en el tercio más alto y ganó la sección;
+  - territorio adverso: voto duro del rival en el tercio más alto y más de 15 puntos de desventaja;
+  - competida: margen menor a 5 puntos;
+  - persuadible: voto volátil en el tercio más alto;
+  - movilizable: votantes ocasionales en el tercio más alto;
+  - sin prioridad: el resto.
+- **Meta:** votos que faltan frente a la fuerza más votada en cada unidad en disputa: estado (gubernatura y Senado), distrito local, municipio o distrito federal.
+- **Votos alcanzables por sección** = votantes ocasionales × % de movilización + voto volátil × % de persuasión. Los dos porcentajes se ajustan con los controles.
+- **Ruta para ganar:**
+  - secciones bastión, competidas, persuadibles y movilizables, ordenadas por votos alcanzables por cada 100 electores;
+  - se suman hasta cubrir la meta;
+  - la lista completa se descarga en CSV.
+- **Es una estimación** para priorizar el trabajo territorial, no un pronóstico.

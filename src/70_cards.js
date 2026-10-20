@@ -83,6 +83,7 @@ function render(fresh){TARJ.forEach(c=>{if(!CAT.find(x=>x[0]===c.id)) CAT.push([
   C2.querySelectorAll('[data-res]').forEach(b=>b.onclick=openRes); C2.querySelectorAll('[data-qe]').forEach(b=>b.onclick=()=>setElec(b.dataset.qe));
   ctxBar();
   if(fresh) C2.querySelectorAll('.gg b,.kv b').forEach(el=>{const t=el.firstChild; if(!t||t.nodeType!==3) return; const m=t.nodeValue.match(/^([\d,]+(?:\.\d+)?)(.*)$/); if(!m) return; const to=parseFloat(m[1].replace(/,/g,'')),dec=(m[1].split('.')[1]||'').length,suf=m[2],t0=performance.now(); const f=x=>x.toLocaleString('es-MX',{minimumFractionDigits:dec,maximumFractionDigits:dec})+suf; const step=now=>{const q2=Math.min(1,(now-t0)/900),e=1-Math.pow(1-q2,3); t.nodeValue=f(to*e); if(q2<1) requestAnimationFrame(step);}; requestAnimationFrame(step);});
+  if(st.view==='est') estRender();
   renderFP(); paint(); if(st.view==='tbl') renderTbl(idx); if($('res')) updRes(); if($('big')) updBig();}
 function setTerr(m){st.terr=m; st.sel=null; render(true); setTimeout(refit,30);}
 
