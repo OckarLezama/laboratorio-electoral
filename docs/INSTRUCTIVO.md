@@ -137,6 +137,9 @@ Botón "Estrategia" junto a Tabla y Mapa. Solo muestra los cargos que se eligen 
 - Con el resultado estatal conocido, el modelo acierta al ganador en 70 % a 100 % de los distritos locales y federales.
 - En ayuntamientos acierta poco (pesan mucho los candidatos): error de 20 a 30 puntos.
 
-**Situación por sección:** ganaría con ventaja (+5 o más), en disputa (±5), se pueden ganar (pierde por 5 a 10), difíciles (pierde por más de 10). Voto duro y switcher como en el resto de la plataforma.
+**Panel en tres niveles:** 1) la respuesta (generales 2027, frase de conclusión, escenarios y meta segura); 2) dónde trabajar (resumen de secciones, acciones y prioritarias); 3) detalle plegado (confiabilidad, alianzas, rivales, encuesta y método).
+**Escenarios:** cada partido parte solo; las posibles alianzas son las combinaciones con los partidos con que se alió desde 2021. Los rivales, por omisión, compiten por separado (se puede cambiar a "en posible alianza como en 2024").
+**Qué hacer por sección:** asegurado (gana por 10+), cuidar (gana por menos de 10), movilizar o convencer (pierde por menos de 10), no invertir (pierde por más de 10). Movilizar si la participación esperada queda al menos el umbral calibrado (meta.proy.mov.th, hoy 20 puntos) por debajo del máximo histórico de la sección; si no, convencer. Calibración: en 6,124 casos reales 2018-2024 de secciones perdidas por menos de 10 y ganadas después, 27 % se ganó movilizando; con esta regla, 67 % de las marcadas como movilizar se ganó así.
+**Metas:** mínima (un voto más que el rival estimado) y segura (gana aunque la estimación falle el error medido).
 **Meta:** voto proyectado del rival más uno. **Secciones a ganar:** las perdidas más cerradas hasta sumar los votos que faltan (supone votos nuevos).
 **¿Qué alianza ganaría?:** prueba todas las combinaciones de hasta 3 aliados (sin el bloque rival) con el rendimiento medido.

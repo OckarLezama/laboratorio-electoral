@@ -233,6 +233,31 @@ def transferencias(P, E):
     return out
 
 
+def regla_mov(c):
+    """Secciones que un partido perdió por menos de 10 puntos y ganó en la siguiente elección del mismo cargo
+    (2018 en adelante): ¿ganó sacando más votantes (movilización) o quitándole votos al rival (convencimiento)?
+    Se prueba la regla: movilizar si la participación quedó al menos `th` por debajo del máximo histórico de la sección."""
+    d = json.load(open(DATA / f'{c}.json', encoding='utf-8')); P = d['P8']; NP = len(P); E = d['E']; out = []
+    for t in ('DIPL', 'DIPF', 'AYU'):
+        ys = sorted(int(e['year']) for e in E.values() if e['type'] == t and int(e['year']) >= 2018)
+        for y0, y1 in zip(ys, ys[1:]):
+            A = E[f'{t}_{y0}']['r']; B = E[f'{t}_{y1}']['r']; prev = [k for k, e in E.items() if int(e['year']) <= y0]
+            for q in ('MORENA', 'PAN', 'PRI', 'MC'):
+                if q not in P:
+                    continue
+                j = P.index(q)
+                for i, (a, b) in enumerate(zip(A, B)):
+                    if not a or not b or not a[NP + 1] or not b[NP + 1] or sum(a[:NP]) <= 0:
+                        continue
+                    rk = max((k for k in range(NP) if k != j), key=lambda k: a[k]); mg0 = 100 * (a[j] - a[rk]) / sum(a[:NP])
+                    if not (-10 < mg0 < 0) or b[j] <= max(b[k] for k in range(NP) if k != j):
+                        continue
+                    dr = b[rk] - a[rk]; dt = b[NP] - a[NP]
+                    tps = [E[k]['r'][i][NP] / E[k]['r'][i][NP + 1] for k in prev if E[k]['r'][i] and E[k]['r'][i][NP + 1]]
+                    out.append((dr >= 0 or dt > abs(dr), max(tps) - a[NP] / a[NP + 1]))
+    return out
+
+
 def main():
     cabs = sorted(p.stem for p in DATA.glob('*.json') if p.stem not in ('estados', 'capas'))
     todos, tr = {}, []
@@ -240,14 +265,22 @@ def main():
         d, P, S, E = carga(c)
         todos[c] = (d, prueba(d, P, S, E))
         tr += [(c,) + t for t in transferencias(P, E)]
+    mv = []
+    for c in cabs:
+        mv += regla_mov(c)
+    base = sum(m for m, _ in mv) / len(mv) if mv else 0
+    best = max((.05, .1, .15, .2), key=lambda th: (sum(m for m, u in mv if u >= th) / max(1, sum(1 for _, u in mv if u >= th))) if sum(1 for _, u in mv if u >= th) >= 200 else 0)
+    sel = [m for m, u in mv if u >= best]
+    mov = {'th': best, 'prec': round(100 * sum(sel) / max(1, len(sel))), 'base': round(100 * base), 'n': len(mv), 'n_sel': len(sel)}
     rs = [max(0, min(1.3, t[1])) for t in tr]
     rmed = round(stt.median(rs), 2) if rs else 1.0
     rq = (round(q(rs, .25), 2), round(q(rs, .75), 2)) if rs else (1, 1)
     for c, (d, pr) in todos.items():
-        pr.update({'r': rmed, 'r_q': rq, 'r_n': len(rs)})
+        pr.update({'r': rmed, 'r_q': rq, 'r_n': len(rs), 'mov': mov})
         d['meta']['proy'] = pr
         json.dump(d, open(DATA / f'{c}.json', 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
         print(c, pr['a'], pr['sw'], 'estado', pr['est'], {t: (v['hist'] or {}).get('mae') for t, v in pr['tipos'].items()}, 'con encuesta', {t: ((v['enc'] or {}).get('mae'), (v['enc'] or {}).get('hit')) for t, v in pr['tipos'].items()}, pr['tp'], pr['tp_err'])
+    print('Regla movilizar/convencer:', mov)
     print(f'Rendimiento de alianzas: mediana {rmed} (25-75%: {rq}) en {len(rs)} casos')
 
 
