@@ -182,3 +182,8 @@ body.tview .mbar{bottom:auto;top:12px;right:calc(var(--cw) + 34px)}
 .es-fl{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--strong)}.es-fl .es-x{margin-left:0}
 .es-ul em.mid{color:#B26A3C}
 .es-cmp.on{color:var(--strong)}
+.es-ref{margin-top:8px;font-size:11.5px;color:#B9D6D4;border-top:1px solid rgba(255,255,255,.12);padding-top:6px}
+.es-part{font-size:11px!important;color:#B9D6D4;margin-top:6px!important;font-weight:400!important}
+.mcard.es-leg .es-tg button{white-space:nowrap;font-size:10.5px}
+.es-ally{margin-top:10px;background:rgba(245,164,124,.15);border-radius:10px;padding:8px 10px}.es-ally small{font-size:10.5px;color:#F5A47C;font-weight:700}.es-ally p{margin:3px 0 0;font-size:12.5px;font-weight:400}
+.es-ally:not(:has(p)){display:none}
