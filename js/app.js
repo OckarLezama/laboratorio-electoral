@@ -177,7 +177,7 @@ function paint(){if(st.view==='est') st.metric='seg'; else if(st.metric==='seg')
   const ms=Object.entries(METRICS).filter(([key,x])=>!x.ext&&!x.est&&(!x.needP||st.party)&&(!x.needE||st.elec)).map(([key,x])=>`<button data-m="${key}" aria-pressed="${st.metric===key}">${x.lab?NM[st.party]+' '+x.n:x.n+(x.needP?' '+NM[st.party]:'')}</button>`).join('')+(XB.length?`<button data-mx="1" class="mxb" aria-expanded="${!!st.mx}" aria-pressed="${!!xCur()}">${xCur()?esc(XV[xCur()].nombre):'Otras capas · '+Object.keys(XV).length} ▾</button>`:'')+(XB.length&&st.mx?`<div class="mxp">${XB.map(b=>`<div class="mxg"><small>${esc(b.nombre)}</small><div class="ms">${b.variables.map(v=>`<button data-m="x_${v.id}" aria-pressed="${st.metric==='x_'+v.id}">${esc(v.nombre)}</button>`).join('')}</div></div>`).join('')}</div>`:'');
   const leg=useP?`<div class="ramp">${(()=>{const T2=totals(st.elec,[...sc]),cn={}; sc.forEach(i=>{const w=winner(st.elec,[i]); if(w) cn[w.lead]=(cn[w.lead]||0)+1;}); return T2.bl.filter(b=>cn[b.lead]).sort((x,y)=>cn[y.lead]-cn[x.lead]).slice(0,8).map(b=>({...b,name:NM[b.lead]+(b.members.filter(m=>m!=='OTROS').length>1?'+':'')}));})().map(b=>`<span style="width:auto;height:auto;gap:5px;align-items:center;display:inline-flex;overflow:visible"><i style="width:9px;height:9px;border-radius:50%;background:${b.c};flex:none"></i>${esc(b.name)}</span>`).join('')}</div>`:`<div class="ramp">${M.inv?M.hi:M.lo}<span>${[0,.2,.4,.6,.8,1].map(t=>`<i style="background:${RP(t)}"></i>`).join('')}</span>${st.metric==='pv'?PVMX()+'% o más':st.metric==='pen'?PNMX()+' votos o más':st.metric==='nul'?NUMX()+'% o más':M.inv?M.lo:M.hi}</div>`;
   $('metric').innerHTML=`<div class="mcard"><small>Colorear el mapa por</small><div class="ms">${ms}</div>${leg}${st.metric==='win'?`<div class="wlr"><span>Por</span>${[['sec','Sección'],['mun','Municipio'],['dl','Distrito local'],['df','Distrito federal'],['est','Estado']].map(x=>`<button data-wl="${x[0]}" aria-pressed="${(st.wl||'sec')===x[0]}">${x[1]}</button>`).join('')}</div>`:''}<div style="font-size:10.5px;color:var(--muted);margin-top:4px">${esc(M.d)}${st.metric==='mar'||st.metric==='win'||st.metric==='pv'||st.metric==='pen'||st.metric==='nul'?' · '+esc(eLabel(st.elec)):''}</div>${RAW[st.metric]?`<button class="rkb" id="rkb" aria-expanded="${!!st.rk}">${st.rk?'Ocultar ranking':'Ver ranking de mayor a menor'}</button>${st.rk?rankHTML():''}`:''}${st.party&&st.elec&&st.metric==='par'?`<div class="mnote">La participación no se puede separar por partido: el voto es secreto. Para ver dónde ${NM[st.party]} moviliza más votos, usa <button data-m="pen">${NM[st.party]} por cada 100 electores</button></div>`:''}</div>`;
-  if(st.view==='est'){$('metric').innerHTML=eLegendHTML(); $('metric').querySelectorAll('[data-eseg]').forEach(b=>b.onclick=()=>{st.es.seg=st.es.seg===b.dataset.eseg?null:b.dataset.eseg; render();}); $('metric').querySelectorAll('[data-ecol]').forEach(b=>b.onclick=()=>{st.es.col=b.dataset.ecol; render();}); return;}
+  if(st.view==='est'){$('metric').innerHTML=eLegendHTML(); $('metric').querySelectorAll('[data-eseg]').forEach(b=>b.onclick=()=>{st.es.seg=st.es.seg===b.dataset.eseg?null:b.dataset.eseg; render();}); $('metric').querySelectorAll('[data-eopen]').forEach(b=>b.onclick=()=>{st.es.tab='sec'; st.es.q=''; st.es.lim=300; st.es.sk=null; eTable();}); $('metric').querySelectorAll('[data-ecol]').forEach(b=>b.onclick=()=>{st.es.col=b.dataset.ecol; render();}); return;}
   $('metric').querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{st.metric=b.dataset.m; xEnsure(st.metric,paint);}); const mx=$('metric').querySelector('[data-mx]'); if(mx) mx.onclick=()=>{st.mx=!st.mx; paint();}; $('metric').querySelectorAll('.mxp [data-m]').forEach(b=>b.addEventListener('click',()=>{st.mx=false;})); $('metric').querySelectorAll('[data-wl]').forEach(b=>b.onclick=()=>{st.wl=b.dataset.wl; paint();}); bindRank();}
 
 /* ficha flotante */
@@ -634,162 +634,193 @@ $('rPa').onclick=()=>{$('party').focus();};
 
 
 /* ===== Estrategia territorial =====
-   Sin partido: panorama competitivo (bastiones de cada fuerza, competidas, persuadibles, movilizables).
-   Con partido: escenarios (solo, coalición de la elección de referencia, alianza a la medida), meta de votos
-   por unidad en disputa, ruta para ganar y meta de votos por sección. */
-const ESEG=[['bas','Bastión','voto duro alto y ganó la sección','#1C7F79'],
-  ['com','Competida','se decidió por menos de 5 puntos','#F46883'],
-  ['per','Persuadible','mucho voto que cambia de partido entre elecciones','#F5A47C'],
-  ['mov','Movilizable','muchos votantes ocasionales que no salieron a votar','#4CC1BA'],
-  ['res','Sin prioridad','margen amplio sin rasgos de oportunidad','#C9D3D3'],
-  ['adv','Territorio adverso','el rival tiene voto duro alto y más de 15 puntos de ventaja','#595959']];
-const ESC=Object.fromEntries(ESEG.map(g=>[g[0],g]));
+   Sin partido: panorama competitivo (competidas, ventaja media, ventaja amplia, voto duro, switcher).
+   Con partido: escenarios (solo, coalición de la elección de referencia, alianza a la medida), contra quién
+   compite, meta estimada, cuántas secciones hay que ganar (las perdidas más cerradas hasta cubrir la brecha)
+   y proyección estimada (promedio ponderado de elecciones recientes). */
+const ECAT={gan:['Ganadas con ventaja','ganó por 5 puntos o más','#1C7F79'],dis:['En disputa','se decidió por menos de 5 puntos','#F46883'],
+  pue:['Se pueden ganar','perdió por entre 5 y 10 puntos','#F5A47C'],per:['Perdidas','perdió por más de 10 puntos','#9AA6A6'],
+  com:['Competidas','el ganador sacó menos de 5 puntos','#F46883'],med:['Ventaja media','el ganador sacó entre 5 y 15 puntos','#F5A47C'],amp:['Ventaja amplia','el ganador sacó más de 15 puntos','#1C7F79'],
+  rt:['A ganar para la meta','perdidas más cerradas que cubren los votos que faltan','#B8860B'],duro:['Voto duro','tercio de secciones con más voto duro','#2E3B3B'],sw:['Switcher','cambiaron de ganador en las últimas 4 elecciones','#4CC1BA']};
+const ESTL={gana:['Gana','up'],dis:['En disputa','mid'],alc:['Se puede ganar','mid'],amplia:['Brecha amplia','dn']};
 const EOBJ=[['GOB','Gubernatura','est'],['DIPL','Congreso local','dl'],['AYU','Ayuntamientos','mun'],['DIPF','Diputación federal','df'],['SEN','Senado','est']].filter(o=>lastOf(o[0]));
 const ELV={est:'Estado',mun:'Municipio',dl:'Distrito local',df:'Distrito federal'};
 const ENN={est:['estado','estados'],mun:['municipio','municipios'],dl:['distrito local','distritos locales'],df:['distrito federal','distritos federales']};
-if(!st.es) st.es={obj:(EOBJ.find(o=>o[0]===(CFG.gob2027?'GOB':'DIPL'))||EOBJ[0])[0],lv:null,u:null,a:20,b:15,seg:null,sc:'s2',ally:null,col:'seg',tab:'sec',q:'',sk:'ord',sd:1};
-const ECACHE={};
+if(!st.es) st.es={obj:(EOBJ.find(o=>o[0]===(CFG.gob2027?'GOB':'DIPL'))||EOBJ[0])[0],lv:null,u:null,seg:null,sc:'s2',ally:null,col:'seg',tab:'sec',q:'',sk:null,sd:1};
+const ECACHE={},EPC={};
+let ERT=new Set();
 const eRef=()=>lastOf(st.es.obj);
 const eNat=()=>(EOBJ.find(o=>o[0]===st.es.obj)||EOBJ[0])[2];
 const eLv=()=>st.es.lv||eNat();
 const eKey=(lv,i)=>lv==='mun'?S[i].m:lv==='dl'?S[i].dl:lv==='df'?S[i].df:0;
 const eName=(lv,k)=>lv==='mun'?MUN[k]:lv==='dl'?'Distrito local '+k+(CABDL[k]?' · '+CABDL[k]:''):lv==='df'?'Distrito federal '+k+(CABDF[k]?' · '+CABDF[k]:''):EST;
 const eSide=A=>A.map(q=>NM[q]).join('-');
+const bnm=ms=>ms.length>3?ms.slice(0,3).map(m=>NM[m]).join('-')+' y '+(ms.length-3)+' más':ms.map(m=>NM[m]).join('-');
+const eGroups=lv=>{const g={}; ALL.forEach(i=>{const k=eKey(lv,i); (g[k]=g[k]||[]).push(i);}); return Object.entries(g).map(([k,ii])=>({k:+k,ii}));};
+const eContests=()=>eNat()==='est'?[{k:0,ii:ALL}]:eGroups(eNat());
+const eYear=()=>D.E[eRef()].year;
 /* escenarios del partido elegido */
 function eBlocOf(ek,p){const b=D.E[ek].blocs.find(b=>b.members.includes(p)); return b?b.members.filter(m=>m!=='OTROS'):[p];}
-function eAlly(){const p=st.party,ek=eRef(); if(!p) return null; const co=eBlocOf(ek,p);
-  if(st.es.sc==='s1') return [p]; if(st.es.sc==='s3'){const a=(st.es.ally||co).filter(q=>q!==p); return [p].concat(a);} return co;}
+function eAllyFor(sc){const p=st.party,ek=eRef(); if(!p) return null; const co=eBlocOf(ek,p);
+  if(sc==='s1') return [p]; if(sc==='s3'){const a=(st.es.ally||co).filter(q=>q!==p); return [p].concat(a);} return co;}
+const eAlly=()=>eAllyFor(st.es.sc);
 /* duelo: votos de la alianza A contra la fuerza más votada que queda (los bloques se rearman sin los partidos de A) */
 function eDuel(ek,ii,A){const T=totals(ek,ii); if(!T.val) return null; const mine=A.reduce((t,q)=>t+(T.tot[q]||0),0); if(!mine) return null;
-  let riv=null; D.E[ek].blocs.forEach(b=>{const rem=b.members.filter(m=>m!=='OTROS'&&!A.includes(m)); if(!rem.length) return; const v=rem.reduce((t,m)=>t+(T.tot[m]||0),0); if(!riv||v>riv.votes){const lead=rem.slice().sort((x,y)=>(T.tot[y]||0)-(T.tot[x]||0))[0]; riv={votes:v,members:rem,lead,name:rem.length>3?rem.slice(0,3).map(m=>NM[m]).join('-')+' y '+(rem.length-3)+' más':rem.map(m=>NM[m]).join('-')};}});
-  return {T,mine,riv,gap:riv?Math.round(riv.votes-mine):-Math.round(mine),mg:100*(mine-(riv?riv.votes:0))/T.val};}
+  let riv=null; D.E[ek].blocs.forEach(b=>{const rem=b.members.filter(m=>m!=='OTROS'&&!A.includes(m)); if(!rem.length) return; const v=rem.reduce((t,m)=>t+(T.tot[m]||0),0); if(!riv||v>riv.votes) riv={votes:v,members:rem,name:bnm(rem)};});
+  return {T,mine,riv,rvN:riv?riv.name:'—',gap:riv?Math.round(riv.votes-mine):-Math.round(mine),mg:100*(mine-(riv?riv.votes:0))/T.val};}
 const q67=a=>{a=a.filter(x=>x!=null).sort((x,y)=>x-y); return a.length?a[Math.floor(2*a.length/3)]:Infinity;};
-/* datos por sección. Con partido: tipos respecto a la alianza. Sin partido: respecto al ganador de la sección */
-function eSecs(){const ek=eRef(),A=eAlly(),key=ek+'|'+(A?A.join('+'):'gen'); if(ECACHE[key]) return ECACHE[key];
+/* secciones: situación, voto duro, switcher y ruta (secciones a ganar por contienda) */
+function eSecs(){const ek=eRef(),A=eAlly(),key=ek+'|'+(A?A.join('+'):'gen'); if(ECACHE[key]){ERT=ECACHE[key].rt; return ECACHE[key];}
   const sumDuro=(ms,i)=>{let s=0,ok=false; ms.forEach(m=>{if(V2.duro[m]&&V2.duro[m][i]!=null){s+=V2.duro[m][i]; ok=true;}}); return ok?s:null;};
-  const L=[]; ALL.forEach(i=>{const r=row(ek,i); if(!r||!r.val) return; const LN=S[i].ln||r.ln||0,oc=Math.max(0,(V2.maxT[i]||0)-(EXPT[i]||0))/100*LN;
-    if(A){const du=eDuel(ek,[i],A); if(!du) return; L.push({i,mg:du.mg,mine:du.mine,rv:du.riv?du.riv.votes:0,rvL:du.riv?du.riv.lead:null,dp:sumDuro(A,i),dr:du.riv?sumDuro(du.riv.members,i):null,vol:V2.vol[i],oc,emit:r.t,ln:LN});}
-    else {const w=winner(ek,[i]); if(!w) return; const b=w.bl[0]; L.push({i,mg:w.m,lead:w.lead,wn:b.name,dp:sumDuro(b.members.filter(m=>m!=='OTROS'),i),vol:V2.vol[i],oc,emit:r.t,ln:LN,mv:Math.round(b.votes-(w.bl[1]?w.bl[1].votes:0))});}});
-  const tP=q67(L.map(x=>x.dp)),tR=q67(L.map(x=>x.dr)),tV=q67(L.map(x=>x.vol)),tO=q67(L.map(x=>x.ln?x.oc/x.ln:null));
-  L.forEach(x=>{x.seg=A?(x.dp!=null&&x.dp>=tP&&x.mg>0?'bas':x.dr!=null&&x.dr>=tR&&x.mg<-15?'adv':Math.abs(x.mg)<5?'com':x.vol!=null&&x.vol>=tV?'per':x.ln&&x.oc/x.ln>=tO?'mov':'res')
-    :(x.dp!=null&&x.dp>=tP&&x.mg>=15?'bas':x.mg<5?'com':x.vol!=null&&x.vol>=tV?'per':x.ln&&x.oc/x.ln>=tO?'mov':'res');});
-  const by={}; L.forEach(x=>by[x.i]=x); return ECACHE[key]={L,by,A};}
-const ePot=x=>x.oc*st.es.a/100+(x.vol||0)/100*x.emit*st.es.b/100;
-/* ruta: bastiones, competidas, persuadibles y movilizables ordenadas por votos alcanzables por elector */
-function eRoute(ii,gap){const E=eSecs(),c=ii.map(i=>E.by[i]).filter(x=>x&&x.seg!=='adv'&&x.seg!=='res'&&(!st.es.seg||x.seg===st.es.seg)).map(x=>({x,p:ePot(x)})).sort((a,b)=>b.p/(b.x.ln||1)-a.p/(a.x.ln||1));
-  let acc=0,n=0,ln=0; const tot=c.reduce((t,y)=>t+y.p,0); c.forEach((y,j)=>{if(gap>0?acc<gap:j<12){acc+=y.p; ln+=y.x.ln; n++; y.ord=n; y.acc=acc;}});
-  return {c,n,acc,ln,tot,ok:gap<=0||acc>=gap};}
-const eGroups=lv=>{const g={}; ALL.forEach(i=>{const k=eKey(lv,i); (g[k]=g[k]||[]).push(i);}); return Object.entries(g).map(([k,ii])=>({k:+k,ii}));};
+  const CR={}; if(A) eContests().forEach(c=>{const d=eDuel(ek,c.ii,A); if(d) c.ii.forEach(i=>CR[i]=d);});
+  const L=[]; ALL.forEach(i=>{const r=row(ek,i); if(!r||!r.val) return; const b={i,ln:S[i].ln||r.ln||0,sw:!!SW[i]};
+    if(A){const cd=CR[i]; if(!cd) return; const mine=A.reduce((t,q)=>t+(r.v[q]||0),0),rv=cd.riv?cd.riv.members.reduce((t,m)=>t+(r.v[m]||0),0):0; Object.assign(b,{mg:100*(mine-rv)/r.val,mine,rv,rvN:cd.rvN,dp:sumDuro(A,i)}); b.cat=b.mg>=5?'gan':b.mg>-5?'dis':b.mg>-10?'pue':'per';}
+    else {const w=winner(ek,[i]); if(!w) return; const B=w.bl[0]; Object.assign(b,{mg:w.m,lead:w.lead,wn:B.name,sn:w.bl[1]?w.bl[1].name:'—',mv:Math.round(B.votes-(w.bl[1]?w.bl[1].votes:0)),dp:sumDuro(B.members.filter(m=>m!=='OTROS'),i)}); b.cat=b.mg<5?'com':b.mg<15?'med':'amp';}
+    L.push(b);});
+  const tP=q67(L.map(x=>x.dp)); L.forEach(x=>x.duro=x.dp!=null&&x.dp>=tP);
+  const by={}; L.forEach(x=>by[x.i]=x); const CT={},rt=new Set();
+  if(A) eContests().forEach(c=>{const d=eDuel(ek,c.ii,A); if(!d) return; let acc=0,n=0;
+    if(d.gap>0) c.ii.map(i=>by[i]).filter(x=>x&&x.rv>x.mine).sort((a,b)=>b.mg-a.mg).forEach(x=>{if(acc>=d.gap) return; x.add=Math.round(x.rv-x.mine)+1; acc+=x.add; x.ord=++n; rt.add(x.i);});
+    CT[c.k]={k:c.k,ii:c.ii,d,n,acc,st:d.gap<=0?'gana':d.mg>-5?'dis':d.mg>-10?'alc':'amplia'};});
+  ERT=rt; return ECACHE[key]={L,by,A,CT,rt};}
+const eMatch=(x,f)=>!f||(f==='duro'?x.duro:f==='sw'?x.sw:f==='rt'?!!x.add:x.cat===f);
+const eKeys=()=>st.party?['gan','dis','pue','per','rt','duro','sw']:['com','med','amp','duro','sw'];
+/* proyección: promedio ponderado de la votación por partido (50% elecciones del año más reciente, 30% última del mismo cargo, 20% la anterior) */
+function eProjW(){const ek=eRef(),t=ek.split('_')[0],same=YEARS.filter(y=>D.E[t+'_'+y]).map(y=>t+'_'+y).slice(-2),ym=Math.max(...Object.values(D.E).map(e=>+e.year)),rec=Object.keys(D.E).filter(k=>+D.E[k].year===ym),W={};
+  rec.forEach(k=>W[k]=(W[k]||0)+.5/rec.length); if(same[1]){W[same[1]]=(W[same[1]]||0)+.3; W[same[0]]=(W[same[0]]||0)+.2;} else if(same[0]) W[same[0]]=(W[same[0]]||0)+.5; return {W,ym,same};}
+function eShares(ii,key){key=eRef()+'|'+key; if(EPC[key]) return EPC[key]; const {W}=eProjW(),P={}; let sw=0;
+  Object.entries(W).forEach(([e,w])=>{const T=totals(e,ii); if(!T.val) return; sw+=w; for(const q in T.tot) P[q]=(P[q]||0)+w*T.tot[q]/T.val;}); if(sw) for(const q in P) P[q]=100*P[q]/sw; return EPC[key]=P;}
+function eProj(ii,key,A){const P=eShares(ii,key),ek=eRef(); if(!Object.keys(P).length) return null;
+  if(A){const a=A.reduce((t,q)=>t+(P[q]||0),0); let r=null; D.E[ek].blocs.forEach(b=>{const rem=b.members.filter(m=>m!=='OTROS'&&!A.includes(m)); if(!rem.length) return; const v=rem.reduce((t,m)=>t+(P[m]||0),0); if(!r||v>r.v) r={v,n:bnm(rem)};});
+    return {a,b:r?r.v:0,an:eSide(A),bn:r?r.n:'—',mg:a-(r?r.v:0)};}
+  const bl=D.E[ek].blocs.map(b=>{const ms=b.members.filter(m=>m!=='OTROS'); return {v:ms.reduce((t,m)=>t+(P[m]||0),0),n:bnm(ms),lead:b.lead};}).filter(b=>b.n).sort((x,y)=>y.v-x.v);
+  return bl.length?{a:bl[0].v,b:bl[1]?bl[1].v:0,an:bl[0].n,bn:bl[1]?bl[1].n:'—',lead:bl[0].lead,mg:bl[0].v-(bl[1]?bl[1].v:0)}:null;}
+const pjTxt=p=>p?(p.mg>=0?'+':'−')+Math.abs(p.mg).toFixed(1)+' pts':'—';
+/* foco: una contienda, varias contiendas o una parte del territorio */
 function eSelII(){const lv=eLv(); return st.es.u==null||lv==='est'?ALL:ALL.filter(i=>String(eKey(lv,i))===String(st.es.u));}
-/* ganador por unidad del nivel elegido (para colorear el mapa por ganador) */
+function eFocus(){const lv=eLv(),nat=eNat(),u=st.es.u; if(u!=null&&lv!=='est'&&lv!==nat) return {mode:'sub'}; if(nat==='est') return {mode:'con',k:0}; if(u!=null) return {mode:'con',k:+u}; return {mode:'multi'};}
+/* ganador por unidad (para colorear por ganador) */
 const EWIN={};
 function eUnitWin(i){const ek=eRef(),lv=eLv(),key=ek+'|'+lv; if(!EWIN[key]){EWIN[key]={}; (lv==='est'?[{k:0,ii:ALL}]:eGroups(lv)).forEach(u=>EWIN[key][u.k]=winner(ek,u.ii));} return EWIN[key][eKey(lv,i)];}
 METRICS.seg={party:1,est:1,n:'Estrategia',d:'',f:ii=>{const i=ii[0];
   if(st.es.col==='win'){const w=eUnitWin(i); return w?{c:C[w.lead],t:.4+.6*Math.min(1,w.m/20)}:null;}
-  const x=eSecs().by[i]; if(!x) return null; const dim=st.es.seg&&x.seg!==st.es.seg,col=!st.party&&x.seg==='bas'?C[x.lead]:ESC[x.seg][3]; return {c:col,t:dim?.15:1};}};
-let ERT=new Set();
-function eLegendHTML(){const E=eSecs(),ii=eSelII(),cnt={}; ii.forEach(i=>{const x=E.by[i]; if(x){const k=!st.party&&x.seg==='bas'?'bas:'+x.lead:x.seg; cnt[k]=(cnt[k]||0)+1;}});
-  const tg=`<div class="es-tg"><button data-ecol="seg" aria-pressed="${st.es.col!=='win'}">Tipo de sección</button><button data-ecol="win" aria-pressed="${st.es.col==='win'}">Ganador por ${ELV[eLv()].toLowerCase()}</button></div>`;
+  const x=eSecs().by[i]; if(!x) return null; return {c:ECAT[x.cat][2],t:st.es.seg&&!eMatch(x,st.es.seg)?.12:1};}};
+/* recuadros (KPI) por situación: filtran el mapa y la tabla */
+function eTiles(ii,cls){const E=eSecs(),xs=ii.map(i=>E.by[i]).filter(Boolean);
+  return `<div class="es-kp ${cls||''}">${eKeys().map(k=>{const n=xs.filter(x=>eMatch(x,k)).length; return `<button data-eseg="${k}" aria-pressed="${st.es.seg===k}" class="${k==='rt'?'krt':''}"><i style="background:${ECAT[k][2]}"></i><b>${fmt(n)}</b><span>${ECAT[k][0]}</span><small>${ECAT[k][1]}</small></button>`;}).join('')}</div>`;}
+function eLegendHTML(){const E=eSecs(),ii=eSelII(),xs=ii.map(i=>E.by[i]).filter(Boolean);
+  const tg=`<div class="es-tg"><button data-ecol="seg" aria-pressed="${st.es.col!=='win'}">Situación</button><button data-ecol="win" aria-pressed="${st.es.col==='win'}">Ganador por ${{est:'estado',mun:'municipio',dl:'DL',df:'DF'}[eLv()]}</button></div>`;
   if(st.es.col==='win'){const ws={}; (eLv()==='est'?[{k:0,ii:ALL}]:eGroups(eLv())).forEach(u=>{const w=winner(eRef(),u.ii); if(w) ws[w.lead]=(ws[w.lead]||0)+1;});
-    return `<div class="mcard es-leg"><small>${esc(eLabel(eRef()))}</small>${tg}${Object.entries(ws).sort((a,b)=>b[1]-a[1]).map(([q,n])=>`<div class="es-li"><i style="background:${C[q]}"></i>${esc(NM[q])}${(D.E[eRef()].blocs.find(b=>b.lead===q)||{members:[]}).members.filter(m=>m!=='OTROS').length>1?' y aliados':''}<b>${n}</b></div>`).join('')}<div class="es-n">${ENN[eLv()][1]} ganados · la coalición toma el color de quien la encabeza</div></div>`;}
-  const rows=[]; if(!st.party){Object.keys(cnt).filter(k=>k.startsWith('bas:')).sort((a,b)=>cnt[b]-cnt[a]).forEach(k=>{const q=k.slice(4); rows.push([k,'Bastión de '+NM[q],C[q],'voto duro alto de '+NM[q]+' y más de 15 puntos de ventaja']);});}
-  ESEG.forEach(g=>{if(g[0]==='bas'&&!st.party) return; if(g[0]==='adv'&&!st.party) return; rows.push([g[0],g[0]==='bas'?'Bastión propio':g[1],g[3],g[2]]);});
-  return `<div class="mcard es-leg"><small>${st.party?'Tipos de sección · '+esc(eSide(eAlly())):'Panorama competitivo'}</small>${tg}${rows.map(r=>{const k=r[0].split(':')[0]; return `<button data-eseg="${k}" aria-pressed="${st.es.seg===k}" title="${esc(r[3])}"><i style="background:${r[2]}"></i>${esc(r[1])}<b>${cnt[r[0]]||0}</b></button>`;}).join('')}<div class="es-n">${esc(eLabel(eRef()))}${st.party?' · contorno oscuro: secciones de la ruta':''}</div></div>`;}
-function eUnitRows(){const lv=eLv(),ek=eRef(),A=eAlly(); if(lv==='est') return [];
-  return eGroups(lv).map(u=>{if(A){const d=eDuel(ek,u.ii,A); if(!d) return null; const r=eRoute(u.ii,d.gap); return {u,d,r};} const w=winner(ek,u.ii); return w?{u,w}:null;}).filter(Boolean)
-    .sort(A?(a,b)=>(a.d.gap>0?0:1)-(b.d.gap>0?0:1)||Math.abs(a.d.gap)-Math.abs(b.d.gap):(a,b)=>a.w.m-b.w.m);}
-function estPanel(){const p=st.party,ek=eRef(),lv=eLv(),nat=eNat(),A=eAlly(),ii=eSelII(),where=st.es.u!=null&&lv!=='est'?eName(lv,st.es.u):EST;
+    return `<div class="mcard es-leg"><small>${esc(eLabel(eRef()))}</small>${tg}${Object.entries(ws).sort((a,b)=>b[1]-a[1]).map(([q,n])=>`<div class="es-li"><i style="background:${C[q]}"></i>${esc(NM[q])}${(D.E[eRef()].blocs.find(b=>b.lead===q)||{members:[]}).members.filter(m=>m!=='OTROS').length>1?' y aliados':''}<b>${n}</b></div>`).join('')}<div class="es-n">${ENN[eLv()][1]} ganados · la coalición toma el color del partido que la encabeza</div></div>`;}
+  const n=st.es.seg?xs.filter(x=>eMatch(x,st.es.seg)).length:0;
+  return `<div class="mcard es-leg"><small>${st.party?esc(eSide(eAlly()))+' · '+esc(eLabel(eRef())):'Panorama · '+esc(eLabel(eRef()))}</small>${tg}${eKeys().map(k=>`<button data-eseg="${k}" aria-pressed="${st.es.seg===k}" title="${esc(ECAT[k][1])}"><i style="background:${ECAT[k][2]}"></i>${ECAT[k][0]}<b>${fmt(xs.filter(x=>eMatch(x,k)).length)}</b></button>`).join('')}${st.es.seg?`<button class="es-open" data-eopen="1">Ver las ${fmt(n)} secciones en tabla</button>`:`<div class="es-n">Clic en una situación para resaltar sus secciones</div>`}</div>`;}
+/* datos por unidad de un nivel (para la lista del panel y la tabla) */
+function eUnits(L){const ek=eRef(),A=eAlly(),E=eSecs(),nat=eNat(),sel=new Set(eSelII());
+  return eGroups(L).filter(u=>u.ii.some(i=>sel.has(i))).map(u=>{const ii=u.ii.filter(i=>sel.has(i)),xs=ii.map(i=>E.by[i]).filter(Boolean),o={k:u.k,name:eName(L,u.k),sec:xs.length};
+    if(A&&L===nat){const c=E.CT[u.k]; if(!c) return null; const p=eProj(c.ii,L+u.k,A); return Object.assign(o,{con:1,me:c.d.mine,rvN:c.d.rvN,rv:c.d.riv?c.d.riv.votes:0,meta:Math.round(c.d.riv?c.d.riv.votes:0)+1,gap:c.d.gap,n:c.n,st:c.st,pr:p?p.mg:null});}
+    if(A){const cnt=k=>xs.filter(x=>x.cat===k).length,rx=xs.filter(x=>x.add); return Object.assign(o,{gan:cnt('gan'),dis:cnt('dis'),pue:cnt('pue'),per:cnt('per'),n:rx.length,add:rx.reduce((t,x)=>t+x.add,0),me:xs.reduce((t,x)=>t+x.mine,0),meta:Math.round(xs.reduce((t,x)=>t+x.mine,0))+rx.reduce((t,x)=>t+x.add,0)});}
+    const w=winner(ek,ii); if(!w) return null; const p=eProj(ii,L+u.k+(ii.length<u.ii.length?'s'+st.es.u:''),null);
+    return Object.assign(o,{wn:w.bl[0].name,lead:w.lead,sn:w.bl[1]?w.bl[1].name:'—',m:w.m,mv:Math.round(w.bl[0].votes-(w.bl[1]?w.bl[1].votes:0)),com:xs.filter(x=>x.cat==='com').length,pr:p,prT:p?NM[p.lead]+' '+pjTxt(p):'—'});}).filter(Boolean);}
+function eUnitSort(U){const A=eAlly(); if(!A) return U.sort((a,b)=>a.m-b.m); if(U[0]&&U[0].con){const o={dis:0,alc:1,amplia:2,gana:3}; return U.sort((a,b)=>o[a.st]-o[b.st]||(a.st==='gana'?b.gap-a.gap:a.gap-b.gap));} return U.sort((a,b)=>b.n-a.n||b.dis-a.dis);}
+/* bloque de proyección */
+function ePjHTML(p){if(!p) return ''; const tot=Math.max(100,p.a+p.b);
+  return `<div class="es-pj"><small>Proyección estimada</small><div class="es-pjb"><i style="width:${(100*p.a/tot).toFixed(1)}%"></i><u style="width:${(100*p.b/tot).toFixed(1)}%"></u></div><div class="es-pjl"><span>${esc(p.an)} <b>${p.a.toFixed(1)}%</b></span><span>${esc(p.bn)} <b>${p.b.toFixed(1)}%</b></span></div><p>${st.party?(p.mg>=0?'Ganaría':'Perdería')+' por '+Math.abs(p.mg).toFixed(1)+' puntos':esc(p.an)+' adelante por '+Math.abs(p.mg).toFixed(1)+' puntos'}</p></div>`;}
+function eHero(){const p=st.party,ek=eRef(),A=eAlly(),E=eSecs(),F=eFocus(),lv=eLv(),nat=eNat(),NN=ENN[nat],yr=eYear(),ii=eSelII(),xs=ii.map(i=>E.by[i]).filter(Boolean),where=st.es.u!=null&&lv!=='est'?eName(lv,st.es.u):EST;
+  const won=xs.filter(x=>x.mg>0).length,h=(tag,p1,big,bl,sub,extra)=>`<div class="es-meta">${tag?`<span class="es-tag">${tag}</span>`:''}<p>${p1}</p><div class="es-big"><b>${big}</b><span>${bl}</span></div>${sub?`<p class="es-sub">${sub}</p>`:''}${extra||''}</div>`;
+  if(!p){if(F.mode==='multi'){const U=eUnits(nat),ws={},pw={}; U.forEach(u=>{ws[u.lead]=(ws[u.lead]||0)+1; if(u.pr) pw[u.pr.lead]=(pw[u.pr.lead]||0)+1;}); const lst=o=>Object.entries(o).sort((a,b)=>b[1]-a[1]).map(([q,n])=>`${esc(NM[q])} ${n}`).join(' · ');
+      return h('',`${eLabel(ek)}: ${NN[1]} ganados por partido (con aliados): ${lst(ws)}.`,fmt(U.filter(u=>u.m<5).length),`${NN[1]} competidos`,'se decidieron por menos de 5 puntos.',`<div class="es-pj"><small>Proyección estimada</small><p>${NN[1][0].toUpperCase()+NN[1].slice(1)} que ganaría cada fuerza: ${lst(pw)||'—'}</p></div>`);}
+    const ci=ii,w=winner(ek,ci); if(!w) return h('','Sin resultados en esta selección.','—','','');
+    return h('',`${esc(w.bl[0].name)} ganó ${esc(where)} con ${w.m.toFixed(1)} puntos de ventaja (${fmt(Math.round(w.bl[0].votes-(w.bl[1]?w.bl[1].votes:0)))} votos) sobre ${esc(w.bl[1]?w.bl[1].name:'—')}.`,fmt(xs.filter(x=>x.cat==='com').length),'secciones competidas',`de ${fmt(xs.length)}: se decidieron por menos de 5 puntos.`,ePjHTML(eProj(ci,'f'+lv+st.es.u,null)));}
+  const me=esc(eSide(A));
+  if(F.mode==='multi'){const cs=Object.values(E.CT),w=cs.filter(c=>c.st==='gana').length,al=cs.filter(c=>c.st==='dis'||c.st==='alc'),am=cs.filter(c=>c.st==='amplia').length,secs=al.reduce((t,c)=>t+c.n,0),pw=cs.filter(c=>{const q=eProj(c.ii,nat+c.k,A); return q&&q.mg>0;}).length;
+    return h('Compite contra el partido o coalición más fuerte de cada '+NN[0],`${me} gana ${w} de ${cs.length} ${NN[1]} con los resultados de ${yr}.`,fmt(al.length),`${NN[1]} perdidos al alcance (por menos de 10 puntos)`,al.length?`Para ganarlos hay que ganar ${fmt(secs)} secciones: las perdidas más cerradas de cada ${NN[0]}. ${am?`Otros ${am} tienen brecha amplia.`:''}`:`Todos los ${NN[1]} perdidos tienen brecha amplia (más de 10 puntos).`,`<div class="es-pj"><small>Proyección estimada</small><p>Ganaría ${pw} de ${cs.length} ${NN[1]}.</p></div>`);}
+  if(F.mode==='sub'){const rx=xs.filter(x=>x.add),v=rx.reduce((t,x)=>t+x.add,0);
+    return h('',`${esc(eLabel(ek))} se decide ${nat==='est'?'en todo el estado':'por '+NN[0]}. En ${esc(where)}, ${me} gana ${won} de ${xs.length} secciones.`,fmt(rx.length),'secciones que ganar aquí',rx.length?`Para la meta${nat==='est'?' estatal':' de cada '+NN[0]} hay que ganar estas secciones; sumarían ${fmt(v)} votos.`:'Aquí no hace falta ganar secciones adicionales para la meta.');}
+  const c=E.CT[F.k]; if(!c) return `<p class="es-p">${esc(NM[p])} no compitió en ${esc(eLabel(ek).toLowerCase())} en este territorio.</p>`;
+  const d=c.d,rv=esc(d.rvN),cx=c.ii.map(i=>E.by[i]).filter(Boolean),cw=cx.filter(x=>x.mg>0).length,pj=ePjHTML(eProj(c.ii,nat+c.k,A)),tag='Compite contra '+rv;
+  if(d.gap<=0) return h(tag,`${me} gana ${esc(where)} a ${rv} por ${fmt(-d.gap)} votos (${yr}).`,'Retener','',`Hoy gana ${fmt(cw)} de ${fmt(cx.length)} secciones. Las ${fmt(cx.filter(x=>x.cat==='dis').length)} en disputa son las que hay que cuidar.`,pj);
+  const sw=Math.floor(d.gap/2)+1,stl=c.st==='dis'?`En disputa: perdió por ${(-d.mg).toFixed(1)} puntos frente a ${rv}.`:c.st==='alc'?`Se puede ganar: perdió por ${(-d.mg).toFixed(1)} puntos frente a ${rv}.`:`Brecha amplia: perdió por ${(-d.mg).toFixed(1)} puntos frente a ${rv}.`;
+  return h(tag,`Meta estimada: ${fmt(Math.round(d.riv.votes)+1)} votos para ganar ${esc(where)}. ${me} obtuvo ${fmt(Math.round(d.mine))} en ${yr}; le faltan ${fmt(d.gap)}.`,fmt(c.n),'secciones más que ganar',`Hoy gana ${fmt(cw)} de ${fmt(cx.length)} secciones. Ganando además las ${fmt(c.n)} perdidas más cerradas se cubren los votos que faltan.<br><b class="es-stl ${ESTL[c.st][1]}">${stl}</b><br>Otra vía: que ${fmt(sw)} votantes de ${rv} voten por ${me}.`,pj);}
+function eCompare(){const p=st.party,ek=eRef(),F=eFocus(),nat=eNat(); if(!p||F.mode==='sub') return '';
+  const co=eBlocOf(ek,p),scs=[['s1','Solo '+NM[p]]].concat(co.length>1?[['s2','Coalición '+eYear()]]:[]).concat(st.es.sc==='s3'?[['s3','Alianza a la medida']]:[]);
+  return `<div class="es-cmpw"><div class="es-cmph"><span>Escenario</span><span>${F.mode==='multi'?'Gana hoy':'Resultado '+eYear()}</span><span>Proyección</span></div>${scs.map(s=>{const A=eAllyFor(s[0]);
+    if(F.mode==='multi'){const cs=eContests(); let w=0,pw=0; cs.forEach(c=>{const d=eDuel(ek,c.ii,A); if(d&&d.gap<=0) w++; const q=eProj(c.ii,nat+c.k,A); if(q&&q.mg>0) pw++;}); return `<div class="es-cmp${s[0]===st.es.sc?' on':''}"><span>${esc(eSide(A))}</span><b>${w} de ${cs.length}</b><b>${pw} de ${cs.length}</b></div>`;}
+    const c=eContests().find(c=>c.k===F.k)||{ii:ALL},d=eDuel(ek,c.ii,A),q=eProj(c.ii,nat+F.k,A); if(!d) return '';
+    return `<div class="es-cmp${s[0]===st.es.sc?' on':''}"><span>${esc(eSide(A))}</span><b class="${d.gap>0?'dn':'up'}">${d.gap>0?'faltan '+fmt(d.gap):'gana +'+fmt(-d.gap)}</b><b class="${q&&q.mg>=0?'up':'dn'}">${pjTxt(q)}</b></div>`;}).join('')}</div>`;}
+function estPanel(){const p=st.party,ek=eRef(),lv=eLv(),nat=eNat(),ii=eSelII(),E=eSecs();
   const chips=(L,cur,attr)=>L.map(x=>`<button data-${attr}="${x[0]}" aria-pressed="${cur===x[0]}">${x[1]}</button>`).join('');
   let h=`<div class="colh"><button class="es-back" id="eback">← Volver al mapa</button><b style="margin-left:8px">Estrategia</b></div><div class="cd es">`;
-  h+=`<div class="es-row"><span>Elección objetivo</span><div class="es-ch">${chips(EOBJ.map(x=>[x[0],x[1]]),st.es.obj,'eobj')}</div></div>`;
-  h+=`<div class="es-row"><span>Analizar por</span><div class="es-ch">${chips(Object.entries(ELV).filter(([k])=>k==='est'?nat==='est':true),lv,'elv')}</div></div>`;
-  h+=`<div class="es-row"><span>Partido</span><div class="es-ch"><button data-epar="" aria-pressed="${!p}">Ninguno · panorama</button>${MAIN.filter(q=>D.E[ek].blocs.some(b=>b.members.includes(q))).map(q=>`<button data-epar="${q}" aria-pressed="${p===q}"><i style="background:${C[q]}"></i>${NM[q]}</button>`).join('')}</div></div>`;
-  ERT=new Set();
-  if(!p){const w=winner(ek,ii),U=eUnitRows(),close=U.filter(z=>z.w.m<5).length;
-    h+=`<div class="es-meta"><p>${w?`En ${esc(where)}, ${esc(w.bl[0].name)} ganó ${esc(eLabel(ek).toLowerCase())} por ${w.m.toFixed(1)} puntos (${fmt(Math.round(w.bl[0].votes-(w.bl[1]?w.bl[1].votes:0)))} votos).`:'Sin resultados en esta selección.'}</p>${U.length?`<div class="es-big"><b>${close}</b></div><p class="es-sub">de ${U.length} ${ENN[lv][1]} se definieron por menos de 5 puntos. Elige un partido arriba para ver su meta y su ruta.</p>`:`<p class="es-sub">Elige un partido arriba para ver su meta de votos y su ruta para ganar.</p>`}</div>`;
-    if(U.length) h+=`<div class="es-h">${ENN[lv][1][0].toUpperCase()+ENN[lv][1].slice(1)}, de más a menos competidos${st.es.u!=null?` <button class="es-x" data-eu="">Ver todo</button>`:''}</div><div class="es-ul">${U.map(z=>`<button data-eu="${z.u.k}" aria-pressed="${String(st.es.u)===String(z.u.k)}"><span><i class="es-d" style="background:${C[z.w.lead]}"></i>${esc(eName(lv,z.u.k))}</span><em class="${z.w.m<5?'dn':''}">${z.w.m.toFixed(1)} pts</em><small>${esc(z.w.bl[0].name)} sobre ${esc(z.w.bl[1]?z.w.bl[1].name:'—')}</small></button>`).join('')}</div>`;
-    h+=`<button class="es-tb" id="etab">Ver tabla de secciones</button><p class="es-f">Fuente: INE, SEE ${D.E[ek].year}. Tipos de sección según el ganador de cada sección; estimación propia.</p></div>`;
-    return h;}
-  const co=eBlocOf(ek,p),scs=[['s1','Solo '+NM[p]]].concat(co.length>1?[['s2','Coalición '+D.E[ek].year+': '+eSide(co)]]:[]).concat([['s3','Alianza a la medida']]);
-  if(co.length<2&&st.es.sc==='s2') st.es.sc='s1';
-  const A2=eAlly();
-  h+=`<div class="es-row"><span>Escenario</span><div class="es-ch">${chips(scs,st.es.sc,'esc')}</div>${st.es.sc==='s3'?`<div class="es-ch es-al">${D.P8.filter(q=>q!=='OTROS'&&q!==p&&D.E[ek].blocs.some(b=>b.members.includes(q))&&totals(ek,ALL).tot[q]>0).map(q=>`<button data-eal="${q}" aria-pressed="${A2.includes(q)}"><i style="background:${C[q]}"></i>${NM[q]}</button>`).join('')}</div>`:''}</div>`;
-  const du=eDuel(ek,ii,A2);
-  if(!du){h+=`<p class="es-p">${esc(NM[p])} no compitió en ${esc(eLabel(ek).toLowerCase())} en este territorio.</p></div>`; return h;}
-  const R=eRoute(ii,du.gap),me=eSide(A2),rv=du.riv?du.riv.name:'';
-  ERT=new Set(R.c.slice(0,R.n).map(y=>y.x.i));
-  let head,big,sub;
-  const multi=nat!=='est'&&lv===nat&&st.es.u==null;
-  if(multi){const U=eUnitRows(),won=U.filter(z=>z.d.gap<=0).length,can=U.filter(z=>z.d.gap>0&&z.r.ok),secs=can.reduce((t,z)=>t+z.r.n,0),NN=ENN[lv];
-    head=`${esc(me)} gana ${won} de ${U.length} ${NN[1]} con los resultados de ${D.E[ek].year}.`;
-    if(won===U.length){big='Defender'; sub='Gana todos. Elige uno abajo para ver dónde ampliar su ventaja.';}
-    else if(!can.length){big='+0'; sub=`Con los supuestos actuales ningún ${NN[0]} perdido se alcanza. Sube los supuestos, prueba otro escenario o revisa cada uno abajo.`;}
-    else {big=`+${can.length}`; sub=`${can.length===1?NN[0]+' más se puede':NN[1]+' más se pueden'} ganar con la ruta, trabajando ${fmt(secs)} ${secs===1?'sección':'secciones'}. Elige uno abajo para ver su meta.`;}}
-  else if(du.gap>0){const sw=Math.ceil(du.gap/2)+1;
-    head=lv===nat||lv==='est'?`Meta: ${fmt(Math.round(du.riv.votes)+1)} votos para ganar ${esc(where)}. ${esc(me)} tuvo ${fmt(Math.round(du.mine))}; le faltan ${fmt(du.gap)} frente a ${esc(rv)}.`:`En ${esc(where)}, ${esc(me)} está ${fmt(du.gap)} votos detrás de ${esc(rv)}.`;
-    big=R.ok?fmt(R.n):'No alcanza'; sub=(R.ok?`${R.n===1?'sección cubre':'secciones cubren'} la brecha: ${(()=>{const v=100*R.ln/lnOf(ii); return v<1?'menos de 1%':Math.round(v)+'%';})()} de la lista nominal.`:`Aun sumando todas las secciones con oportunidad se llega a ${fmt(R.tot)} votos.`)+` Otra vía: que ${fmt(sw)} votantes de ${esc(rv)} (${(100*sw/du.riv.votes).toFixed(1)}% de sus votos) cambien a ${esc(me)}.`;}
-  else {head=`${esc(me)} ya gana ${esc(where)} por ${fmt(-du.gap)} votos sobre ${esc(rv)}.`; big='Defender'; sub='La ruta muestra dónde se pueden sumar más votos por elector para ampliar la ventaja.';}
-  const prog=du.gap>0?Math.min(100,100*Math.min(R.acc,du.gap)/Math.max(du.gap,R.tot)):100,pot=du.gap>0?Math.max(0,100*(R.tot-Math.min(R.acc,du.gap))/Math.max(du.gap,R.tot)):0;
-  const cmp=scs.map(s=>{const sv=st.es.sc; st.es.sc=s[0]; const a=eAlly(); st.es.sc=sv; if(s[0]==='s3'&&a.length<2&&st.es.sc!=='s3') return ''; const d=eDuel(ek,ii,a); if(!d) return '';
-    let txt; if(multi){const won=eGroups(lv).filter(u=>{const x=eDuel(ek,u.ii,a); return x&&x.gap<=0;}).length; txt=`gana ${won} de ${eGroups(lv).length}`;} else txt=d.gap>0?'faltan '+fmt(d.gap):'gana +'+fmt(-d.gap);
-    return `<div class="es-cmp${s[0]===st.es.sc?' on':''}"><span>${esc(s[0]==='s3'?'Alianza: '+eSide(a):s[1].replace(/^Coalición \d+: /,'Coalición: '))}</span><b class="${multi?'':d.gap>0?'dn':'up'}">${txt}</b></div>`;}).join('');
-  h+=`<div class="es-meta"><p>${head}</p><div class="es-big"><b>${big}</b></div><p class="es-sub">${sub}</p>${du.gap>0&&!multi?`<div class="es-bar"><i style="width:${prog.toFixed(1)}%"></i><u style="width:${pot.toFixed(1)}%"></u></div><div class="es-bl"><span>brecha ${fmt(du.gap)}</span><span>alcanzable ${fmt(R.tot)}</span></div>`:''}<div class="es-cmpw"><small>Comparación de escenarios</small>${cmp}</div></div>`;
-  h+=`<label class="es-sl">Ocasionales que logras movilizar <b>${st.es.a}%</b><input type="range" min="5" max="50" step="5" value="${st.es.a}" data-esl="a"></label><label class="es-sl">Volátiles que logras convencer <b>${st.es.b}%</b><input type="range" min="5" max="40" step="5" value="${st.es.b}" data-esl="b"></label>`;
-  if(lv!=='est'){const U=eUnitRows(); h+=`<div class="es-h">${lv===nat?'Dónde está en juego':'Por '+ENN[lv][0]}${st.es.u!=null?` <button class="es-x" data-eu="">Ver todo</button>`:''}</div><div class="es-ul">${U.map(z=>`<button data-eu="${z.u.k}" aria-pressed="${String(st.es.u)===String(z.u.k)}"><span>${esc(eName(lv,z.u.k))}</span><em class="${z.d.gap>0?'dn':'up'}">${z.d.gap>0?'faltan '+fmt(z.d.gap):'gana +'+fmt(-z.d.gap)}</em><small>meta ${fmt(Math.round(z.d.riv?z.d.riv.votes:0)+1)} votos${z.d.gap>0?' · '+(z.r.ok?z.r.n+(z.r.n===1?' sección':' secciones'):'no alcanza con los supuestos'):''}</small></button>`).join('')}</div>`;}
-  const list=R.c.slice(0,Math.min(R.n,10));
-  h+=`<div class="es-h">Ruta: primeras ${list.length} de ${R.n} secciones</div><div class="es-sec">${list.map(y=>`<button data-esec="${y.x.i}"><b>${S[y.x.i].s}</b><span>${esc(MUN[S[y.x.i].m])}<small><i style="background:${ESC[y.x.seg][3]}"></i>${y.x.seg==='bas'?'Bastión propio':ESC[y.x.seg][1]}</small></span><em>meta ${fmt(Math.round(y.x.mine+y.p))}</em><u>+${fmt(y.p)}</u></button>`).join('')||'<p class="es-p">Sin secciones con este filtro.</p>'}</div>`;
-  h+=`<button class="es-tb" id="etab">Ver tabla de secciones y metas</button><p class="es-f">Fuente: INE, SEE ${D.E[ek].year}; ${esc(SRC.pad||'')}. Meta de la sección = votos que obtuvo + votos alcanzables (ocasionales × ${st.es.a}% + voto volátil × ${st.es.b}%). La ruta usa bastiones, competidas, persuadibles y movilizables. En los escenarios sin coalición, los votos de coalición se reparten en partes iguales. Estimación propia: indica dónde trabajar, no garantiza votos.</p></div>`;
+  h+=`<div class="es-row"><span>1 · Elección</span><div class="es-ch">${chips(EOBJ.map(x=>[x[0],x[1]+' '+D.E[lastOf(x[0])].year]),st.es.obj,'eobj')}</div></div>`;
+  h+=`<div class="es-row"><span>2 · Partido</span><div class="es-ch"><button data-epar="" aria-pressed="${!p}">Ninguno (panorama)</button>${MAIN.filter(q=>D.E[ek].blocs.some(b=>b.members.includes(q))).map(q=>`<button data-epar="${q}" aria-pressed="${p===q}"><i style="background:${C[q]}"></i>${NM[q]}</button>`).join('')}</div></div>`;
+  if(p){const co=eBlocOf(ek,p); if(co.length<2&&st.es.sc==='s2') st.es.sc='s1'; const A=eAlly(),scs=[['s1','Solo '+NM[p]]].concat(co.length>1?[['s2','Con su coalición '+eYear()+' ('+eSide(co)+')']]:[]).concat([['s3','Alianza a la medida']]);
+    h+=`<div class="es-row"><span>3 · Escenario</span><div class="es-ch">${chips(scs,st.es.sc,'esc')}</div>${st.es.sc==='s3'?`<div class="es-al"><small>Elige con quién iría ${esc(NM[p])}:</small><div class="es-ch">${D.P8.filter(q=>q!=='OTROS'&&q!==p&&D.E[ek].blocs.some(b=>b.members.includes(q))&&totals(ek,ALL).tot[q]>0).map(q=>`<button data-eal="${q}" aria-pressed="${A.includes(q)}"><i style="background:${C[q]}"></i>${NM[q]}</button>`).join('')}</div></div>`:''}</div>`;}
+  const lvs=Object.keys(ELV).filter(k=>k==='est'?nat==='est':true),G=lv==='est'?[]:eGroups(lv).sort((a,b)=>lv==='mun'?String(MUN[a.k]).localeCompare(MUN[b.k]):a.k-b.k);
+  h+=`<div class="es-row"><span>${p?4:3} · Territorio</span><div class="es-ch">${chips(lvs.map(k=>[k,k==='est'?EST:ELV[k]]),lv,'elv')}</div>${lv!=='est'?`<select class="es-sel" data-eunit="1"><option value="">${lv===nat?'Todos los '+ENN[lv][1]:'Todo '+EST+' (por '+ENN[lv][0]+')'}</option>${G.map(u=>`<option value="${u.k}" ${String(st.es.u)===String(u.k)?'selected':''}>${esc(eName(lv,u.k))}</option>`).join('')}</select>`:''}</div>`;
+  h+=eHero()+eCompare();
+  h+=`<div class="es-h">Secciones de ${esc(st.es.u!=null&&lv!=='est'?eName(lv,st.es.u):EST)}</div>${eTiles(ii)}<p class="es-hint">Clic en un recuadro para resaltar esas secciones en el mapa.</p>`;
+  const n=st.es.seg?ii.map(i=>E.by[i]).filter(x=>x&&eMatch(x,st.es.seg)).length:ii.length;
+  h+=`<button class="es-tb" id="etab">${st.es.seg?`Ver las ${fmt(n)} secciones: ${ECAT[st.es.seg][0].toLowerCase()}`:'Ver tabla de secciones y metas'}</button>`;
+  if(lv!=='est'&&st.es.u==null){const U=eUnitSort(eUnits(lv)); h+=`<div class="es-h">Por ${ENN[lv][0]}</div><div class="es-ul">${U.map(z=>eUnitBtn(z)).join('')}</div>`;}
+  const {ym,same}=eProjW();
+  h+=`<p class="es-f">Fuente: INE, Sistema de Elecciones Estatales y Federales, ${yr2(same,ym)}. Metas y proyección son estimaciones propias. Meta de una sección: votos para ganarla, o los que ya obtuvo si la ganó. Secciones a ganar: las perdidas más cerradas hasta sumar los votos que faltan, suponiendo votos nuevos. Proyección: promedio ponderado de la votación por partido (50% elecciones de ${ym}${same.length===2?', 30% '+eLabel(same[1])+' y 20% '+eLabel(same[0]):same[0]?', 50% '+eLabel(same[0]):''}). Cuando el escenario separa una coalición, sus votos compartidos se reparten en partes iguales.</p></div>`;
   return h;}
-/* tabla completa de secciones y metas */
-function eTableRows(){const ek=eRef(),A=eAlly(),ii=eSelII(),E=eSecs(); let R=null,du=null; if(A){du=eDuel(ek,ii,A); if(du) R=eRoute(ii,du.gap);}
-  const inR={}; if(R) R.c.forEach(y=>{if(y.ord) inR[y.x.i]=y;});
-  return ii.map(i=>E.by[i]).filter(Boolean).map(x=>{const y=inR[x.i],pot=A?ePot(x):0; return {x,ord:y?y.ord:null,pot,meta:A?Math.round(x.mine+(y?y.p:0)):null,acc:y&&du&&du.gap>0?Math.min(100,100*y.acc/du.gap):null};});}
-const ENUM=['s','dl','df','ln','mine','rv','dif','pot','meta','acc','mg','mv','oc','vol','ord'];
+const yr2=(same,ym)=>[...new Set(same.map(e=>D.E[e].year).concat([ym]))].sort().join(', ');
+function eUnitBtn(z){const A=eAlly(); let r,s;
+  if(!A){r=`<em>${z.m.toFixed(1)} pts</em>`; s=`${esc(z.wn)} sobre ${esc(z.sn)} · proyección: ${esc(z.prT)}`; return `<button data-eu="${z.k}"><span><i class="es-d" style="background:${C[z.lead]}"></i>${esc(z.name)}</span>${r}<small>${s}</small></button>`;}
+  if(z.con){r=`<em class="${ESTL[z.st][1]}">${z.gap>0?'faltan '+fmt(z.gap):'gana +'+fmt(-z.gap)}</em>`; s=`contra ${esc(z.rvN)} · meta ${fmt(z.meta)} votos${z.gap>0?' · ganar '+fmt(z.n)+' secciones · '+ESTL[z.st][0].toLowerCase():''} · proyección ${pjTxt({mg:z.pr})}`;}
+  else {r=`<em>${fmt(z.n)} a ganar</em>`; s=`${z.sec} secciones · ${z.gan} ganadas con ventaja · ${z.dis} en disputa · ${z.pue} se pueden ganar`;}
+  return `<button data-eu="${z.k}"><span>${esc(z.name)}</span>${r}<small>${s}</small></button>`;}
+/* tabla: secciones o unidades, con recuadros que filtran, orden, búsqueda y CSV */
+function eCols(tab){const A=eAlly(),me=A?esc(eSide(A)):'',dot=x=>`<i class="es-d" style="background:${ECAT[x.cat][2]}"></i>${ECAT[x.cat][0]}`,si=(x,f)=>x?'Sí':'';
+  if(tab==='sec'){const b=[['s','Sección',r=>S[r.i].s,r=>S[r.i].s,1],['mun','Municipio',r=>esc(MUN[S[r.i].m]),r=>MUN[S[r.i].m]],['dl','DL',r=>S[r.i].dl,r=>S[r.i].dl,1],['df','DF',r=>S[r.i].df,r=>S[r.i].df,1],['cat','Situación',dot,r=>r.cat]];
+    if(A) return [['ord','Prioridad',r=>r.ord||'—',r=>r.ord||1e9,1]].concat(b,[['duro','Voto duro',r=>si(r.duro),r=>r.duro?0:1],['sw','Switcher',r=>si(r.sw),r=>r.sw?0:1],['mine','Votos '+me,r=>fmt(Math.round(r.mine)),r=>r.mine,1],['rvN','Rival principal',r=>esc(r.rvN),r=>r.rvN],['rv','Votos del rival',r=>fmt(Math.round(r.rv)),r=>r.rv,1],['dif','Diferencia',r=>{const d=Math.round(r.mine-r.rv); return `<span class="${d>=0?'up':'dn'}">${d>=0?'+':''}${fmt(d)}</span>`;},r=>r.mine-r.rv,1],['meta','Meta estimada (votos)',r=>`<b>${fmt(r.mg>0?Math.round(r.mine):Math.round(r.rv)+1)}</b>`,r=>r.mg>0?r.mine:r.rv+1,1]]);
+    return b.concat([['wn','Ganador',r=>esc(r.wn),r=>r.wn],['sn','Segundo lugar',r=>esc(r.sn),r=>r.sn],['mg','Ventaja (pts)',r=>r.mg.toFixed(1),r=>r.mg,1],['mv','Ventaja (votos)',r=>fmt(r.mv),r=>r.mv,1],['duro','Voto duro del ganador',r=>si(r.duro),r=>r.duro?0:1],['sw','Switcher',r=>si(r.sw),r=>r.sw?0:1],['ln','Lista nominal',r=>fmt(r.ln),r=>r.ln,1]]);}
+  const nm=[['name',ELV[tab],r=>esc(r.name),r=>tab==='mun'?r.name:r.k]];
+  if(!A) return nm.concat([['wn','Ganador',r=>`<i class="es-d" style="background:${C[r.lead]}"></i>${esc(r.wn)}`,r=>r.wn],['sn','Segundo lugar',r=>esc(r.sn),r=>r.sn],['m','Ventaja (pts)',r=>r.m.toFixed(1),r=>r.m,1],['mv','Ventaja (votos)',r=>fmt(r.mv),r=>r.mv,1],['com','Secciones competidas',r=>fmt(r.com),r=>r.com,1],['prT','Proyección estimada',r=>esc(r.prT),r=>r.pr?r.pr.mg:0]]);
+  if(tab===eNat()) return nm.concat([['me','Votos '+me,r=>fmt(Math.round(r.me)),r=>r.me,1],['rvN','Compite contra',r=>esc(r.rvN),r=>r.rvN],['rv','Votos del rival',r=>fmt(Math.round(r.rv)),r=>r.rv,1],['meta','Meta estimada (votos)',r=>`<b>${fmt(r.meta)}</b>`,r=>r.meta,1],['gap','Faltan / ventaja',r=>`<span class="${r.gap>0?'dn':'up'}">${r.gap>0?fmt(r.gap):'gana +'+fmt(-r.gap)}</span>`,r=>r.gap,1],['n','Secciones a ganar',r=>r.gap>0?fmt(r.n):'—',r=>r.n,1],['st','Situación',r=>`<b class="es-stl ${ESTL[r.st][1]}">${ESTL[r.st][0]}</b>`,r=>r.st],['pr','Proyección estimada',r=>pjTxt({mg:r.pr}),r=>r.pr==null?-999:r.pr,1]]);
+  return nm.concat([['sec','Secciones',r=>fmt(r.sec),r=>r.sec,1],['gan','Ganadas con ventaja',r=>fmt(r.gan),r=>r.gan,1],['dis','En disputa',r=>fmt(r.dis),r=>r.dis,1],['pue','Se pueden ganar',r=>fmt(r.pue),r=>r.pue,1],['per','Perdidas',r=>fmt(r.per),r=>r.per,1],['n','Secciones a ganar para la meta',r=>`<b>${fmt(r.n)}</b>`,r=>r.n,1],['add','Votos a sumar',r=>fmt(r.add),r=>r.add,1],['meta','Meta estimada (votos)',r=>fmt(r.meta),r=>r.meta,1]]);}
 function eTable(){let m=$('estm'); if(!m){m=document.createElement('div'); m.id='estm'; m.className='estm'; document.body.appendChild(m);}
-  const A=eAlly(),lv=eLv(),rows0=eTableRows(),q=norm(st.es.q||''),rows=rows0.filter(r=>!q||String(S[r.x.i].s).startsWith(q)||norm(MUN[S[r.x.i].m]).includes(q));
-  const segN=x=>!st.party&&x.seg==='bas'?'Bastión de '+NM[x.lead]:x.seg==='bas'?'Bastión propio':ESC[x.seg][1];
-  const cols=A?[['ord','Orden en la ruta',r=>r.ord||'—',r=>r.ord||1e9],['s','Sección',r=>S[r.x.i].s,r=>S[r.x.i].s],['mun','Municipio',r=>esc(MUN[S[r.x.i].m]),r=>MUN[S[r.x.i].m]],['dl','DL',r=>S[r.x.i].dl,r=>S[r.x.i].dl],['df','DF',r=>S[r.x.i].df,r=>S[r.x.i].df],['seg','Tipo',r=>`<i class="es-d" style="background:${ESC[r.x.seg][3]}"></i>${segN(r.x)}`,r=>r.x.seg],['ln','Lista nominal',r=>fmt(r.x.ln),r=>r.x.ln],['mine','Votos '+esc(eSide(A)),r=>fmt(Math.round(r.x.mine)),r=>r.x.mine],['rv','Votos del rival',r=>fmt(Math.round(r.x.rv)),r=>r.x.rv],['dif','Diferencia',r=>{const d=Math.round(r.x.mine-r.x.rv); return `<span class="${d>=0?'up':'dn'}">${d>=0?'+':''}${fmt(d)}</span>`;},r=>r.x.mine-r.x.rv],['pot','Votos alcanzables',r=>fmt(Math.round(r.pot)),r=>r.pot],['meta','Meta de votos',r=>`<b>${fmt(r.meta)}</b>`,r=>r.meta],['acc','Avance acumulado de la brecha',r=>r.acc==null?'—':r.acc.toFixed(0)+'%',r=>r.acc==null?-1:r.acc]]
-    :[['s','Sección',r=>S[r.x.i].s,r=>S[r.x.i].s],['mun','Municipio',r=>esc(MUN[S[r.x.i].m]),r=>MUN[S[r.x.i].m]],['dl','DL',r=>S[r.x.i].dl,r=>S[r.x.i].dl],['df','DF',r=>S[r.x.i].df,r=>S[r.x.i].df],['seg','Tipo',r=>`<i class="es-d" style="background:${r.x.seg==='bas'?C[r.x.lead]:ESC[r.x.seg][3]}"></i>${segN(r.x)}`,r=>r.x.seg],['wn','Ganador',r=>esc(r.x.wn),r=>r.x.wn],['mg','Margen (pts)',r=>r.x.mg.toFixed(1),r=>r.x.mg],['mv','Diferencia (votos)',r=>fmt(r.x.mv),r=>r.x.mv],['ln','Lista nominal',r=>fmt(r.x.ln),r=>r.x.ln],['oc','Ocasionales',r=>fmt(Math.round(r.x.oc)),r=>r.x.oc],['vol','Voto volátil',r=>r.x.vol==null?'—':pct(r.x.vol,1),r=>r.x.vol||0]];
-  const sk=cols.find(c=>c[0]===st.es.sk)?st.es.sk:(A?'ord':'mg'),sc=cols.find(c=>c[0]===sk),srt=(a,b)=>{const u=sc[3](a),v=sc[3](b); return (u>v?1:u<v?-1:0)*st.es.sd;}; rows.sort(srt);
-  const U=eUnitRows(),ut=lv!=='est'&&U.length,lim=st.es.lim||300,cl=k=>ENUM.includes(k)?'r':'';
-  const uniT=()=>`<table><thead><tr><th>${ELV[lv]}</th>${A?'<th class="r">Votos '+esc(eSide(A))+'</th><th>Rival</th><th class="r">Votos del rival</th><th class="r">Meta para ganar</th><th class="r">Faltan</th><th class="r">Secciones de la ruta</th>':'<th>Ganador</th><th class="r">Margen (pts)</th><th class="r">Diferencia (votos)</th>'}</tr></thead><tbody>${U.map(z=>A?`<tr data-eu="${z.u.k}"><td>${esc(eName(lv,z.u.k))}</td><td class="r">${fmt(Math.round(z.d.mine))}</td><td>${esc(z.d.riv?z.d.riv.name:'—')}</td><td class="r">${fmt(Math.round(z.d.riv?z.d.riv.votes:0))}</td><td class="r"><b>${fmt(Math.round(z.d.riv?z.d.riv.votes:0)+1)}</b></td><td class="r"><span class="${z.d.gap>0?'dn':'up'}">${z.d.gap>0?fmt(z.d.gap):'gana +'+fmt(-z.d.gap)}</span></td><td class="r">${z.d.gap>0?(z.r.ok?z.r.n:'no alcanza'):'—'}</td></tr>`:`<tr data-eu="${z.u.k}"><td>${esc(eName(lv,z.u.k))}</td><td><i class="es-d" style="background:${C[z.w.lead]}"></i>${esc(z.w.bl[0].name)}</td><td class="r">${z.w.m.toFixed(1)}</td><td class="r">${fmt(Math.round(z.w.bl[0].votes-(z.w.bl[1]?z.w.bl[1].votes:0)))}</td></tr>`).join('')}</tbody></table>`;
-  const secT=()=>`<table><thead><tr>${cols.map(c=>`<th data-esk="${c[0]}" class="${cl(c[0])}">${c[1]}${c[0]===sk?(st.es.sd>0?' ↑':' ↓'):''}</th>`).join('')}</tr></thead><tbody>${rows.slice(0,lim).map(r=>`<tr class="${r.ord?'inr':''}" data-esec="${r.x.i}">${cols.map(c=>`<td class="${cl(c[0])}">${c[2](r)}</td>`).join('')}</tr>`).join('')}</tbody></table>${rows.length>lim?`<button class="es-x" id="estmore" style="margin:10px auto;display:block">Ver ${Math.min(300,rows.length-lim)} más de ${fmt(rows.length)}</button>`:''}`;
-  const isU=st.es.tab==='uni'&&ut;
-  m.innerHTML=`<div class="estm-b" role="dialog" aria-modal="true" aria-label="Tabla de estrategia"><div class="estm-h"><div><h3>${A?'Secciones y metas · '+esc(eSide(A)):'Secciones · panorama competitivo'}</h3><p>${esc(eLabel(eRef()))} · ${esc(st.es.u!=null&&lv!=='est'?eName(lv,st.es.u):EST)} · ${fmt(rows0.length)} secciones</p></div><button class="x" id="estx" aria-label="Cerrar">✕</button></div>
-   <div class="estm-t">${ut?`<div class="es-ch"><button data-etab="sec" aria-pressed="${!isU}">Secciones</button><button data-etab="uni" aria-pressed="${!!isU}">${ENN[lv][1][0].toUpperCase()+ENN[lv][1].slice(1)}</button></div>`:''}${isU?'':`<input id="estq" placeholder="Buscar sección o municipio" value="${esc(st.es.q||'')}">`}<button class="es-x" id="estcsv">Descargar CSV</button></div>
-   <div class="estm-w">${isU?uniT():secT()}</div>
-   <p class="es-f">${A?'Meta de votos de la sección = votos que obtuvo la alianza + votos alcanzables si la sección está en la ruta. Las filas resaltadas forman la ruta. ':''}Fuente: INE, SEE ${D.E[eRef()].year}; estimación propia.</p></div>`;
+  const A=eAlly(),E=eSecs(),lv=eLv(),ii=eSelII(),tabs=[['sec','Secciones']].concat(['mun','dl','df'].map(k=>[k,ENN[k][1][0].toUpperCase()+ENN[k][1].slice(1)])),tab=tabs.find(t=>t[0]===st.es.tab)?st.es.tab:'sec',cols=eCols(tab),q=norm(st.es.q||'');
+  let rows=tab==='sec'?ii.map(i=>E.by[i]).filter(x=>x&&eMatch(x,st.es.seg)):eUnits(tab);
+  if(q) rows=rows.filter(r=>tab==='sec'?String(S[r.i].s).startsWith(q)||norm(MUN[S[r.i].m]).includes(q):norm(r.name).includes(q));
+  const sk=cols.find(c=>c[0]===st.es.sk)?st.es.sk:(tab==='sec'?(A?'ord':'mg'):null),sc=cols.find(c=>c[0]===sk); if(sc) rows.sort((a,b)=>{const u=sc[3](a),v=sc[3](b); return (u>v?1:u<v?-1:0)*st.es.sd;}); else eUnitSort(rows);
+  const lim=st.es.lim||300,where=st.es.u!=null&&lv!=='est'?eName(lv,st.es.u):EST;
+  m.innerHTML=`<div class="estm-b" role="dialog" aria-modal="true" aria-label="Tabla de estrategia"><div class="estm-h"><div><h3>${A?esc(eSide(A))+': secciones y metas':'Panorama competitivo'}</h3><p>${esc(eLabel(eRef()))} · ${esc(where)}</p></div><button class="x" id="estx" aria-label="Cerrar">✕</button></div>
+   ${eTiles(ii,'row')}
+   <div class="estm-t"><div class="es-ch">${tabs.map(t=>`<button data-etab="${t[0]}" aria-pressed="${t[0]===tab}">${t[1]}</button>`).join('')}</div><input id="estq" placeholder="${tab==='sec'?'Buscar sección o municipio':'Buscar'}" value="${esc(st.es.q||'')}"><button class="es-x" id="estcsv">Descargar CSV</button></div>
+   ${tab==='sec'&&st.es.seg?`<div class="es-fl">Mostrando: <b>${ECAT[st.es.seg][0]}</b> (${fmt(rows.length)}) <button class="es-x" data-eseg="${st.es.seg}">Quitar filtro</button></div>`:''}
+   <div class="estm-w"><table><thead><tr>${cols.map(c=>`<th data-esk="${c[0]}" class="${c[4]?'r':''}">${c[1]}${c[0]===sk?(st.es.sd>0?' ↑':' ↓'):''}</th>`).join('')}</tr></thead><tbody>${rows.slice(0,lim).map(r=>`<tr class="${tab==='sec'&&r.add?'inr':''}" ${tab==='sec'?`data-esec="${r.i}"`:`data-eunit2="${r.k}"`}>${cols.map(c=>`<td class="${c[4]?'r':''}">${c[2](r)}</td>`).join('')}</tr>`).join('')||`<tr><td colspan="${cols.length}">Sin secciones con este filtro.</td></tr>`}</tbody></table>${rows.length>lim?`<button class="es-x" id="estmore" style="margin:10px auto;display:block">Ver ${Math.min(300,rows.length-lim)} más de ${fmt(rows.length)}</button>`:''}</div>
+   <p class="es-f">${A?'Meta estimada: votos para ganar la sección o el territorio (o retener lo ganado). Filas resaltadas: secciones a ganar para cubrir los votos que faltan. ':''}Clic en una fila para verla en el mapa. Fuente: INE; estimación propia.</p></div>`;
   m.classList.add('on');
   const close=()=>m.classList.remove('on'); $('estx').onclick=close; m.onclick=e=>{if(e.target===m) close();};
-  m.querySelectorAll('[data-etab]').forEach(b=>b.onclick=()=>{st.es.tab=b.dataset.etab; eTable();});
+  m.querySelectorAll('[data-etab]').forEach(b=>b.onclick=()=>{st.es.tab=b.dataset.etab; st.es.sk=null; st.es.sd=1; st.es.q=''; st.es.lim=300; eTable();});
+  m.querySelectorAll('[data-eseg]').forEach(b=>b.onclick=()=>{const k=b.dataset.eseg; st.es.seg=st.es.seg===k?null:k; st.es.tab='sec'; render();});
   m.querySelectorAll('[data-esk]').forEach(t=>t.onclick=()=>{const k=t.dataset.esk; st.es.sd=st.es.sk===k?-st.es.sd:1; st.es.sk=k; eTable();});
-  const qi=$('estq'); if(qi) qi.oninput=()=>{st.es.q=qi.value; st.es.lim=300; eTable(); const n=$('estq'); n.focus(); n.setSelectionRange(n.value.length,n.value.length);};
+  const qi=$('estq'); qi.oninput=()=>{st.es.q=qi.value; st.es.lim=300; eTable(); const n=$('estq'); n.focus(); n.setSelectionRange(n.value.length,n.value.length);};
   if($('estmore')) $('estmore').onclick=()=>{st.es.lim=lim+300; eTable();};
   m.querySelectorAll('tr[data-esec]').forEach(r=>r.onclick=()=>{const i=+r.dataset.esec; close(); st.sel=i; paint(); fit([i]);});
-  m.querySelectorAll('tr[data-eu]').forEach(r=>r.onclick=()=>{close(); st.es.u=+r.dataset.eu; st.es.tab='sec'; applyScope(lv,st.es.u);});
-  $('estcsv').onclick=()=>{const qq=x=>'"'+String(x).replace(/"/g,'""')+'"',strip=h=>String(h).replace(/<[^>]+>/g,''),tmp=document.createElement('div');
-    let lines; if(isU){tmp.innerHTML=uniT(); lines=[...tmp.querySelectorAll('tr')].map(tr=>[...tr.children].map(c=>qq(c.textContent)).join(','));}
-    else lines=[cols.map(c=>qq(strip(c[1]))).join(',')].concat(rows0.slice().sort(srt).map(r=>cols.map(c=>qq(strip(c[2](r)))).join(',')));
-    saveFile(('Estrategia_'+norm(EST)+'_'+st.es.obj+'_'+(A?A.join('-'):'panorama')+(st.es.u!=null?'_'+lv+st.es.u:'')+(isU?'_'+lv:'')).replace(/[^\w]+/g,'_')+'.csv','﻿'+lines.join('\n'),$('estcsv'));};}
+  m.querySelectorAll('tr[data-eunit2]').forEach(r=>r.onclick=()=>{close(); st.es.lv=tab; st.es.u=+r.dataset.eunit2; st.es.tab='sec'; applyScope(tab,st.es.u);});
+  $('estcsv').onclick=()=>{const qq=x=>'"'+String(x).replace(/"/g,'""')+'"',strip=h=>String(h).replace(/<[^>]+>/g,'');
+    const lines=[cols.map(c=>qq(strip(c[1]))).join(',')].concat(rows.map(r=>cols.map(c=>qq(strip(c[2](r)))).join(',')));
+    saveFile(('Estrategia_'+norm(EST)+'_'+st.es.obj+'_'+(A?A.join('-'):'panorama')+'_'+tab+(st.es.seg?'_'+st.es.seg:'')+(st.es.u!=null?'_'+lv+st.es.u:'')).replace(/[^\w]+/g,'_')+'.csv','﻿'+lines.join('\n'),$('estcsv'));};}
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('estm')&&$('estm').classList.contains('on')){$('estm').classList.remove('on'); e.stopImmediatePropagation();}},true);
 /* al entrar: tomar la selección actual (partido, elección, territorio) */
 function estEnter(){const t=st.elec?st.elec.split('_')[0]:null; if(t&&EOBJ.find(o=>o[0]===t)) st.es.obj=t;
   st.es.lv=null; st.es.u=null; st.es.seg=null; const f=st.f;
   if(st.terr){st.es.lv='mun'; st.es.u=+st.terr;} else if(f.dl.length===1){st.es.lv='dl'; st.es.u=f.dl[0];} else if(f.df.length===1){st.es.lv='df'; st.es.u=f.df[0];} else if(f.mun.length===1){st.es.lv='mun'; st.es.u=f.mun[0];}
-  if(st.es.lv==='mun'&&eNat()==='mun') st.es.lv=null; if(st.es.lv==='dl'&&eNat()==='dl') st.es.lv=null; if(st.es.lv==='df'&&eNat()==='df') st.es.lv=null;
   st.elec=eRef(); $('elec').value=st.elec;}
 function estRender(){const C2=$('col'); C2.innerHTML=estPanel();
   const go=()=>{const lv=eLv(); if(st.es.u!=null&&lv!=='est') applyScope(lv,st.es.u); else applyScope('all',0);};
-  if($('eback')) $('eback').onclick=()=>setView2('map');
-  C2.querySelectorAll('[data-eobj]').forEach(b=>b.onclick=()=>{st.es.obj=b.dataset.eobj; st.es.lv=null; st.es.u=null; st.elec=eRef(); $('elec').value=st.elec; go();});
+  $('eback').onclick=()=>setView2('map');
+  C2.querySelectorAll('[data-eobj]').forEach(b=>b.onclick=()=>{st.es.obj=b.dataset.eobj; st.es.lv=null; st.es.u=null; st.es.seg=null; st.elec=eRef(); $('elec').value=st.elec; go();});
   C2.querySelectorAll('[data-elv]').forEach(b=>b.onclick=()=>{st.es.lv=b.dataset.elv; st.es.u=null; go();});
-  C2.querySelectorAll('[data-epar]').forEach(b=>b.onclick=()=>{st.party=b.dataset.epar; $('party').value=st.party; st.es.ally=null; st.es.seg=null; st.es.sk=st.party?'ord':'mg'; $('rPa').setAttribute('aria-pressed',!!st.party); render(true);});
-  C2.querySelectorAll('[data-esc]').forEach(b=>b.onclick=()=>{st.es.sc=b.dataset.esc; if(st.es.sc==='s3'&&!st.es.ally) st.es.ally=eBlocOf(eRef(),st.party); render();});
+  const us=C2.querySelector('[data-eunit]'); if(us) us.onchange=()=>{st.es.u=us.value===''?null:+us.value; go();};
+  C2.querySelectorAll('[data-epar]').forEach(b=>b.onclick=()=>{st.party=b.dataset.epar; $('party').value=st.party; st.es.ally=null; st.es.seg=null; st.es.sk=null; $('rPa').setAttribute('aria-pressed',!!st.party); render(true);});
+  C2.querySelectorAll('[data-esc]').forEach(b=>b.onclick=()=>{st.es.sc=b.dataset.esc; if(st.es.sc==='s3'&&!st.es.ally) st.es.ally=eBlocOf(eRef(),st.party); st.es.seg=null; render();});
   C2.querySelectorAll('[data-eal]').forEach(b=>b.onclick=()=>{const q=b.dataset.eal,a=(st.es.ally||[st.party]).slice(),j=a.indexOf(q); j>=0?a.splice(j,1):a.push(q); st.es.ally=a; render();});
-  C2.querySelectorAll('[data-eu]').forEach(b=>b.onclick=()=>{const v=b.dataset.eu; st.es.u=v===''?null:+v; go();});
-  C2.querySelectorAll('[data-esl]').forEach(r=>{r.oninput=()=>{const t=r.previousElementSibling; if(t) t.textContent=r.value+'%';}; r.onchange=()=>{st.es[r.dataset.esl]=+r.value; render();};});
-  C2.querySelectorAll('.es-sec [data-esec]').forEach(b=>b.onclick=()=>{const i=+b.dataset.esec; st.sel=i; paint(); fit([i]);});
-  if($('etab')) $('etab').onclick=()=>{st.es.q=''; st.es.lim=300; st.es.tab='sec'; eTable();};
+  C2.querySelectorAll('[data-eu]').forEach(b=>b.onclick=()=>{st.es.u=+b.dataset.eu; go();});
+  C2.querySelectorAll('[data-eseg]').forEach(b=>b.onclick=()=>{const k=b.dataset.eseg; st.es.seg=st.es.seg===k?null:k; render();});
+  $('etab').onclick=()=>{st.es.q=''; st.es.lim=300; st.es.tab='sec'; st.es.sk=null; eTable();};
   if($('estm')&&$('estm').classList.contains('on')) eTable();}
 
 /* ===== informe PDF de la vista actual ===== */

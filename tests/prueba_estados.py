@@ -100,9 +100,13 @@ async def probar(b, url, cab):
             for sc in ['s1', 's2', 's3']:
                 await js(f"const b=document.querySelector('[data-esc=\"{sc}\"]'); if(b) b.click()", f'escenario {sc}'); await pg.wait_for_timeout(150)
             await js("const b=document.querySelector('[data-eal]'); if(b) b.click()", 'alianza'); await pg.wait_for_timeout(150)
-            await js("document.getElementById('etab').click(); const u=document.querySelector('[data-etab=\"uni\"]'); if(u) u.click()", 'tabla estrategia'); await pg.wait_for_timeout(250)
-            n = await pg.evaluate("document.querySelectorAll('#estm tbody tr').length")
-            if not n: prob.append(f'tabla de estrategia vacía {par} {o}')
+            await js("document.querySelector('#col [data-eseg=\"rt\"]').click()", 'recuadro ruta'); await pg.wait_for_timeout(200)
+            await js("document.getElementById('etab').click()", 'tabla estrategia'); await pg.wait_for_timeout(250)
+            for tb in ['sec', 'mun', 'dl', 'df']:
+                await js(f"document.querySelector('[data-etab=\"{tb}\"]').click()", f'pestaña {tb}'); await pg.wait_for_timeout(200)
+                n = await pg.evaluate("document.querySelectorAll('#estm tbody tr').length")
+                if not n: prob.append(f'tabla de estrategia vacía {par} {o} {tb}')
+            await js("const b=document.querySelector('#estm [data-eseg=\"rt\"]'); if(b&&b.getAttribute('aria-pressed')==='true') b.click()", 'quitar filtro')
             await js("document.getElementById('estx').click()", 'cerrar tabla')
             await js("document.querySelector('[data-ecol=\"win\"]').click()", 'ganador'); await js("document.querySelector('[data-ecol=\"seg\"]').click()", 'tipo')
         await js("document.getElementById('eback').click()", 'volver')
