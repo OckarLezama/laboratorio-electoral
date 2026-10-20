@@ -1,0 +1,14 @@
+# Bases crudas y temporales: nunca al repositorio
+_tmp/
+*.zip
+*.7z
+*.shp
+*.shx
+*.dbf
+*.prj
+*.cpg
+*.xlsx
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db
