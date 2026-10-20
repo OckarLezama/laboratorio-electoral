@@ -101,7 +101,7 @@ async def probar(b, url, cab):
                 await js("document.querySelectorAll('[data-esa]').forEach(b=>b.click())", 'escenarios'); await js("document.querySelectorAll('[data-erv]').forEach(b=>b.click())", 'rivales')
                 await js(f"const b=document.querySelector('[data-esc=\"{sc}\"]'); if(b) b.click()", f'escenario {sc}'); await pg.wait_for_timeout(150)
             await js("const b=document.querySelector('[data-eal]'); if(b) b.click()", 'alianza'); await pg.wait_for_timeout(150)
-            await js("document.querySelector('#col [data-eseg=\"rt\"]').click()", 'recuadro ruta'); await pg.wait_for_timeout(200)
+            await js("const b=document.querySelector('#col [data-eseg=\"rt\"]')||document.querySelector('#col [data-eseg=\"con\"]'); b.click()", 'recuadro ruta'); await pg.wait_for_timeout(200)
             await js("document.getElementById('etab').click()", 'tabla estrategia'); await pg.wait_for_timeout(250)
             for tb in ['sec', 'mun', 'dl', 'df']:
                 await js(f"document.querySelector('[data-etab=\"{tb}\"]').click()", f'pestaña {tb}'); await pg.wait_for_timeout(200)

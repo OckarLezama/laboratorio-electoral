@@ -994,3 +994,8 @@ body.tview .mbar{bottom:auto;top:12px;right:calc(var(--cw) + 34px)}
 .es-lv3 .es-poll{margin-top:8px}
 .es-acs{grid-template-columns:repeat(6,minmax(0,1fr))}.es-acs .es-ac{grid-column:span 2}.es-acs .es-ac:nth-child(n+4){grid-column:span 3}
 .es-acs .es-ac small{display:none}.es-acs .es-ac{padding:6px 8px}
+.es-cfg summary b{font-size:12.5px}
+.es-sc{padding:7px 10px;gap:3px}.es-sc b{font-size:13px}
+.mcard.es-leg button{flex-wrap:wrap}.es-ld{flex-basis:100%;padding-left:19px;font-size:10.5px;color:var(--muted);margin-top:-2px}
+.mcard.es-leg button[aria-pressed="true"] .es-ld{color:#D5E6E5}
+.es-gen{padding:6px 10px}.es-gen b{font-size:15px}
