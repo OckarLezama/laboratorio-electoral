@@ -12,10 +12,13 @@ css/estilos.css       estilos                 │ generados por pipeline/sitio.p
 js/app.js             código de la plataforma │ no se editan a mano
 data/estados.json     estados disponibles     ┘
 data/<clave>.json     datos procesados de cada estado (generados por el proceso de datos)
+data/<clave>/capas/   bases adicionales del estado; se descargan solo cuando se usan
+data/capas.json       registro de bases disponibles (generado)
 
 src/                  código fuente que sí se edita (módulos JS, CSS y estructura HTML)
 pipeline/             proceso de datos: de las bases crudas del INE a data/<clave>.json
   config.json         ruta a tu carpeta "Resultados INE" y fechas de corte
+  capas.json          registro de bases adicionales (CONAPO hoy; INEGI y otras después)
   estados.json        claves de los 32 estados
   insumos/            catálogo legal 2027 y contorno de los estados (para el mapa de contexto)
 tests/                prueba automática de la plataforma

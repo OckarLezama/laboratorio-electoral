@@ -11,6 +11,8 @@ const norm=t=>String(t).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
 const C={MORENA:'#A9455E',PAN:'#3F72B5',PRI:'#2F8F64',PRD:'#D9A928',PVEM:'#7FB24E',PT:'#CF4B42',MC:'#E9813F',OTROS:'#A0A7A6'};
 const NM={MORENA:'Morena',PAN:'PAN',PRI:'PRI',PRD:'PRD',PVEM:'PVEM',PT:'PT',MC:'MC',OTROS:'Otros'};
 const MAIN=['MORENA','PAN','PRI','PRD','PVEM','PT','MC'];
+/* registro de tarjetas: cada módulo (archivo 7x_*.js) llama tarjeta({id,titulo,resumen,icono,html(ctx)}) y aparece en "Gráficas" */
+const TARJ=[]; const tarjeta=def=>TARJ.push(def);
 const NMX={PES:'PES',RSP:'RSP',FXM:'FxM',NA:'Nueva Alianza',IND:'Independientes',PH:'Humanista',PCHU:'Chiapas Unido',PMCH:'Mover a Chiapas',PPCH:'Popular Chiapaneco',PUP:'PUP',PSD:'PSD',PRS:'PRS',MUJER:'PMR',PMR:'PMR',MAS:'MAS',CQROO:'Confianza por QRoo',AVE:'Alternativa Veracruzana',PC:'Cardenista',TXVER:'Todos por Veracruz',PODEMOS:'Podemos',UC:'Unidad Ciudadana',PLC:'PLC',PESC:'PESC'};
 const XPAL=['#8C6BB1','#4E9BB9','#B07A8C','#6D8A96','#B98B4F','#7C9A6D','#9A8C5B','#5E6B8C'];
 D.P8.filter(p=>!MAIN.includes(p)&&p!=='OTROS').forEach((p,j)=>{NM[p]=NMX[p]||p; C[p]=p==='IND'?'#7E8A89':XPAL[j%XPAL.length];});
@@ -87,6 +89,7 @@ function passF(i){const f=st.f; if(f.tipo.length&&!f.tipo.includes(tipoN(S[i].t)
   if(f.win.length&&st.elec){const w=winner(st.elec,[i]); if(!w||!f.win.includes(w.lead)) return false;}
   if(f.cmp.length){const w=st.elec?winner(st.elec,[i]):null; const ok=f.cmp.some(c=>c==='cer'?w&&w.m<5:c==='sw'?SW[i]:c==='chg'?(()=>{const pk=prevOf(st.elec),a=winner(st.elec,[i]),b=pk&&winner(pk,[i]); return a&&b&&a.lead!==b.lead;})():c==='vol'?(V2.vol[i]||0)>DST.vol:c==='abs'?(100-(V2.maxT[i]||100))>DST.ab:false); if(!ok) return false;}
   if(f.age.length){const d=demo([i]); const ok=f.age.some(c=>c==='jv'?d.jv>DST.d.jv*1.1:c==='ma'?d.ma>DST.d.ma*1.1:c==='mj'?d.mj>52:false); if(!ok) return false;}
+  if(!xPass(i)) return false;
   return true;}
 const scope=()=>ALL.filter(i=>munScope(i)&&passF(i));
 const nf=()=>Object.values(st.f).reduce((a,x)=>a+x.length,0);

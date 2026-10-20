@@ -2,6 +2,7 @@
 
   python pipeline/lab.py preparar chis      paso 1: extrae insumos de las bases crudas
   python pipeline/lab.py construir chis     paso 2: genera data/chis.json
+  python pipeline/lab.py capas chis         paso 2b: genera las bases adicionales de pipeline/capas.json
   python pipeline/lab.py sitio              paso 3: arma index.html, css/, js/ y data/estados.json
   python pipeline/lab.py todo chis oax      los tres pasos para uno o varios estados
   python pipeline/lab.py estados            lista las claves disponibles
@@ -31,7 +32,7 @@ def main(a):
         for e in ESTADOS:
             print(f'{e["clave"]:6} {e["ent"]:2}  {e["nombre"]}')
         return
-    if cmd in ('preparar', 'construir', 'todo') and not est:
+    if cmd in ('preparar', 'construir', 'capas', 'todo') and not est:
         raise SystemExit('Indica al menos un estado, por ejemplo: python pipeline/lab.py todo chis')
     if cmd in ('preparar', 'todo'):
         from preparar import preparar
@@ -40,11 +41,15 @@ def main(a):
     if cmd in ('construir', 'todo'):
         for e in est:
             construir(e)
+    if cmd in ('capas', 'todo'):
+        from capas import capas
+        for e in est:
+            print(f'[capas] {e["nombre"]}'); capas(e)
     if cmd in ('sitio', 'todo'):
         from sitio import sitio
         sitio()
-    if cmd not in ('preparar', 'construir', 'todo', 'sitio'):
-        raise SystemExit(f'Comando no reconocido: {cmd}. Usa: preparar, construir, sitio, todo o estados.')
+    if cmd not in ('preparar', 'construir', 'capas', 'todo', 'sitio'):
+        raise SystemExit(f'Comando no reconocido: {cmd}. Usa: preparar, construir, capas, sitio, todo o estados.')
 
 
 if __name__ == '__main__':

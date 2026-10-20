@@ -762,3 +762,24 @@ body.tview .tbl{top:62px}
 .tbl td .pc{white-space:nowrap}
 body.tview .mbar{bottom:auto;top:12px;right:calc(var(--cw) + 34px)}
 @media (max-width:860px){.app{grid-template-columns:minmax(0,1fr)}.top,.stage,.main{min-width:0;max-width:100vw}.top>*{min-width:0;max-width:100%}.ctl,.ac,.ac .box,.sel{box-sizing:border-box;max-width:100%}body{overflow-x:hidden}}
+/* otras capas y bases registradas */
+.mcard .ms .mxb{background:transparent;border:1px dashed var(--line);color:var(--teal3);font-weight:600}
+.mcard .ms .mxb[aria-expanded="true"]{border-style:solid;background:var(--tealxl)}
+.mxp{width:100%;margin-top:4px;padding-top:6px;border-top:1px solid var(--hair)}
+.mxg small{display:block;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:2px 0 0}
+.mxg .ms{margin:4px 0 6px!important}
+.xbg{width:100%;margin:4px 0 2px}
+.xbg>small{display:block;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:2px 0 4px}
+.xvr{display:flex;flex-wrap:wrap;align-items:center;gap:5px;width:100%;margin:0 0 7px}
+.xvr>span{width:100%;font-size:11.5px;color:var(--strong);font-weight:600}
+.xvr .opt{height:26px}
+/* nombres largos (Oaxaca) sin desbordar la tabla */
+.tbl td:first-child{white-space:normal;min-width:150px;max-width:230px}
+.tbl td:first-child .tu b{display:block;line-height:1.25}
+.tbl tfoot td,.tbl tr.tot td{white-space:normal}
+.tbl th{white-space:normal;line-height:1.25;vertical-align:bottom}
+.tbl td{padding-left:6px;padding-right:6px}.tbl th{padding-left:6px;padding-right:6px}
+.tbl th{letter-spacing:.02em}
+.tbl .tspk{width:64px;height:auto}
+.tbl td:first-child{min-width:130px}
+.tbl tfoot td .pc{white-space:normal}

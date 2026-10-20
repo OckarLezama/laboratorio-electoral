@@ -67,11 +67,21 @@ async def probar(b, url, cab):
     await js(f"LAB.setElec('{elecs[-1]}')", 'elección')
     for mt in ['mar', 'win', 'par', 'vol', 'abs', 'nul', 'pv', 'pen', 'duro']:
         await js(f"LAB.st.metric='{mt}'; LAB.render(true)", mt); await ver('mapa ' + mt)
-    await js("const s=document.getElementById('party'); s.value='MORENA'; s.onchange(); LAB.setView2('tbl')", 'tabla')
+    # bases adicionales registradas: cada variable como color del mapa, filtro y columna de tabla
+    xs = await pg.evaluate("Object.keys(LAB.XV||{})")
+    for x in xs:
+        await js(f"LAB.st.metric='x_{x}'; LAB.xEnsure('x_{x}',()=>LAB.render(true))", 'capa ' + x); await pg.wait_for_timeout(400); await ver('capa ' + x)
+        await js(f"LAB.st.f['x_{x}']=['a']; LAB.render(true)", 'filtro ' + x); await ver('filtro ' + x)
+        await js(f"LAB.st.f['x_{x}']=[]; LAB.render(true)", 'filtro ' + x)
+    await js("const s=document.getElementById('party'); s.value='MORENA'; s.onchange(); LAB.st.metric=Object.keys(LAB.XV||{}).length?'x_'+Object.keys(LAB.XV)[0]:LAB.st.metric; LAB.setView2('tbl')", 'tabla')
+    await pg.wait_for_timeout(900)   # la tabla termina de abrirse antes de medir
     for tg in ['sec', 'mun', 'dl', 'df']:
         for tv in ['all', 'def', 'dis', 'rec', 'bas']:
             await js(f"LAB.st.tg='{tg}'; LAB.st.tv='{tv}'; LAB.renderTbl(LAB.scope())", f'tabla {tg} {tv}')
             await ver(f'tabla {tg} {tv}')
+            ancho = await pg.evaluate("(()=>{const t=document.querySelector('.tbl table'); return t?[t.offsetWidth,t.parentElement.clientWidth]:[0,0];})()")
+            if ancho[0] > ancho[1] + 2:
+                prob.append((f'tabla {tg} {tv}', 'tabla más ancha que su espacio', ancho))
     await js("LAB.setView2('map')", 'mapa')
     await js("document.querySelector('[data-res]').click()", 'resultados'); await pg.wait_for_timeout(500); await ver('ventana resultados')
     await js("LAB.closeRes()", 'cerrar')

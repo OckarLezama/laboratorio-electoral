@@ -1,0 +1,20 @@
+{
+ "_nota": "Registro de bases adicionales. Cada base se une a las secciones por número de sección o por municipio. Cada variable aparece en la plataforma como color del mapa, filtro (bajo/medio/alto) y columna de la tabla. Ver docs/INSTRUCTIVO.md, sección 'Agregar una base o capa'.",
+ "bases": [
+  {
+   "id": "conapo",
+   "nombre": "Marginación (CONAPO 2020)",
+   "fuente": "CONAPO, Índice de marginación por municipio 2020",
+   "archivo": "FUENTES_COMPLEMENTARIAS/CONAPO_MARGINACION_2020/CONAPO_imm_2020-3.csv",
+   "nivel": "municipio",
+   "columna_estado": "CVE_ENT",
+   "columna_clave": "NOM_MUN",
+   "variables": [
+    {"id": "im", "nombre": "Índice de marginación", "descripcion": "índice municipal de CONAPO (escala 2020): más alto = menos marginación", "expresion": "IM_2020", "unidad": "indice", "decimales": 1, "sentido": "mayor_mejor"},
+    {"id": "analf", "nombre": "Analfabetismo", "descripcion": "población de 15 años o más analfabeta, % del municipio", "expresion": "ANALF", "unidad": "pct", "decimales": 1, "sentido": "mayor_peor"},
+    {"id": "sbasc", "nombre": "Sin educación básica", "descripcion": "población de 15 años o más sin educación básica, % del municipio", "expresion": "SBASC", "unidad": "pct", "decimales": 1, "sentido": "mayor_peor"},
+    {"id": "po2sm", "nombre": "Ingresos bajos", "descripcion": "población ocupada con ingresos de hasta 2 salarios mínimos, % del municipio", "expresion": "PO2SM", "unidad": "pct", "decimales": 1, "sentido": "mayor_peor"}
+   ]
+  }
+ ]
+}

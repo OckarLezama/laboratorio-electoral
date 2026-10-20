@@ -35,6 +35,7 @@ Van dentro de la carpeta `base`, con estas rutas. Nunca se suben al repositorio.
 python pipeline/lab.py estados           # lista las claves (chis, oax, ver…)
 python pipeline/lab.py preparar chis     # paso 1: extrae lo del estado a "Resultados INE/LAB_POLITICO_DATOS/_tmp/chis"
 python pipeline/lab.py construir chis    # paso 2: genera data/chis.json
+python pipeline/lab.py capas chis        # paso 2b: genera las bases adicionales (pipeline/capas.json)
 python pipeline/lab.py sitio             # paso 3: arma index.html, css/, js/ y data/estados.json
 python pipeline/lab.py todo chis oax     # los tres pasos para uno o varios estados
 python tests/prueba_estados.py           # prueba automática de todos los estados
@@ -75,6 +76,39 @@ Ten en cuenta:
 
 No edites `js/app.js` ni `css/estilos.css`: se sobrescriben.
 
+**Agregar una base o capa por sección o por municipio (INEGI, encuestas, etc.)**
+1. Pon el archivo CSV en tu carpeta "Resultados INE". Necesita una columna con el número de sección, o con el nombre del municipio, y otra con la clave del estado si trae varios estados.
+2. Regístralo en `pipeline/capas.json`, copiando el bloque de CONAPO. Por cada base indicas:
+   - `id`, `nombre` y `fuente`;
+   - `archivo`: la ruta dentro de "Resultados INE"; puede usar `{ent}` para el número de estado;
+   - `nivel`: `seccion` o `municipio`;
+   - `columna_estado` y `columna_clave`.
+3. Por cada variable de la base indicas:
+   - `id` y `nombre`;
+   - `descripcion`: la frase que aparece en la plataforma;
+   - `expresion`: una columna, o una operación entre columnas, por ejemplo `P15YM_SE / P_15YMAS * 100`;
+   - `unidad`: `pct`, `indice` o `n`;
+   - `decimales`;
+   - `sentido`: `mayor_peor`, `mayor_mejor` u omitido.
+4. Corre `python pipeline/lab.py capas <estado>` y luego `python pipeline/lab.py sitio`.
+5. Cada variable aparece sola:
+   - en "Colorear el mapa por → Otras capas";
+   - en "Explorar → Otras bases", como filtro bajo, medio o alto;
+   - en la ficha al pasar el cursor;
+   - como columna en la tabla y en el CSV;
+   - en la tarjeta "Contexto socioeconómico".
+
+   No hay que tocar código.
+
+**Agregar una tarjeta nueva (módulo)**
+Crea un archivo `src/7x_nombre.js` con `tarjeta({id, titulo, resumen, icono, html(ctx)})`; usa como ejemplo `src/75_contexto.js`. `ctx` trae:
+- las secciones seleccionadas (`idx`);
+- la elección (`ek`) y sus totales (`T`);
+- el partido (`p`);
+- las funciones de encabezado y fuente (`hd`, `ft`).
+
+La tarjeta aparece en "Gráficas" sin modificar los demás archivos.
+
 **Un partido local aparece con su sigla (por ejemplo "PLC")**
 Agrega su nombre corto en el diccionario `NMX` al inicio de `src/10_core.js`. Si el INE usa varias siglas para el mismo partido, agrégalas en `ALIAS` de `pipeline/construir.py`.
 
@@ -83,3 +117,4 @@ Agrega su nombre corto en el diccionario `NMX` al inicio de `src/10_core.js`. Si
 - **Votos de coalición:** se reparten en partes iguales entre los partidos que la integran.
 - **Escaños de mayoría relativa:** cuando gana una coalición, se asignan al partido que la encabeza (marcado con "+"). Las plurinominales son una estimación, con umbral y tope de sobrerrepresentación de 8 puntos.
 - **"Evolución del voto":** solo muestra los 7 partidos nacionales.
+- **Bases municipales:** si una base es municipal (como CONAPO), todas las secciones de un municipio comparten el valor; la plataforma lo indica.
