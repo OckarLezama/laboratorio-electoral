@@ -270,6 +270,37 @@ body.mob .mod{padding:0}body.mob .mb{border-radius:0;height:100%}
 .mleg h4{margin:0 0 4px;font:700 10px var(--f);color:var(--muted)}
 .lh{flex-direction:column;align-items:flex-start;gap:6px}
 .boot{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:100;font:600 13px var(--f);color:var(--muted)}.boot .logo{width:48px;height:48px;animation:pop 1s ease infinite alternate}
+
+.app{position:relative}
+/* panel ampliado dentro del tablero */
+.xp{position:absolute;z-index:45;background:var(--card);border-radius:16px;box-shadow:0 18px 44px rgba(20,40,40,.18);overflow:hidden;transition:left .45s cubic-bezier(.2,.8,.2,1),top .45s cubic-bezier(.2,.8,.2,1),width .45s cubic-bezier(.2,.8,.2,1),height .45s cubic-bezier(.2,.8,.2,1)}
+.xpb{height:100%;overflow:auto;padding:18px 22px;display:flex;flex-direction:column;gap:12px;opacity:0;transition:opacity .25s ease .15s}
+.xp.in .xpb{opacity:1}
+.xpb .mh h2{font-size:19px}.xpb .kt b{font-size:19px}.xpb .ktiles b{font-size:17px}
+.dim2{opacity:.0!important;transition:opacity .3s}
+/* selector de elección */
+.esel{position:relative}
+.esel select{position:absolute;opacity:0;pointer-events:none;width:1px;height:1px}
+.esel>button{display:flex;flex-direction:column;align-items:flex-start;gap:0;min-width:210px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:6px 36px 6px 14px;cursor:pointer;box-shadow:var(--sh);position:relative;text-align:left;transition:border-color .2s}
+.esel>button:hover,.esel.open>button{border-color:var(--teal2)}
+.esel small{font-size:10px;color:var(--muted)}.esel b{font:800 15px var(--d);color:var(--strong)}
+.esel>button svg{position:absolute;right:12px;top:50%;width:14px;height:14px;transform:translateY(-50%);stroke:var(--muted);fill:none;stroke-width:2;transition:transform .2s}
+.esel.open>button svg{transform:translateY(-50%) rotate(180deg)}
+.epop{position:absolute;left:0;top:calc(100% + 6px);z-index:40;background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:0 14px 36px rgba(16,40,40,.16);padding:8px;display:flex;flex-direction:column;gap:2px;min-width:360px}
+.ey{display:grid;grid-template-columns:44px 1fr;gap:8px;align-items:center;padding:4px 6px;border-radius:9px}
+.ey:hover{background:var(--hair)}.ey>b{font:800 13px var(--d);color:var(--strong)}
+.ey>div{display:flex;flex-wrap:wrap;gap:4px}
+.ey button{border:1px solid var(--line);background:var(--card);border-radius:20px;padding:3px 10px;font-size:11px;font-weight:600;color:var(--ink);cursor:pointer}
+.ey button:hover{border-color:var(--teal2);color:var(--strong)}.ey button.on{background:var(--rail);border-color:var(--rail);color:#fff}
+.playb{white-space:nowrap}
+
+.zn{stroke:#fff;stroke-width:.35;vector-effect:non-scaling-stroke;cursor:pointer;transition:opacity .4s,fill .5s,fill-opacity .5s}
+.zn:hover{filter:brightness(1.1)}
+#gzn{filter:drop-shadow(0 2px 6px rgba(16,40,40,.12))}
+#gzn.foc .zn{opacity:.3}#gzn.foc .zn.on{opacity:1;stroke:var(--strong);stroke-width:2}
+#gst.bord path.st{fill:transparent!important;stroke:#fff;stroke-width:1.3;pointer-events:none}
+#gst.bord path.st.on{stroke:var(--strong);stroke-width:2}
+.seg button:disabled{opacity:.4;cursor:default}
 </style>
 </head>
 <body>
@@ -280,14 +311,14 @@ body.mob .mod{padding:0}body.mob .mb{border-radius:0;height:100%}
     <div class="logo" aria-hidden="true"></div>
     <button class="back" id="bback" hidden aria-label="Volver a la vista general"><svg viewBox="0 0 14 14"><path d="M9 3L5 7l4 4"/></svg>México</button><div><div class="crumb"><button id="bmex">México</button><span id="csep" hidden>›</span><span id="cst"></span></div>
       <div class="cb"><input id="q" autocomplete="off" aria-label="Elegir estado" role="combobox" aria-expanded="false" aria-controls="ac"><svg viewBox="0 0 12 12"><path d="M3 4.5l3 3 3-3"/></svg><div class="ac" id="ac" role="listbox" hidden></div></div></div>
-    <label class="fl"><small id="elab">Elección</small><select id="elec"></select></label>
+    <div class="esel" id="esel"><button id="ebtn" aria-haspopup="listbox" aria-expanded="false"><small id="elab">Elección</small><b id="eval"></b><svg viewBox="0 0 12 12"><path d="M3 4.5l3 3 3-3"/></svg></button><div class="epop" id="epop" hidden></div><select id="elec" aria-hidden="true" tabindex="-1"></select></div>
     <div class="cdx" id="cdx" title="Avance del proceso electoral federal 2026-2027"></div>
   </header>
   <section class="fi fade" id="fi" aria-label="Ficha"></section>
   <main class="grid">
     <section class="p mp"><div class="ph"><div><h2 id="mh"></h2><p id="mp"></p></div><div class="s2" id="s2w" hidden><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="5"/><path d="M11 11l3.5 3.5"/></svg><input id="q2" type="search" autocomplete="off" aria-label="Buscar dentro del estado" role="combobox" aria-expanded="false" aria-controls="ac2"><div class="ac" id="ac2" role="listbox" hidden></div></div></div>
       <div class="lrow" id="lrow"></div><div class="lg fade" id="mlg"></div>
-      <div class="mapw"><svg id="map" role="img" aria-label="Mapa" preserveAspectRatio="xMidYMid meet"><g class="lvl" id="Lmx"><g id="gst"></g><g class="stl" id="gstl"></g></g><g class="lvl" id="Lst" style="opacity:0"><g class="ctx" id="gctx"></g><g id="gun"></g><path class="ent" id="gent"/><g class="lab" id="glab"></g></g></svg>
+      <div class="mapw"><svg id="map" role="img" aria-label="Mapa" preserveAspectRatio="xMidYMid meet"><g class="lvl" id="Lmx"><g id="gzn"></g><g id="gst"></g><g class="stl" id="gstl"></g></g><g class="lvl" id="Lst" style="opacity:0"><g class="ctx" id="gctx"></g><g id="gun"></g><path class="ent" id="gent"/><g class="lab" id="glab"></g></g></svg>
         <div class="mctl" id="mctl"></div><div class="prev" id="prev" aria-live="polite"></div><a class="anam" id="ana" hidden target="_blank" rel="noopener"><span>Análisis y estrategia 2027<small id="anas"></small></span><svg viewBox="0 0 14 14"><path d="M3 7h8M7.5 3.5L11 7l-3.5 3.5"/></svg></a><div class="mleg" id="mleg"></div><div class="focus off" id="focus"><span>Viendo <b id="fname"></b></span><button id="fx">Ver todo el estado</button></div></div>
       <div class="foot" id="mfoot"></div></section>
     <div class="col col2 fade" id="c2">
@@ -323,6 +354,10 @@ const tip=$('tip'),tt=(e,h)=>{tip.innerHTML=h;tip.hidden=false;tip.style.left=Ma
 
 const NM={cab:'mx',est:'México',EL:NAC.EL,order:Object.keys(NAC.EL).sort((a,b)=>NAC.EL[a].y-NAC.EL[b].y||a.localeCompare(b)),pc:PC,pn:PN};
 
+/* ===== zonas nacionales: distritos federales y municipios vigentes (carga al usarse) ===== */
+const ZN={geo:{},ok:false,mn:{}};let zl='e',zlAuto=true;
+function zonasData(){if(ZN.ok)return Promise.resolve();if(ZN.p)return ZN.p;ZN.p=fetch('data/inicio/nac_zonas.json',{cache:'no-cache'}).then(r=>r.json()).then(Z=>{for(const k in Z){const E=NAC.EL[k];if(!E)continue;const ps=Z[k].p;for(const id in Z[k].z){const a=Z[k].z[id],v={};ps.forEach((p,i)=>{if(a[i+2])v[p]=a[i+2];});E.v[id]=[a[0],a[1],v];}}ZN.ok=true;});return ZN.p;}
+function zonasGeo(t){if(ZN.geo[t])return Promise.resolve(ZN.geo[t]);return fetch(`data/inicio/mx_${t==='f'?'df':'mun'}.json`,{cache:'no-cache'}).then(r=>r.json()).then(g=>{ZN.geo[t]=g;if(t==='m')g.forEach(x=>ZN.mn['m'+x.id]=x.n);return g;});}
 /* ===== circunscripciones: totales sumando sus estados ===== */
 const CIRCS={};NAC.est.forEach(e=>(CIRCS[e.circ]=CIRCS[e.circ]||[]).push('e'+e.ent));
 Object.values(NAC.EL).forEach(E=>{for(const c in CIRCS){let t=0,ln=0;const v={},d={};CIRCS[c].forEach(u=>{const x=E.v[u];if(x){t+=x[0];ln+=x[1];for(const p in x[2])v[p]=(v[p]||0)+x[2][p];}const o=E.df&&E.df[u];if(o)for(const p in o)d[p]=(d[p]||0)+o[p];});E.v['c'+c]=[t,ln,v];if(E.df)E.df['c'+c]=d;}});
@@ -335,9 +370,9 @@ function juega(s){if(!s)return [];const c=s.c27,o=[],na=String(c.na||''),n0=(na.
   return o;}
 /* ===== estado de la vista ===== */
 let LV='mx',M=NM,ek=NM.order.filter(k=>k.startsWith('PRE_')).pop(),unit='e0',lay='m',mmode='p',circ=0,rk='m',showAll=false,trShow=null,resMode='c',busy=false;
-const root=()=>LV==='mx'?(circ?'c'+circ:'e0'):'e',isRoot=u=>u==='e0'||u==='e'||/^c\d$/.test(u);
+const root=()=>LV==='mx'?(circ?'c'+circ:'e0'):'e',isRoot=u=>u==='e0'||u==='e'||/^c\d$/.test(u),entOf=u=>+(u[0]==='e'?u.slice(1):u.slice(1).split('_')[0]);
 const pc=p=>(M.pc&&M.pc[p])||PC[p]||'#A0A7A6',pn=p=>(M.pn&&M.pn[p])||PN[p]||p,elab=k=>TYN[k.split('_')[0]]+' '+M.EL[k].y;
-const uname=u=>LV==='mx'?(u==='e0'?'México':u[0]==='c'?'Circunscripción '+u.slice(1):(ES[u]?ES[u].n:u)):(M.names[u]||u),focusTag=()=>uname(unit);
+const uname=u=>LV==='mx'?(u==='e0'?'México':u[0]==='c'?'Circunscripción '+u.slice(1):u[0]==='f'?`Distrito federal ${u.split('_')[1]} · ${ES['e'+u.slice(1).split('_')[0]].n}`:u[0]==='m'?`${ZN.mn[u]||'Municipio'} · ${ES['e'+u.slice(1).split('_')[0]].n}`:(ES[u]?ES[u].n:u)):(M.names[u]||u),focusTag=()=>uname(unit);
 const sbar=o=>{const ks=Object.keys(o).sort((a,b)=>o[b]-o[a]);return `<div class="sb">${ks.map(k=>`<i style="flex:${o[k]};background:${pc(k)}"></i>`).join('')}</div>`;},top1=o=>Object.keys(o).sort((a,b)=>o[b]-o[a])[0];
 const prevK=k=>{const t=k.split('_')[0],y=M.EL[k].y,o=M.order.filter(x=>x.startsWith(t+'_')&&M.EL[x].y<y);return o.length?o[o.length-1]:null;};
 
@@ -373,24 +408,35 @@ const tealRamp=t=>{const a=[226,243,241],b=[19,97,92];return `rgb(${a.map((x,i)=
 function mlegend(kind,arg){const el=$('mleg');if(!kind){el.style.opacity=0;return;}el.style.opacity=1;
   if(kind==='p')el.innerHTML=`<div class="vb" style="background:linear-gradient(${tealRamp(.97)},${tealRamp(.12)})"></div><div class="vl"><h4>Participación</h4><b>${f1(arg[1])}%</b><span>más alta</span><span style="flex:1"></span><span>más baja</span><b>${f1(arg[0])}%</b></div>`;
   else{const c=pc(arg);el.innerHTML=`<div class="vb" style="background:linear-gradient(${c},${c} 33%,${c}C0 33%,${c}C0 66%,${c}8C 66%)"></div><div class="vl"><h4>Ventaja del ganador</h4><span><b>más de 10</b> pts</span><span><b>5 a 10</b> pts</span><span><b>menos de 5</b> pts</span></div>`;}}
-function paintMx(){const cnt={};let pv=[];
-  if(mmode==='p'){$('gst').querySelectorAll('path.st').forEach(p=>{const r=R(p.dataset.u,ek);if(r)pv.push(r.turn);});}
+let zDrawn=null;
+function zEff(){return (mmode==='g'||mmode==='27')?'e':zl;}
+async function drawZones(){const t=zEff();if(t==='e'){$('gzn').innerHTML='';zDrawn=null;$('gst').classList.remove('bord');return;}
+  if(zDrawn===t)return;$('mlg').classList.add('out');await Promise.all([zonasData(),zonasGeo(t)]);
+  $('gzn').innerHTML=ZN.geo[t].map(x=>`<path class="zn" d="${x.d}" data-u="${t}${x.id}"></path>`).join('');zDrawn=t;$('gst').classList.add('bord');
+  $('gzn').querySelectorAll('path.zn').forEach(p=>{const u=p.dataset.u;p.onmousemove=e=>{const r=R(u,ek);tt(e,`<b>${uname(u)}</b>`+(r?`<br>Ganó ${r.bl[0].n} por ${f1(r.m)} pts<br>Participación ${f1(r.turn)}% · ${fmt(r.ln)} electores`:'<br>Sin dato'));};p.onmouseleave=th;p.onclick=()=>{th();setUnit(u===unit?root():u);};});}
+function paintMx(){const cnt={};let pv=[];const t=zEff();
+  if(t!=='e'&&zDrawn!==t){drawZones().then(()=>{paintMx();rank();$('mlg').classList.remove('out');});}
+  const els=t==='e'?[...$('gst').querySelectorAll('path.st')]:[...$('gzn').querySelectorAll('path.zn')];
+  if(mmode==='p')els.forEach(p=>{const r=R(p.dataset.u,ek);if(r&&r.turn!=null)pv.push(r.turn);});
   const lo=Math.min(...pv),hi=Math.max(...pv);
-  $('gst').querySelectorAll('path.st').forEach(p=>{const u=p.dataset.u,e=ES[u];let f='#D5DEDD',op=1,k=null;
+  els.forEach(p=>{const u=p.dataset.u,e=ES['e'+entOf(u)];let f='#D5DEDD',op=1,k=null;
     if(mmode==='p'){const r=R(u,ek);if(r){f=tealRamp((r.turn-lo)/((hi-lo)||1)*.85+.12);k='x';}}
     else if(mmode==='w'){const r=R(u,ek);if(r){k=r.bl[0].parts[0].p;f=pc(k);op=r.m>=10?1:r.m>=5?.78:.55;}}
     else if(mmode==='g'){if(e&&e.gob){k=e.gob.l;f=pc(k);}}
     else{const c=e?C27(e):0;k=['nada','cl','gob'][c];f=c===2?'#1C7F79':c===1?'#8FD3CC':'#D5DEDD';}
     if(k)cnt[k]=(cnt[k]||0)+1;
     p.style.fill=f;p.style.fillOpacity=op;p.classList.toggle('on',u===unit);p.classList.toggle('dim',!!circ&&(!e||e.circ!==circ));});
-  $('gst').classList.toggle('foc',!isRoot(unit));
+  if(t!=='e')$('gst').querySelectorAll('path.st').forEach(p=>{p.classList.toggle('on',p.dataset.u===unit);p.classList.remove('dim');});
+  $('gst').classList.toggle('foc',t==='e'&&!isRoot(unit));$('gzn').classList.toggle('foc',t!=='e'&&!isRoot(unit)&&unit[0]===t);
+  const zn={e:'estado',f:'distrito federal',m:'municipio'}[t],old=t!=='e'&&M.EL[ek].y<2024;
   mlegend(mmode==='p'?'p':mmode==='w'?'w':null,mmode==='p'?[lo,hi]:top1(cnt));
-  $('mlg').innerHTML=mmode==='p'?`<span>${f1(lo)}%</span><i class="ramp" style="background:linear-gradient(90deg,${tealRamp(.12)},${tealRamp(.97)})"></i><span>${f1(hi)}%</span><span style="color:var(--muted)">participación por estado (% de la lista nominal)</span>`
+  $('mlg').innerHTML=(mmode==='p'?`<span style="color:var(--muted)">Participación por ${zn} (% de la lista nominal)</span>`
     :mmode==='27'?[['gob','#1C7F79','Gubernatura, congreso y ayuntamientos'],['cl','#8FD3CC','Congreso o ayuntamientos']].filter(x=>cnt[x[0]]).map(x=>`<span><i style="background:${x[1]}"></i>${x[2]} <b>${cnt[x[0]]}</b></span>`).join('')
-    :Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a]).map(k=>`<span><i style="background:${pc(k)}"></i>${pn(k)} <b>${cnt[k]}</b></span>`).join('');
+    :Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a]).map(k=>`<span><i style="background:${pc(k)}"></i>${pn(k)} <b>${fmt(cnt[k])}</b></span>`).join(''))+(old?`<span style="color:var(--muted)">· resultados de ${M.EL[ek].y} sumados en los ${t==='f'?'distritos':'municipios'} actuales</span>`:'');
   $('mh').textContent=mmode==='g'?'Quién gobierna cada estado':mmode==='27'?'Qué se elige en 2027':elab(ek);
-  $('mp').textContent=mmode==='p'?'Participación por estado':mmode==='w'?'Partido que encabezó al ganador en cada estado':mmode==='g'?'Partido de la última gubernatura':'Elecciones locales del 6 de junio de 2027';
-  $('lrow').querySelectorAll('[data-m]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.m===mmode));}
+  $('mp').textContent=mmode==='p'?`Participación por ${zn}`:mmode==='w'?`Partido que encabezó al ganador en cada ${zn}`:mmode==='g'?'Partido de la última gubernatura':'Elecciones locales del 6 de junio de 2027';
+  $('lrow').querySelectorAll('[data-m]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.m===mmode));
+  $('lrow').querySelectorAll('[data-z]').forEach(b=>{b.setAttribute('aria-pressed',b.dataset.z===t);b.disabled=mmode==='g'||mmode==='27';});}
 $('gst').querySelectorAll('path.st').forEach(p=>{const u=p.dataset.u;
   p.onmousemove=e=>{const s=ES[u],r=R(u,ek);if(mmode==='27'){const j=juega(s);tt(e,`<b>${s.n}: en 2027 se elige</b>`+j.map(x=>`<br>${x[0]}: <b>${x[1]}</b>`).join(''));return;}tt(e,`<b>${s.n}</b>`+(r?`<br>${elab(ek)}: ganó ${r.bl[0].n} por ${f1(r.m)} pts<br>Participación ${f1(r.turn)}%`:'')+(s.gob?`<br>Gobierna ${pn(s.gob.l)} (desde ${s.gob.y})`:'')+`<br><i style="opacity:.7">${AVAIL.has(s.clave)?'Doble clic para entrar al detalle':'Clic para ver sus datos'}</i>`);};p.onmouseleave=th;
   p.onclick=()=>{th();if(LV==='mx')setUnit(u===unit?root():u);};p.ondblclick=()=>{const s=ES[u];if(AVAIL.has(s.clave))toState(s.clave);};});
@@ -416,14 +462,15 @@ function paintSt(){const cnt={};let nd=0;
   $('lrow').querySelectorAll('[data-l]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.l===lay));
   $('focus').classList.toggle('off',unit==='e');if(unit!=='e')$('fname').textContent=uname(unit);}
 function circBox(){const bs=[...$('gst').querySelectorAll('path.st')].filter(p=>ES[p.dataset.u].circ===circ).map(bbOf);const x0=Math.min(...bs.map(b=>b[0])),y0=Math.min(...bs.map(b=>b[1])),x1=Math.max(...bs.map(b=>b[0]+b[2])),y1=Math.max(...bs.map(b=>b[1]+b[3]));return fitBox([x0,y0,x1-x0,y1-y0],.06);}
-function unitBox(){if(LV==='mx'){if(unit==='e0')return mxFull();if(unit[0]==='c')return circBox();const t=fitBox(bbOf($('gst').querySelector(`path[data-u="${unit}"]`)),.75);t[0]-=t[2]*.18;t[1]-=t[3]*.1;return t;}
+function unitBox(){if(LV==='mx'){if(unit==='e0')return mxFull();if(unit[0]==='c')return circBox();if(unit[0]==='f'||unit[0]==='m'){const p=$('gzn').querySelector(`path[data-u="${unit}"]`);if(p){const b=bbOf(p);return fitBox(b,Math.max(b[2],b[3])<8?3:1.2);}return mxFull();}const t=fitBox(bbOf($('gst').querySelector(`path[data-u="${unit}"]`)),.75);t[0]-=t[2]*.18;t[1]-=t[3]*.1;return t;}
   if(unit==='e')return fitBox(stBox,.1);const p=$('gun').querySelector(`path[data-u="${unit}"]`);if(!p)return fitBox(stBox,.1);const b=bbOf(p),r=Math.max(b[2],b[3])/Math.max(stBox[2],stBox[3]);return fitBox(b,r<.06?2.2:r<.2?.7:.25);}
 $('fx').onclick=()=>setUnit('e');
 
 /* ===== controles del mapa por nivel ===== */
 function controls(){if(LV==='mx'){
-    $('lrow').innerHTML=`<div class="seg"><button data-m="p">Participación</button><button data-m="w">Resultados</button><button data-m="g">Quién gobierna</button><button data-m="27">Qué se elige en 2027</button></div><label class="csel">Circunscripción <select id="circ"><option value="0">Todas</option>${[1,2,3,4,5].map(c=>`<option value="${c}">${c}</option>`).join('')}</select></label>`;
+    $('lrow').innerHTML=`<div class="seg"><button data-m="p">Participación</button><button data-m="w">Resultados</button><button data-m="g">Quién gobierna</button><button data-m="27">Qué se elige en 2027</button></div><div class="seg" title="Unidad del mapa"><button data-z="e">Estados</button><button data-z="f">Distritos federales</button><button data-z="m">Municipios</button></div><label class="csel">Circunscripción <select id="circ"><option value="0">Todas</option>${[1,2,3,4,5].map(c=>`<option value="${c}">${c}</option>`).join('')}</select></label>`;
     $('lrow').querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{mmode=b.dataset.m;paintMx();});$('circ').value=circ;
+    $('lrow').querySelectorAll('[data-z]').forEach(b=>b.onclick=()=>{if(zl===b.dataset.z)return;zl=b.dataset.z;zlAuto=false;if(!isRoot(unit)&&unit[0]!=='e'&&unit[0]!==zl)unit=root();showAll=false;paintMx();rank();refresh();preview();animVB(unitBox(),900);});
     $('circ').onchange=e=>{circ=+e.target.value;trShow=null;outs(true);setTimeout(()=>{ficha();outs(false);},300);setUnit(root());};
     $('mctl').innerHTML='';$('s2w').hidden=true;$('mfoot').textContent='Clic en un estado para ver sus datos en todo el tablero; doble clic o "Ver detalle" para entrar.';
     $('rkt').innerHTML='<button data-r="m">Más cerrados</button><button data-r="p">Participación</button><button data-r="l">Electores</button>';
@@ -439,7 +486,7 @@ function controls(){if(LV==='mx'){
 function setUnit(u){unit=u;if(LV==='mx')paintMx();else paintSt();rank(true);refresh();preview();animVB(unitBox(),1100);}
 
 /* ===== tarjeta de estado y entrada al detalle ===== */
-function preview(){const el=$('prev');if(LV!=='mx'||isRoot(unit)){el.classList.remove('in');return;}const s=ES[unit],r=R(unit,ek),ok=AVAIL.has(s.clave);
+function preview(){const el=$('prev');if(LV!=='mx'||isRoot(unit)){el.classList.remove('in');return;}if(unit[0]!=='e'){const s=ES['e'+entOf(unit)],r=R(unit,ek),ok=AVAIL.has(s.clave);el.innerHTML=`<button class="px" aria-label="Cerrar">✕</button><div><small>${s.n} · Circunscripción ${s.circ}</small><h3>${uname(unit).split(' · ')[0]}</h3></div><dl>${r?`<dt>${elab(ek)}</dt><dd>${r.bl[0].n}, ${f1(r.bl[0].p)}% (+${f1(r.m)})</dd><dt>Participación</dt><dd>${f1(r.turn)}%</dd><dt>Electores</dt><dd>${fmt(r.ln)}</dd>`:''}</dl><button class="go" ${ok?'':'disabled'} id="gobtn">${ok?`Ver detalle de ${s.n}`:'Detalle del estado disponible al cargar sus datos'}<svg viewBox="0 0 14 14"><path d="M3 7h8M7.5 3.5L11 7l-3.5 3.5"/></svg></button>`;el.classList.add('in');el.querySelector('.px').onclick=()=>setUnit(root());$('gobtn').onclick=()=>toState(s.clave);return;}const s=ES[unit],r=R(unit,ek),ok=AVAIL.has(s.clave);
   el.innerHTML=`<button class="px" aria-label="Cerrar">✕</button><div><small>Circunscripción ${s.circ}</small><h3>${s.n}</h3></div>
    <dl>${s.gob?`<dt>Gobierna</dt><dd><i class="sw" style="background:${pc(s.gob.l)}"></i>${pn(s.gob.l)}, desde ${s.gob.y}</dd>`:''}
    ${r?`<dt>${elab(ek)}</dt><dd>${r.bl[0].n}, ${f1(r.bl[0].p)}% (+${f1(r.m)})</dd><dt>Participación</dt><dd>${f1(r.turn)}%</dd>`:''}
@@ -512,7 +559,7 @@ function resultados(){const r=R(unit,ek),pk=prevK(ek),pr=pk?R(unit,pk):null;if(p
 
 /* ===== lista: estados o zonas de la capa ===== */
 function rank(scroll){const by=rk;let us;
-  if(LV==='mx'){us=NAC.est.filter(e=>!circ||e.circ===circ).map(e=>'e'+e.ent);$('lh').textContent=circ?`Estados · C${circ}`:'Estados';}
+  if(LV==='mx'){const t=zEff();us=t==='e'||!ZN.geo[t]?NAC.est.filter(e=>!circ||e.circ===circ).map(e=>'e'+e.ent):ZN.geo[t].map(x=>t+x.id).filter(u=>!circ||ES['e'+entOf(u)].circ===circ);$('lh').textContent=(t==='e'||!ZN.geo[t]?'Estados':t==='f'?'Distritos federales':'Municipios')+(circ?` · C${circ}`:'');}
   else{us=lay==='e'?[]:M.geo[lay].map(x=>lay+x.id);$('lh').textContent=({m:'Municipios',d:'Distritos locales',f:'Distritos federales',e:'Zonas'})[lay];}
   const avg=(R(root(),ek)||{}).turn;
   let L=us.map(u=>{const r=R(u,ek);if(!r)return null;const mb=r.bl.find(b=>b.ms.includes('MORENA'));return {u,n:uname(u),r,m:r.m,p:r.turn,mw:mb?mb.p:0};}).filter(Boolean);
@@ -596,15 +643,15 @@ function compHTML(C,big){const pct=C.c.map(x=>100*x/C.n),cut=[];let acc=0;pct.fo
 function comp(){const C=compOf(unit,ek);$('cps').textContent=`${elab(ek)} · ${focusTag()}`;$('comp').innerHTML=C.n?compHTML(C):'<div class="foot">Sin secciones con resultado.</div>';}
 
 /* ===== en juego 2027 ===== */
-function juego(){const s=$('hm'),W=s.clientWidth,H=s.clientHeight,df=(M.EL[ek].df||{})[unit]||{};if(!W||!H)return;s.setAttribute('viewBox',`0 0 ${W} ${H}`);
+function juego(){const s=$('hm'),W=s.clientWidth,H=s.clientHeight,uu=unit[0]==='f'||unit[0]==='m'?'e'+entOf(unit):unit,df=(M.EL[ek].df||{})[uu]||{};if(!W||!H)return;s.setAttribute('viewBox',`0 0 ${W} ${H}`);
   const ord=['MORENA','PT','PVEM','IND','MC','PRD','PRI','PAN'],ks=Object.keys(df).sort((a,b)=>(ord.indexOf(a)<0?99:ord.indexOf(a))-(ord.indexOf(b)<0?99:ord.indexOf(b))),N=ks.reduce((a,k)=>a+df[k],0);
-  $('hmh').textContent=`${elab(ek)}: distritos federales ganados`;$('hmp').textContent=`${focusTag()} · ${N} distritos de mayoría relativa, por partido que encabezó al ganador`;
+  $('hmh').textContent=`${elab(ek)}: distritos federales ganados`;$('hmp').textContent=`${uname(uu)} · ${N} distritos de mayoría relativa, por partido que encabezó al ganador`;
   if(!N){s.innerHTML='';$('hml').innerHTML='';return;}
-  const cx=W/2,cy=H-6,R1=Math.min(W/2-70,H-30),rows=Math.max(3,Math.min(12,Math.round(Math.sqrt(N/3.2)))),R0=R1*(rows>6?.38:.5),seats=[];
+  const cx=W/2,cy=H-6,R1=Math.min(W/2-70,H-30),rows=N<16?1:Math.max(2,Math.min(12,Math.round(Math.sqrt(N/3.2)))),R0=rows===1?R1:R1*(rows>6?.38:.5),seats=[];
   const rs=[...Array(rows)].map((_,i)=>R0+(R1-R0)*i/(rows-1||1)),tot=rs.reduce((a,r)=>a+r,0);let left=N;
   const per=rs.map((r,i)=>{const n=i===rows-1?left:Math.round(N*r/tot);left-=n;return n;});
   rs.forEach((r,i)=>{for(let k=0;k<per[i];k++){const t=Math.PI*(per[i]>1?k/(per[i]-1):.5);seats.push({x:cx-r*Math.cos(t),y:cy-r*Math.sin(t),t});}});
-  seats.sort((a,b)=>a.t-b.t||0);const dot=Math.max(2.2,Math.min(9,(R1-R0)/rows*.42));let i=0,h='';
+  seats.sort((a,b)=>a.t-b.t||0);const dot=rows===1?Math.min(14,Math.PI*R1/N*.35):Math.max(2.2,Math.min(9,(R1-R0)/rows*.42));if(rows===1)seats.forEach(q=>{q.y-=dot+2;});let i=0,h='';
   ks.forEach(k=>{for(let n=0;n<df[k];n++){const q=seats[i++];h+=`<circle cx="${q.x.toFixed(1)}" cy="${q.y.toFixed(1)}" r="${dot.toFixed(1)}" fill="${pc(k)}" data-k="${k}" class="pp" style="animation-delay:${(i*1.6/N).toFixed(3)}s"/>`;}});
   const lead=ks.slice().sort((a,b)=>df[b]-df[a])[0],may=Math.floor(N/2)+1,cal=Math.ceil(2*N/3);
   [[may,'Mitad + 1: '+may],[cal,'Dos tercios: '+cal]].forEach(([k,t],ix)=>{const q=seats[k-1];if(!q)return;const a=q.t,x1=cx-(R0-10)*Math.cos(a),y1=cy-(R0-10)*Math.sin(a),x2=cx-(R1+12)*Math.cos(a),y2=cy-(R1+12)*Math.sin(a);
@@ -615,9 +662,22 @@ function juego(){const s=$('hm'),W=s.clientWidth,H=s.clientHeight,df=(M.EL[ek].d
 function refresh(){resultados();tendencia();if(LV==='mx')juego();else{edad();comp();}}
 
 /* ===== ventanas ampliadas ===== */
-function openMod(html,id){closeMod(true);const el=document.createElement('div');el.className='mod';el.id='mod';el.innerHTML=`<div class="mb" role="dialog" aria-modal="true" id="${id}">${html}</div>`;document.body.appendChild(el);
-  el.addEventListener('click',e=>{if(e.target===el)closeMod();});el.querySelector('.x').onclick=()=>closeMod();requestAnimationFrame(()=>el.classList.add('in'));el.querySelector('.x').focus();}
-function closeMod(now){const el=$('mod');if(!el)return;if(el.querySelector('#mtr')&&trT!==M.EL[ek].t){trT=M.EL[ek].t;trShow=null;setTimeout(tendencia,50);}if(now||RM){el.remove();return;}el.classList.remove('in');setTimeout(()=>el.remove(),300);}
+let srcCard=null;
+function region(){const a=$('app').getBoundingClientRect(),z=Z||1,r2=$('c2').getBoundingClientRect(),r3=$('c3').getBoundingClientRect();
+  if(document.body.classList.contains('mob'))return null;return {x:(r2.left-a.left)/z,y:(Math.min(r2.top,r3.top)-a.top)/z,w:(r3.right-r2.left)/z,h:(Math.max(r2.bottom,r3.bottom)-Math.min(r2.top,r3.top))/z};}
+function rectOf(el){const a=$('app').getBoundingClientRect(),z=Z||1,r=el.getBoundingClientRect();return {x:(r.left-a.left)/z,y:(r.top-a.top)/z,w:r.width/z,h:r.height/z};}
+const place=(el,r)=>{el.style.left=r.x+'px';el.style.top=r.y+'px';el.style.width=r.w+'px';el.style.height=r.h+'px';};
+function openMod(html,id){closeMod(true);const R0=region();
+  if(!R0){const el=document.createElement('div');el.className='mod';el.id='mod';el.innerHTML=`<div class="mb" role="dialog" aria-modal="true" id="${id}">${html}</div>`;document.body.appendChild(el);el.querySelector('.x').onclick=()=>closeMod();requestAnimationFrame(()=>el.classList.add('in'));return;}
+  const el=document.createElement('div');el.className='xp';el.id='mod';el.innerHTML=`<div class="xpb" role="region" id="${id}">${html}</div>`;$('app').appendChild(el);
+  const r0=srcCard?rectOf(srcCard):R0;place(el,r0);el.dataset.src=JSON.stringify(r0);['c2','c3'].forEach(i=>$(i).classList.add('dim2'));
+  el.querySelector('.x').onclick=()=>closeMod();el.querySelector('.x').textContent='✕';el.querySelector('.x').setAttribute('aria-label','Cerrar y volver');
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{el.classList.add('in');place(el,R0);}));}
+function closeMod(now){const el=$('mod');if(!el)return;if(el.querySelector('#mtr')&&trT!==M.EL[ek].t){trT=M.EL[ek].t;trShow=null;setTimeout(tendencia,50);}
+  ['c2','c3'].forEach(i=>$(i).classList.remove('dim2'));
+  if(now||RM){el.remove();return;}
+  if(el.classList.contains('xp')){el.classList.remove('in');place(el,JSON.parse(el.dataset.src));setTimeout(()=>el.remove(),450);return;}
+  el.classList.remove('in');setTimeout(()=>el.remove(),300);}
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMod();});
 function bigRes(){const r=R(unit,ek),pk=prevK(ek),pr=pk?R(unit,pk):null;if(pr)pr.y=M.EL[pk].y;if(!r)return;const w=r.bl[0],s=r.bl[1],c=pc(w.parts[0].p),C=LV==='st'?compOf(unit,ek):null;
   openMod(`<div class="mh"><div><h2>Resultados por partido</h2><p>${elab(ek)} · ${focusTag()} · ${fmt(r.t)} votos emitidos</p></div><button class="x" aria-label="Cerrar">✕</button></div>
@@ -629,7 +689,7 @@ function bigRes(){const r=R(unit,ek),pk=prevK(ek),pr=pk?R(unit,pk):null;if(pr)pr
     ${C?`<div class="mbox"><h3>Competencia en las secciones</h3><p>Margen entre 1º y 2º lugar en cada sección con resultado.</p>${compHTML(C,1)}</div>`:''}</div>
    <div class="dg"><div class="dgh"><small>DESGLOSE POR</small><div class="seg" id="dgl"></div><div class="seg" id="dgs"><button data-s="m">Más competidos</button><button data-s="w">Mayor peso electoral</button><button data-s="a">A–Z</button></div><input id="dgq" type="search" placeholder="Buscar…" aria-label="Buscar en el desglose"></div><div class="dgb"><div class="dgt" id="dgt"></div></div></div>
    <p class="foot">Fuente: INE, Sistema de Consulta de la Estadística Electoral. Votos de coalición repartidos en partes iguales entre sus partidos. Clic en una fila para verla en todo el tablero.</p>`,'mres');desglose();
-  const draw=()=>barsSVG($('mrb'),r,pr,{big:1,mode:resMode});requestAnimationFrame(()=>requestAnimationFrame(draw));
+  const draw=()=>barsSVG($('mrb'),r,pr,{big:1,mode:resMode});setTimeout(draw,$('mod').classList.contains('xp')?470:40);
   $('mrm').querySelectorAll('button').forEach(b=>b.onclick=()=>{resMode=b.dataset.m;$('mrm').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));draw();});}
 function spark(v,col,W=118,H=28,hl=-1){const n=v.length,mx=Math.max(...v),mn=Math.min(...v),X=j=>4+j/(Math.max(1,n-1))*(W-8),Y=x=>H-4-(mx===mn?.5:(x-mn)/(mx-mn))*(H-8);return `<svg class="spk" viewBox="0 0 ${W} ${H}"><polyline points="${v.map((x,j)=>X(j).toFixed(1)+','+Y(x).toFixed(1)).join(' ')}" fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>${v.map((x,j)=>`<circle cx="${X(j).toFixed(1)}" cy="${Y(x).toFixed(1)}" r="${j===hl||j===n-1?3:1.8}" fill="${j===hl?'#1C2121':col}"/>`).join('')}</svg>`;}
 function tiles(o){const D=o.D,n=D.length;if(!n)return '';const hp=o.hl,sv=D.map(x=>x.r.per[hp]||0),pk=Math.max(...sv),pj=sv.indexOf(pk),L=D[n-1].r,b1=L.bl[0],b2=L.bl[1],tv=D.map(x=>x.r.turn||0),dT=n>1?tv[n-1]-tv[n-2]:null,win=D.map(x=>x.r.bl[0].parts[0].p),chg=win.filter((w,j)=>j&&w!==win[j-1]).length,c=pc(hp);
@@ -656,11 +716,11 @@ function bigTrend(again){const o=trData(),n=o.D.length;
   trControls($('mty'),$('mpt'),o,()=>tendencia(),9);$('mts').textContent=n?`${TYS[trT]}, ${o.D[0].y}–${o.D[n-1].y} · ${focusTag()} · ${trAbs?'votos':'% de la votación válida'}, votación propia de cada partido`:'';
   $('mab').querySelectorAll('button').forEach(b=>{b.setAttribute('aria-pressed',(+b.dataset.a===1)===trAbs);b.onclick=()=>{trAbs=b.dataset.a==='1';bigTrend(true);};});
   $('mtk').innerHTML=tiles(o);$('mtk').querySelectorAll('.wseq i').forEach(el=>{const x=o.D[+el.dataset.j],b=x.r.bl[0],s2=x.r.bl[1];el.onmousemove=e=>tt(e,`<b>${TYN[trT]} ${x.y}</b><br>Ganó ${b.n} con ${f1(b.p)}%`+(s2?`<br>2º ${s2.n} ${f1(s2.p)}% (ventaja ${f1(b.p-s2.p)} pts)`:'')+(+el.dataset.j>0&&o.D[+el.dataset.j-1].r.bl[0].parts[0].p!==b.parts[0].p?'<br><b>Cambio de partido ganador</b>':''));el.onmouseleave=th;});$('bpl').onclick=playTrend;
-  requestAnimationFrame(()=>requestAnimationFrame(()=>trSVG($('mtsvg'),{...o,big:1,abs:trAbs})));}
+  setTimeout(()=>{if($('mtsvg'))trSVG($('mtsvg'),{...o,big:1,abs:trAbs});},again===true?0:($('mod').classList.contains('xp')?470:40));}
 function playTrend(){const s=$('mtsvg'),r=$('tcrb');if(!r||playing)return;playing=1;const W=+r.getAttribute('width'),t0=performance.now(),dur=900*Math.max(2,trData().D.length);
   s.querySelectorAll('.ends').forEach(e=>e.style.visibility='hidden');$('bpl').classList.add('on');$('bpl').querySelector('span').textContent='Reproduciendo…';
   const st=now=>{const u=Math.min(1,(now-t0)/dur);r.setAttribute('width',(W*u).toFixed(1));if(u<1&&$('mtr'))requestAnimationFrame(st);else{playing=0;s.querySelectorAll('.ends').forEach(e=>e.style.visibility='');if($('bpl')){$('bpl').classList.remove('on');$('bpl').querySelector('span').textContent='Reproducir elección por elección';}}};r.setAttribute('width',0);requestAnimationFrame(st);}
-document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>b.dataset.open==='res'?bigRes():bigTrend());
+document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>{srcCard=b.closest('.p');b.dataset.open==='res'?bigRes():bigTrend();});
 
 /* ===== combo de estado y buscador interno ===== */
 const norm=s=>s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
@@ -682,13 +742,17 @@ mkAC($('q2'),$('ac2'),q=>{const t=lay==='e'?'m':lay,us=M.geo[t].map(x=>t+x.id).f
 function q2ph(){const t=lay==='e'?'m':lay;$('q2').placeholder=`Buscar ${LTN[t]}`;}
 
 /* ===== elección ===== */
-function fillElec(){const ys=[...new Set(M.order.map(k=>M.EL[k].y))].sort((a,b)=>b-a);
+function fillElec(){const ys=[...new Set(M.order.map(k=>M.EL[k].y))].sort((a,b)=>b-a);$('eval').textContent=elab(ek);
+  $('epop').innerHTML=ys.map(y=>`<div class="ey"><b>${y}</b><div>${M.order.filter(k=>M.EL[k].y===y).map(k=>`<button data-k="${k}" class="${k===ek?'on':''}">${TYN[k.split('_')[0]]}</button>`).join('')}</div></div>`).join('');
+  $('epop').querySelectorAll('button').forEach(b=>b.onclick=()=>{epop(false);if(b.dataset.k===ek)return;$('elec').value=b.dataset.k;$('elec').dispatchEvent(new Event('change'));});
   $('elec').innerHTML=ys.map(y=>`<optgroup label="${y}">${M.order.filter(k=>M.EL[k].y===y).map(k=>`<option value="${k}">${elab(k)}</option>`).join('')}</optgroup>`).join('');$('elec').value=ek;}
-$('elec').onchange=e=>{ek=e.target.value;trT=M.EL[ek].t;trShow=null;if(LV==='st'&&unit!=='e'&&!R(unit,ek))unit='e';['res','mlg'].forEach(i=>$(i).classList.add('out'));
+const epop=on=>{$('epop').hidden=!on;$('ebtn').setAttribute('aria-expanded',on);$('esel').classList.toggle('open',on);};
+$('ebtn').onclick=e=>{e.stopPropagation();epop($('epop').hidden);};document.addEventListener('click',e=>{if(!e.target.closest('#esel'))epop(false);});
+$('elec').onchange=e=>{ek=e.target.value;if(LV==='mx'&&zlAuto){const nz=ek.startsWith('DIPF_')?'f':'e';if(nz!==zl){zl=nz;if(!isRoot(unit)&&unit[0]!=='e')unit=root();}}$('eval').textContent=elab(ek);$('epop').querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.k===ek));trT=M.EL[ek].t;trShow=null;if(LV==='st'&&unit!=='e'&&!R(unit,ek))unit='e';['res','mlg'].forEach(i=>$(i).classList.add('out'));
   setTimeout(()=>{if(LV==='mx'){paintMx();preview();ficha();}else paintSt();rank();refresh();['res','mlg'].forEach(i=>$(i).classList.remove('out'));},250);};
 
 function cuenta(){const el=$('cdx'),now=new Date(),j=new Date('2027-06-07T00:00:00');if(now>j){el.hidden=true;return;}
-  const a=new Date('2026-09-01T00:00:00'),W=300,H=30,X=d=>8+(d-a)/(j-a)*(W-16),ev=CAL.filter(x=>x[0]).map(x=>({d:new Date(x[0]+'T12:00:00'),t:x[1].replace(/\s*\(.*?\)/,'')})),nx=ev.find(e=>e.d>=now),dd=Math.ceil((new Date('2027-06-06T08:00:00')-now)/864e5);
+  const a=new Date('2026-09-01T00:00:00'),W=Math.max(200,el.clientWidth-28||440),H=30,X=d=>8+(d-a)/(j-a)*(W-16),ev=CAL.filter(x=>x[0]).map(x=>({d:new Date(x[0]+'T12:00:00'),t:x[1].replace(/\s*\(.*?\)/,'')})),nx=ev.find(e=>e.d>=now),dd=Math.ceil((new Date('2027-06-06T08:00:00')-now)/864e5);
   let h=`<rect x="8" y="13" width="${W-16}" height="4" rx="2" fill="rgba(255,255,255,.14)"/><rect x="8" y="13" width="${Math.max(0,X(now)-8)}" height="4" rx="2" fill="#4CC1BA"/>`;
   ev.forEach((e,i)=>{const jor=/Jornada/.test(e.t);if(jor)return;h+=`<circle cx="${X(e.d)}" cy="15" r="${e===nx?4:2.6}" fill="${e.d<now?'#4CC1BA':e===nx?'#F46883':'#5C6A69'}" data-i="${i}"/>`;});
   h+=`<line x1="${X(now)}" x2="${X(now)}" y1="6" y2="24" stroke="#fff" stroke-width="1.5"/><circle cx="${W-8}" cy="15" r="6" fill="#fff"/><circle cx="${W-8}" cy="15" r="2.5" fill="#1F2222"/>`;
@@ -698,7 +762,7 @@ cuenta();
 /* ===== arranque ===== */
 controls();fillElec();crumb();ficha();paintMx();rank();refresh();setVB(fitBox([0,0,MX32.w,MX32.h],.25));requestAnimationFrame(()=>animVB(mxFull(),1400));
 {const h=location.hash.slice(1);if(AVAIL.has(h))setTimeout(()=>toState(h),500);}
-let rz;addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(()=>{fitScreen();refresh();rank();setVB(unitBox());},150);});
+let rz;addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(()=>{fitScreen();cuenta();refresh();rank();setVB(unitBox());},150);});
 window.INICIO={toState,toNation,setUnit,estado:()=>({nivel:LV,zona:unit,eleccion:ek,nombre:M.est,ocupado:busy})};
 }
 </script>

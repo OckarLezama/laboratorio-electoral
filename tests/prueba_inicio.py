@@ -47,6 +47,10 @@ async def main():
             await pg.click(f'#lrow [data-m="{m}"]'); await pg.wait_for_timeout(250)
         for k in await pg.eval_on_selector_all('#elec option', 'o=>o.map(x=>x.value)'):
             await pg.select_option('#elec', k); await pg.wait_for_timeout(350); await roto(f'México {k}')
+        for z in ['f', 'm', 'e']:
+            await pg.click(f'#lrow [data-z="{z}"]'); await pg.wait_for_timeout(2500); await roto(f'capa {z}')
+            if z != 'e':
+                await pg.click('#rank .r >> nth=0'); await pg.wait_for_timeout(1500); await roto(f'zona {z}')
         for c in ['1', '2', '3', '4', '5', '0']:
             await pg.select_option('#circ', c); await pg.wait_for_timeout(900); await roto(f'circunscripción {c}')
         for r in ['p', 'l', 'm']:

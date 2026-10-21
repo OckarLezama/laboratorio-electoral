@@ -38,7 +38,8 @@ python pipeline/lab.py construir chis    # paso 2: genera data/chis.json
 python pipeline/lab.py capas chis        # paso 2b: genera las bases adicionales (pipeline/capas.json)
 python pipeline/lab.py proyeccion        # paso 2c: calibra la proyección 2027 (usa todos los data/*.json)
 python pipeline/lab.py sitio             # paso 3: arma index.html, inicio.html, css/, js/, data/estados.json y data/inicio/
-python pipeline/lab.py nacional          # paso 4: resumen de los 32 estados para la vista general (data/nacional.json)
+python pipeline/lab.py nacional          # paso 4: resumen de los 32 estados para la vista general (data/nacional.json y data/inicio/nac_zonas.json)
+python pipeline/lab.py zonas             # paso 4b: mapas nacionales por estado, distrito federal y municipio (solo si cambia la cartografía)
 python pipeline/lab.py todo chis oax     # los tres pasos para uno o varios estados
 python tests/prueba_estados.py           # prueba automática de todos los estados
 python tests/prueba_inicio.py            # prueba automática de la página de inicio
@@ -171,3 +172,8 @@ Botón "Estrategia" junto a Tabla y Mapa. Solo muestra los cargos que se eligen 
 - Congreso local: estimado con la última elección de diputaciones locales (mayoría por distrito más representación proporcional con umbral y tope de +8 puntos). No es la integración oficial.
 - Distritos federales ganados: los 300 distritos de mayoría relativa. La Cámara tiene 500 curules, así que la mitad y los dos tercios del semicírculo son de los distritos, no de la Cámara.
 - Circunscripción: suma de los resultados de sus estados.
+
+**Mapa nacional por distrito federal y municipio.**
+- Con una elección federal, el mapa de México se puede ver por estados, distritos federales o municipios. Al elegir una diputación federal cambia solo a distritos.
+- Cartografía: Marco Geográfico Seccional del INE (`CARTO/MGS`). Para regenerarla, descomprime `MGSAN_Shapefile.zip` y el `SHAPEFILE.7z` que trae dentro en `CARTO/MGS/SHAPEFILE/` y corre `python pipeline/lab.py zonas`. Crea `data/inicio/mx32.json`, `mx_df.json`, `mx_mun.json` y `pipeline/insumos/secciones_mgs.csv.gz` (sección → distrito federal y municipio vigentes).
+- Resultados por zona: `python pipeline/lab.py nacional` suma cada sección en su distrito y municipio **vigentes**. En elecciones anteriores a 2024 el mapa los muestra así ("resultados sumados en los distritos actuales"); por eso pueden no coincidir con quién ganó cada distrito en esa elección. El semicírculo de distritos ganados sí usa los distritos de cada elección.

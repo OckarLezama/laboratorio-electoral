@@ -6,7 +6,7 @@ quién ganó la última gubernatura y qué se elige en 2027. Pesa poco para que 
 
 uso: python pipeline/lab.py nacional
 """
-import csv, glob, json, os, re, sys
+import csv, glob, gzip, json, os, re, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from comun import CFG, PIPE, REPO, ruta, ESTADOS
 
@@ -100,7 +100,17 @@ def ganador(bl, v):
     return r[0][1], 100 * r[0][0] / val, 100 * (r[0][0] - (r[1][0] if len(r) > 1 else 0)) / val
 
 
+def mapa_secciones():
+    """(estado, sección) → (distrito federal, municipio) del Marco Geográfico Seccional vigente."""
+    f = PIPE / 'insumos' / 'secciones_mgs.csv.gz'
+    if not f.exists():
+        return {}
+    with gzip.open(f, 'rt', encoding='utf-8') as g:
+        return {(int(r['ENTIDAD']), int(r['SECCION'])): (int(r['DISTRITO_F']), int(r['MUNICIPIO'])) for r in csv.DictReader(g)}
+
+
 def main():
+    MS = mapa_secciones(); ZON = {}
     amin = CFG.get('anio_minimo', 2015)
     est = {e['ent']: e for e in ESTADOS}
     EL, secs = {}, {}
@@ -112,7 +122,12 @@ def main():
             fs = [f for f in glob.glob(d + '/*NAL_SEC.csv') if 'EXT' not in os.path.basename(f)]
             if not fs:
                 continue
-            claves = lambda r: ['e0', 'e%d' % int(num(r.get('ID_ESTADO'))), 'f%d_%d' % (int(num(r.get('ID_ESTADO'))), int(num(r.get('ID_DISTRITO_FEDERAL') or r.get('ID_DISTRITO') or 0)))]
+            def claves(r):
+                e = int(num(r.get('ID_ESTADO'))); k = ['e0', 'e%d' % e, 'f%d_%d' % (e, int(num(r.get('ID_DISTRITO_FEDERAL') or r.get('ID_DISTRITO') or 0)))]
+                z = MS.get((e, int(num(r.get('SECCION')))))
+                if z:
+                    k += ['F%d_%d' % (e, z[0]), 'M%d_%d' % (e, z[1])]
+                return k
             agg, used = leer(fs[0], claves)
             tot = agg['e0'][2]; val = sum(tot.values()) or 1
             partidos = [p for p in tot if p in MAIN or p == 'IND' or tot[p] / val >= .02]
@@ -134,6 +149,10 @@ def main():
                     df.setdefault('e0', {}); df.setdefault('e' + e, {})
                     df['e0'][w] = df['e0'].get(w, 0) + 1; df['e' + e][w] = df['e' + e].get(w, 0) + 1
             EL[f'{t}_{y}'] = {'t': t, 'y': int(y), 'bl': bl, 'v': v, 'df': df}
+            if MS:
+                ps = partidos + ['OTROS']
+                ZON[f'{t}_{y}'] = {'p': ps, 'z': {k[0].lower() + k[1:]: [round(tt), round(ln)] + [round(vv.get(p, 0)) if p != 'OTROS' else round(sum(n for q, n in vv.items() if q not in partidos)) for p in ps]
+                                              for k, (tt, ln, vv, n) in agg.items() if k[0] in 'FM'}}
             print(f'  {t} {y}: {len(v) - 1} estados')
     # última gubernatura de cada estado
     cat = {int(r['ID_ESTADO']): r for r in csv.DictReader(open(PIPE / 'insumos' / 'catalogo_eleccion_2027.csv', encoding='utf-8-sig'))}
@@ -156,6 +175,10 @@ def main():
                     'gob': g, 'c27': {'g': c.get('GUBERNATURA_2027') == 'SI', 'c': c.get('CONGRESO_2027') == 'SI', 'a': c.get('AYUNTAMIENTOS_2027') == 'SI', 'na': c.get('N_AYUNTAMIENTOS_2027', ''), 'mr': c.get('DIP_MR', ''), 'rp': c.get('DIP_RP', ''), 'dt': c.get('DIP_TOTAL', '')}})
         print(f'  {e["nombre"]}: gubernatura {g["y"] if g else "—"}')
     (REPO / 'data' / 'nacional.json').write_text(json.dumps({'est': out, 'EL': EL}, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
+    if ZON:
+        (REPO / 'data' / 'inicio').mkdir(parents=True, exist_ok=True)
+        (REPO / 'data' / 'inicio' / 'nac_zonas.json').write_text(json.dumps(ZON, separators=(',', ':')), encoding='utf-8')
+        print('data/inicio/nac_zonas.json listo (resultados federales por distrito federal y municipio vigentes)')
     print('data/nacional.json listo')
 
 
