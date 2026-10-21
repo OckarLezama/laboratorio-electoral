@@ -174,6 +174,8 @@ Botón "Estrategia" junto a Tabla y Mapa. Solo muestra los cargos que se eligen 
 - Distritos federales ganados: los 300 distritos de mayoría relativa. La Cámara tiene 500 curules, así que la mitad y los dos tercios del semicírculo son de los distritos, no de la Cámara.
 - Circunscripción: suma de los resultados de sus estados.
 
+**Cómo se usa el inicio.** Cada cosa se decide en un solo lugar: la elección, en el selector de arriba; la zona, con clic en el mapa o la lista, o con el buscador del encabezado (estados y circunscripciones). El encabezado muestra la ruta (México › Nuevo León › Distrito 11); se regresa con la ✕ o con clic en la ruta. El botón "Ver análisis de…" entra al detalle del estado. En el mapa solo hay "Ver por" (estados, distritos o municipios) y "Color" (quién ganó o participación); "Qué se elige en 2027" se ve con clic en esa casilla de la franja oscura.
+
 **Mapa: zoom.** Rueda del mouse o botones + − para acercar, arrastrar para mover y el botón de encuadre para volver. El clic sigue eligiendo la zona.
 
 **Mapa nacional por distrito federal y municipio.**

@@ -43,8 +43,10 @@ async def main():
             if t:
                 prob.append(f'{donde}: {t}')
         await pg.goto(f'http://127.0.0.1:{port}/inicio.html'); await pg.wait_for_timeout(2500)
-        for m in ['w', 'g', '27', 'p']:
+        for m in ['p', 'w']:
             await pg.click(f'#lrow [data-m="{m}"]'); await pg.wait_for_timeout(250)
+        await pg.click('#fi [data-act="27"]'); await pg.wait_for_timeout(400); await roto('2027 en el mapa')
+        await pg.click('#m27x'); await pg.wait_for_timeout(300)
         for k in await pg.eval_on_selector_all('#elec option', 'o=>o.map(x=>x.value)'):
             await pg.select_option('#elec', k); await pg.wait_for_timeout(350); await roto(f'México {k}')
         for z in ['f', 'm', 'e']:
@@ -58,7 +60,7 @@ async def main():
         await pg.mouse.down(); await pg.mouse.move(caja[0] - 80, caja[1] - 40, steps=6); await pg.mouse.up(); await pg.wait_for_timeout(300)
         await pg.click('#zfit'); await pg.wait_for_timeout(900); await roto('zoom')
         for c in ['1', '2', '3', '4', '5', '0']:
-            await pg.select_option('#circ', c); await pg.wait_for_timeout(900); await roto(f'circunscripción {c}')
+            await pg.evaluate(f'INICIO.setCirc({c})'); await pg.wait_for_timeout(900); await roto(f'circunscripción {c}')
         for r in ['p', 'l', 'm']:
             await pg.click(f'#rkt [data-r="{r}"]'); await pg.wait_for_timeout(200)
         await pg.click('[data-open="res"]'); await pg.wait_for_timeout(700); await roto('resultados ampliados'); await pg.keyboard.press('Escape'); await pg.wait_for_timeout(400)
@@ -70,11 +72,11 @@ async def main():
                 prob.append(f'{cab}: no entró al estado'); continue
             for k in (await pg.eval_on_selector_all('#elec option', 'o=>o.map(x=>x.value)'))[:4]:
                 await pg.select_option('#elec', k); await pg.wait_for_timeout(350); await roto(f'{cab} {k}')
-            for l in ['d', 'f', 'e', 'm']:
+            for l in ['d', 'f', 'm']:
                 await pg.click(f'#lrow [data-l="{l}"]'); await pg.wait_for_timeout(500)
             await pg.click('#rank .r >> nth=0'); await pg.wait_for_timeout(1200); await roto(f'{cab} zona')
             await pg.click('[data-open="res"]'); await pg.wait_for_timeout(700); await roto(f'{cab} resultados ampliados'); await pg.keyboard.press('Escape'); await pg.wait_for_timeout(400)
-            await pg.click('#bback'); await pg.wait_for_timeout(3200)
+            await pg.click('#crumb button >> nth=0'); await pg.wait_for_timeout(3200)
             if (await pg.evaluate('INICIO.estado()'))['nivel'] != 'mx':
                 prob.append(f'{cab}: no regresó a México')
             print(f'OK    {cab}' if not errs else f'ERROR {cab}: {errs[-1]}')

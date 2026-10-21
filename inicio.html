@@ -366,6 +366,20 @@ body.mob .mod{padding:0}body.mob .mb{border-radius:0;height:100%}
 .dgt .hd>span{font-size:10.5px;font-weight:600}
 .dgn{font-size:11px;color:var(--muted)}
 body.mob .tl{flex-basis:100%;border-left:0;padding:4px 0 0;margin-left:0}
+.zt{display:none!important}.focus{display:none!important}
+/* v12: una sola ruta de selección en el encabezado */
+.crumb{gap:5px;min-height:14px}.crumb button{font-size:10.5px;font-weight:600}.crumb span{color:#B5BFBE}.crumb em{font-style:normal}
+.tit{display:flex;align-items:center;gap:6px}
+.qx{border:0;background:var(--hair);width:24px;height:24px;border-radius:50%;cursor:pointer;color:var(--strong);font-size:11px;flex:none}.qx:hover{background:#DDE6E5}
+.goin{display:inline-flex;align-items:center;gap:8px;border:0;background:var(--teal);color:#fff;border-radius:10px;padding:8px 14px;font-weight:700;font-size:12.5px;cursor:pointer;white-space:nowrap;box-shadow:0 4px 12px rgba(19,97,92,.25);transition:background .2s,transform .2s}
+.goin:hover{background:#13615C;transform:translateY(-1px)}.goin[disabled]{background:var(--hair);color:var(--muted);box-shadow:none;cursor:default;transform:none}
+.lbl{font-size:11px;color:var(--muted);font-weight:600}
+.lrow{gap:6px 10px}.lrow .gap{width:8px}
+.chipx{display:inline-flex;align-items:center;gap:6px;border:0;background:var(--rail);color:#fff;border-radius:8px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer}
+.c[data-act]{cursor:pointer;border-radius:10px;transition:background .2s}.c[data-act]:hover{background:rgba(255,255,255,.06)}.c[data-act] small u{color:#8BE7E1;text-decoration:none}
+.app{grid-template-columns:minmax(0,1fr)}.tl{flex:1 1 0;width:0;overflow:hidden}.tlb>span:last-child{flex:none}
+.hero>span small{white-space:normal}
+.rkc{font-size:10.5px;color:var(--muted);margin-top:-2px}
 </style>
 </head>
 <body>
@@ -374,8 +388,8 @@ body.mob .tl{flex-basis:100%;border-left:0;padding:4px 0 0;margin-left:0}
 <div class="app" id="app">
   <header class="top">
     <div class="logo" aria-hidden="true"></div>
-    <button class="back" id="bback" hidden aria-label="Volver a la vista general"><svg viewBox="0 0 14 14"><path d="M9 3L5 7l4 4"/></svg>México</button><div><div class="crumb"><button id="bmex">México</button><span id="csep" hidden>›</span><span id="cst"></span></div>
-      <div class="cb"><input id="q" autocomplete="off" aria-label="Elegir estado" role="combobox" aria-expanded="false" aria-controls="ac"><svg viewBox="0 0 12 12"><path d="M3 4.5l3 3 3-3"/></svg><div class="ac" id="ac" role="listbox" hidden></div></div></div>
+    <button class="back" id="bback" hidden aria-label="Volver a la vista general"><svg viewBox="0 0 14 14"><path d="M9 3L5 7l4 4"/></svg>México</button><div><div class="crumb" id="crumb"></div>
+      <div class="tit"><div class="cb"><input id="q" autocomplete="off" aria-label="Buscar estado o circunscripción" role="combobox" aria-expanded="false" aria-controls="ac"><svg viewBox="0 0 12 12"><path d="M3 4.5l3 3 3-3"/></svg><div class="ac" id="ac" role="listbox" hidden></div></div><button class="qx" id="qx" hidden aria-label="Quitar la selección" title="Quitar la selección">✕</button></div></div><button class="goin" id="goin" hidden></button>
     <div class="esel" id="esel"><button id="ebtn" aria-haspopup="listbox" aria-expanded="false"><small id="elab">Elección</small><b id="eval"></b><svg viewBox="0 0 12 12"><path d="M3 4.5l3 3 3-3"/></svg></button><div class="epop" id="epop" hidden></div><select id="elec" aria-hidden="true" tabindex="-1"></select></div>
     <div class="tl" id="cdx" aria-label="Avance del proceso electoral federal 2026-2027"></div>
   </header>
@@ -388,7 +402,7 @@ body.mob .tl{flex-basis:100%;border-left:0;padding:4px 0 0;margin-left:0}
       <div class="foot" id="mfoot"></div></section>
     <div class="col col2 fade" id="c2">
       <section class="p fade" id="res"><div class="ph"><div><h2>Resultados <span class="zt" id="rzt"></span></h2><p id="rs"></p></div><button class="amp" data-open="res"><svg viewBox="0 0 12 12"><path d="M7 1.5h3.5V5M5 10.5H1.5V7M10.5 1.5L7 5M1.5 10.5L5 7"/></svg>Ampliar</button></div><div class="hero" id="rhero"></div><div class="bw"><svg id="rb"></svg></div><div class="note" id="rnote"></div></section>
-      <section class="p"><div class="lh"><h2 class="ph" style="margin:0;justify-content:flex-start;gap:8px"><span style="font:800 14px var(--d);color:var(--strong);white-space:nowrap" id="lh"></span><span class="zt" id="lzt"></span></h2><div class="seg" id="rkt"></div></div><div class="rank" id="rank"></div><button class="more" id="more"></button></section>
+      <section class="p"><div class="lh"><h2 class="ph" style="margin:0;justify-content:flex-start;gap:8px"><span style="font:800 14px var(--d);color:var(--strong);white-space:nowrap" id="lh"></span><span class="zt" id="lzt"></span></h2><div class="seg" id="rkt"></div><div class="rkc" id="rkc"></div></div><div class="rank" id="rank"></div><button class="more" id="more"></button></section>
     </div>
     <div class="col col3 fade" id="c3">
       <section class="p"><div class="ph"><div><h2>Evolución del voto <span class="zt" id="tzt"></span></h2><p id="ts"></p></div><button class="amp" data-open="tr"><svg viewBox="0 0 12 12"><path d="M7 1.5h3.5V5M5 10.5H1.5V7M10.5 1.5L7 5M1.5 10.5L5 7"/></svg>Ampliar</button></div><div class="tb"><div class="pt" id="tpt"></div></div><div class="cw"><svg id="tr" role="img" aria-label="Evolución del voto"></svg></div><div class="foot" id="tf"></div></section>
@@ -524,7 +538,7 @@ function paintMx(){const cnt={};let pv=[],nd=0;const t=zEff(),E=M.EL[ek];
   $('mh').textContent=mmode==='g'?'Quién gobierna cada estado':mmode==='27'?'Qué se elige en 2027':elab(ek);
   $('mp').textContent=mmode==='p'?`Participación por ${zn}`:mmode==='w'?(E.comp?`Partido de la gubernatura más reciente, por ${zn}`:`Partido que encabezó al ganador en cada ${zn}`):mmode==='g'?'Partido de la última gubernatura':'Elecciones locales del 6 de junio de 2027';
   $('lrow').querySelectorAll('[data-m]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.m===mmode));
-  $('lrow').querySelectorAll('[data-z]').forEach(b=>{b.setAttribute('aria-pressed',b.dataset.z===t);b.disabled=mmode==='g'||mmode==='27';});}
+  $('lrow').querySelectorAll('[data-z]').forEach(b=>{b.setAttribute('aria-pressed',b.dataset.z===t);b.disabled=mmode==='g'||mmode==='27';});if($('m27x'))$('m27x').hidden=mmode!=='27';}
 $('gst').querySelectorAll('path.st').forEach(p=>{const u=p.dataset.u;
   p.onmousemove=e=>{const s=ES[u],r=R(u,ek);if(mmode==='27'){const j=juega(s);tt(e,`<b>${s.n}: en 2027 se elige</b>`+j.map(x=>`<br>${x[0]}: <b>${x[1]}</b>`).join(''));return;}tt(e,`<b>${s.n}</b>`+(r?`<br>${elab(ek)}: ganó ${r.bl[0].n} por ${f1(r.m)} pts<br>Participación ${f1(r.turn)}%`:M.EL[ek].t==='GOB'?`<br>No eligió gubernatura en ${M.EL[ek].y}`:'')+(s.gob?`<br>Gobierna ${pn(s.gob.l)} (desde ${s.gob.y})`:'')+`<br><i style="opacity:.7">${AVAIL.has(s.clave)?'Doble clic para entrar al detalle':'Clic para ver sus datos'}</i>`);};p.onmouseleave=th;
   p.onclick=()=>{th();if(LV==='mx')setUnit(u===unit?root():u);};p.ondblclick=()=>{const s=ES[u];if(AVAIL.has(s.clave))toState(s.clave);};});
@@ -550,31 +564,31 @@ function paintSt(){const cnt={};let nd=0;
   $('lrow').querySelectorAll('[data-l]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.l===lay));
   $('focus').classList.toggle('off',unit==='e');if(unit!=='e')$('fname').textContent=uname(unit);}
 function circBox(){const bs=[...$('gst').querySelectorAll('path.st')].filter(p=>ES[p.dataset.u].circ===circ).map(bbOf);const x0=Math.min(...bs.map(b=>b[0])),y0=Math.min(...bs.map(b=>b[1])),x1=Math.max(...bs.map(b=>b[0]+b[2])),y1=Math.max(...bs.map(b=>b[1]+b[3]));return fitBox([x0,y0,x1-x0,y1-y0],.06);}
-function unitBox(){if(LV==='mx'){if(unit==='e0')return mxFull();if(unit[0]==='c')return circBox();if(unit[0]==='f'||unit[0]==='m'){const p=$('gzn').querySelector(`path[data-u="${unit}"]`);if(p){const b=bbOf(p),sp=$('gst').querySelector(`path[data-u="e${entOf(unit)}"]`),sb=sp?bbOf(sp):b,w=Math.max(Math.max(b[2],b[3])*3.2,Math.max(sb[2],sb[3])*.6,14),t=fitBox([b[0]+b[2]/2-w/2,b[1]+b[3]/2-w/2,w,w],0);t[0]-=t[2]*.16;return t;}return mxFull();}const t=fitBox(bbOf($('gst').querySelector(`path[data-u="${unit}"]`)),.75);t[0]-=t[2]*.18;t[1]-=t[3]*.1;return t;}
+function unitBox(){if(LV==='mx'){if(unit==='e0')return mxFull();if(unit[0]==='c')return circBox();if(unit[0]==='f'||unit[0]==='m'){const p=$('gzn').querySelector(`path[data-u="${unit}"]`);if(p){const b=bbOf(p),sp=$('gst').querySelector(`path[data-u="e${entOf(unit)}"]`),sb=sp?bbOf(sp):b,w=Math.max(Math.max(b[2],b[3])*3.2,Math.max(sb[2],sb[3])*.6,14),t=fitBox([b[0]+b[2]/2-w/2,b[1]+b[3]/2-w/2,w,w],0);return t;}return mxFull();}return fitBox(bbOf($('gst').querySelector(`path[data-u="${unit}"]`)),.45);}
   if(unit==='e')return fitBox(stBox,.1);const p=$('gun').querySelector(`path[data-u="${unit}"]`);if(!p)return fitBox(stBox,.1);const b=bbOf(p),r=Math.max(b[2],b[3])/Math.max(stBox[2],stBox[3]);return fitBox(b,r<.06?2.2:r<.2?.8:.45);}
 $('fx').onclick=()=>setUnit('e');
 
 /* ===== controles del mapa por nivel ===== */
 function controls(){if(LV==='mx'){
-    $('lrow').innerHTML=`<div class="seg"><button data-m="p">Participación</button><button data-m="w">Resultados</button><button data-m="g">Quién gobierna</button><button data-m="27">Qué se elige en 2027</button></div><div class="seg" title="Unidad del mapa"><button data-z="e">Estados</button><button data-z="f">Distritos federales</button><button data-z="m">Municipios</button></div><label class="csel">Circunscripción <select id="circ"><option value="0">Todas</option>${[1,2,3,4,5].map(c=>`<option value="${c}">${c}</option>`).join('')}</select></label>`;
-    $('lrow').querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{if(mmode===b.dataset.m)return;mmode=b.dataset.m;if(!isRoot(unit)&&unit[0]!=='e'&&zEff()==='e')unit='e'+entOf(unit);paintMx();rank();refresh();preview();});$('circ').value=circ;
+    $('lrow').innerHTML=`<span class="lbl">Ver por</span><div class="seg"><button data-z="e">Estados</button><button data-z="f">Distritos</button><button data-z="m">Municipios</button></div><span class="gap"></span><span class="lbl">Color</span><div class="seg"><button data-m="w">Quién ganó</button><button data-m="p">Participación</button></div><button class="chipx" id="m27x" hidden>Qué se elige en 2027 ✕</button>`;
+    $('m27x').onclick=()=>{mmode='w';paintMx();rank();refresh();ficha();};
+    $('lrow').querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{if(mmode===b.dataset.m)return;mmode=b.dataset.m;if(!isRoot(unit)&&unit[0]!=='e'&&zEff()==='e')unit='e'+entOf(unit);paintMx();rank();refresh();});
     $('lrow').querySelectorAll('[data-z]').forEach(b=>b.onclick=()=>{if(zl===b.dataset.z)return;zl=b.dataset.z;zlAuto=false;if(!isRoot(unit)&&unit[0]!=='e'&&unit[0]!==zl)unit=root();showAll=false;paintMx();rank();refresh();preview();animVB(unitBox(),900);});
-    $('circ').onchange=e=>{circ=+e.target.value;trShow=null;outs(true);setTimeout(()=>{ficha();outs(false);},300);setUnit(root());};
-    $('mctl').innerHTML='';$('s2w').hidden=true;$('mfoot').textContent='Clic en el mapa o en la lista: todo el tablero muestra esa zona. Doble clic en un estado: entrar a su detalle. Rueda o + −: zoom; arrastra para mover.';
-    $('rkt').innerHTML='<button data-r="m">Más cerrados</button><button data-r="p">Participación</button><button data-r="l">Electores</button>';
+    $('mctl').innerHTML='';$('s2w').hidden=true;$('mfoot').textContent='Clic en una zona del mapa o de la lista para ver sus datos. Rueda del mouse: acercar o alejar.';
+    $('rkt').innerHTML='<button data-r="m">Más reñidos</button><button data-r="p">Más participación</button><button data-r="l">Más electores</button>';
   }else{
-    $('lrow').innerHTML='<div class="seg"><button data-l="m">Municipios</button><button data-l="d">Dist. locales</button><button data-l="f">Dist. federales</button><button data-l="e">Estado completo</button></div>';
+    $('lrow').innerHTML='<span class="lbl">Ver por</span><div class="seg"><button data-l="m">Municipios</button><button data-l="d">Distritos locales</button><button data-l="f">Distritos federales</button></div>';
     $('lrow').querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>{if(lay===b.dataset.l)return;lay=b.dataset.l;showAll=false;if(unit!=='e'&&unit[0]!==lay)unit='e';$('gun').style.opacity=0;setTimeout(()=>{drawLayer();rank();refresh();q2ph();$('gun').style.opacity=1;animVB(unitBox(),900);},250);});
-    $('mctl').innerHTML='<button id="bmx2">← México</button>';$('bmx2').onclick=toNation;$('s2w').hidden=false;q2ph();
-    $('mfoot').textContent='Clic en el mapa o en la lista: todo el tablero muestra esa zona. Rueda o + −: zoom; arrastra para mover.';
-    $('rkt').innerHTML='<button data-r="m">Más cerrados</button><button data-r="p">Participación</button><button data-r="l">Electores</button>';}
+    $('mctl').innerHTML='';$('s2w').hidden=false;q2ph();
+    $('mfoot').textContent='Clic en una zona del mapa o de la lista para ver sus datos. Rueda del mouse: acercar o alejar.';
+    $('rkt').innerHTML='<button data-r="m">Más reñidos</button><button data-r="p">Más participación</button><button data-r="l">Más electores</button>';}
   $('gun').style.transition='opacity .3s';$('rkt').querySelectorAll('button').forEach(b=>b.onclick=()=>{rk=b.dataset.r;rank();});}
 
 /* ===== zona elegida: todo el tablero la sigue ===== */
-function setUnit(u){unit=u;if(LV==='mx')paintMx();else paintSt();rank(true);refresh();preview();animVB(unitBox(),1100);}
+function setUnit(u){unit=u;if(LV==='mx')paintMx();else paintSt();rank(true);refresh();crumb();animVB(unitBox(),1100);}
 
 /* ===== tarjeta de estado y entrada al detalle ===== */
-function preview(){const el=$('prev');if(LV!=='mx'||isRoot(unit)){el.classList.remove('in');return;}if(unit[0]!=='e'){const s=ES['e'+entOf(unit)],r=R(unit,ek),ok=AVAIL.has(s.clave);el.innerHTML=`<button class="px" aria-label="Cerrar">✕</button><div><small>${s.n} · Circunscripción ${s.circ}</small><h3>${uname(unit).split(' · ')[0]}</h3></div><dl>${r?`<dt>${elab(ek)}</dt><dd>${r.bl[0].n}, ${f1(r.bl[0].p)}% (+${f1(r.m)})</dd><dt>Participación</dt><dd>${f1(r.turn)}%</dd><dt>Electores</dt><dd>${fmt(r.ln)}</dd>`:''}</dl><button class="go" ${ok?'':'disabled'} id="gobtn">${ok?`Ver detalle de ${s.n}`:'Detalle del estado disponible al cargar sus datos'}<svg viewBox="0 0 14 14"><path d="M3 7h8M7.5 3.5L11 7l-3.5 3.5"/></svg></button>`;el.classList.add('in');el.querySelector('.px').onclick=()=>setUnit(root());$('gobtn').onclick=()=>toState(s.clave);return;}const s=ES[unit],r=R(unit,ek),ok=AVAIL.has(s.clave);
+function preview(){$('prev').classList.remove('in');return;const el=$('prev');if(LV!=='mx'||isRoot(unit)){el.classList.remove('in');return;}if(unit[0]!=='e'){const s=ES['e'+entOf(unit)],r=R(unit,ek),ok=AVAIL.has(s.clave);el.innerHTML=`<button class="px" aria-label="Cerrar">✕</button><div><small>${s.n} · Circunscripción ${s.circ}</small><h3>${uname(unit).split(' · ')[0]}</h3></div><dl>${r?`<dt>${elab(ek)}</dt><dd>${r.bl[0].n}, ${f1(r.bl[0].p)}% (+${f1(r.m)})</dd><dt>Participación</dt><dd>${f1(r.turn)}%</dd><dt>Electores</dt><dd>${fmt(r.ln)}</dd>`:''}</dl><button class="go" ${ok?'':'disabled'} id="gobtn">${ok?`Ver detalle de ${s.n}`:'Detalle del estado disponible al cargar sus datos'}<svg viewBox="0 0 14 14"><path d="M3 7h8M7.5 3.5L11 7l-3.5 3.5"/></svg></button>`;el.classList.add('in');el.querySelector('.px').onclick=()=>setUnit(root());$('gobtn').onclick=()=>toState(s.clave);return;}const s=ES[unit],r=R(unit,ek),ok=AVAIL.has(s.clave);
   el.innerHTML=`<button class="px" aria-label="Cerrar">✕</button><div><small>Circunscripción ${s.circ}</small><h3>${s.n}</h3></div>
    <dl>${s.gob?`<dt>Gobierna</dt><dd><i class="sw" style="background:${pc(s.gob.l)}"></i>${pn(s.gob.l)}, desde ${s.gob.y}</dd>`:''}
    ${r?`<dt>${elab(ek)}</dt><dd>${r.bl[0].n}, ${f1(r.bl[0].p)}% (+${f1(r.m)})</dd><dt>Participación</dt><dd>${f1(r.turn)}%</dd>`:''}
@@ -601,10 +615,11 @@ async function toNation(quick){if(busy)return;busy=true;th();outs(true);const ca
 
 /* ===== ficha ===== */
 let fiV=0;
-function setFicha(cells){const el=$('fi'),v=++fiV,H=cells.map(c=>`<div class="c" title="${c[3]||''}"><small>${c[0]}</small><b class="n">${c[1]}</b>${c[2]||''}</div>`),cur=[...el.children];
+function setFicha(cells){const el=$('fi'),v=++fiV,H=cells.map(c=>`<div class="c" title="${c[3]||''}"${c[4]?` data-act="${c[4]}"`:''}><small>${c[0]}</small><b class="n">${c[1]}</b>${c[2]||''}</div>`),cur=[...el.children];
   if(cur.length!==H.length||RM){el.innerHTML=H.join('');return;}
   H.forEach((h,i)=>{const d=document.createElement('div');d.innerHTML=h;const nw=d.firstChild,old=cur[i];old.getAnimations().forEach(a=>a.cancel());if(old.innerHTML===nw.innerHTML&&old.title===nw.title)return;
     old.animate([{opacity:1},{opacity:0}],{duration:150,fill:'forwards'}).onfinish=()=>{if(v!==fiV||!old.isConnected)return;old.replaceWith(nw);nw.animate([{opacity:0,transform:'translateY(3px)'},{opacity:1,transform:'none'}],{duration:280,easing:'ease-out'});};});}
+$('fi').onclick=e=>{const c=e.target.closest('[data-act]');if(!c||LV!=='mx'||busy)return;mmode=mmode==='27'?'w':'27';if(mmode==='27'&&!isRoot(unit)&&unit[0]!=='e')unit='e'+entOf(unit);paintMx();rank();refresh();ficha();crumb();};
 function ficha(){if(LV==='mx'){const ESL=NAC.est.filter(e=>!circ||e.circ===circ),R0=root(),E=NM.EL[ek];const G={};ESL.forEach(e=>{if(e.gob)G[e.gob.l]=(G[e.gob.l]||0)+1;});const ng=Object.values(G).reduce((a,b)=>a+b,0),lg=top1(G);
     const isD=ek.startsWith('DIPF_'),DF=isD?(E.df[R0]||{}):(()=>{const o={};ESL.forEach(e=>{const r=R('e'+e.ent,ek);if(r){const w=r.bl[0].parts[0].p;o[w]=(o[w]||0)+1;}});return o;})(),nd=Object.values(DF).reduce((a,b)=>a+b,0),ld=top1(DF);
     const ek2=E.t==='GOB'?ORD().filter(k=>k.startsWith('DIPF_')).pop():ek,v=NM.EL[ek2].v[R0],c27=ESL.filter(e=>e.c27.g).length,cc=ESL.filter(e=>e.c27.c).length,na=ESL.reduce((a,e)=>a+(e.c27.a?+((e.c27.na.match(/\d+/)||[0])[0]):0),0);
@@ -613,7 +628,7 @@ function ficha(){if(LV==='mx'){const ESL=NAC.est.filter(e=>!circ||e.circ===circ)
      ['Gubernaturas',`${G[lg]} <em>de ${ng} para ${pn(lg)}</em>`,sbar(G),'Partido de la gubernatura más reciente de cada estado'],
      [lab2,nd?`${DF[ld]} <em>de ${nd} ${isD?'distritos':'estados'} para ${pn(ld)}</em>`:'—',nd?sbar(DF):'',isD?'Distritos de mayoría relativa, por partido que encabezó la candidatura ganadora':'Estados ganados, por partido que encabezó la candidatura ganadora'],
      ['Electores',`${fmt(v[1])} <em>votó ${f1(100*v[0]/v[1])}%</em>`,'',`Lista nominal de ${elab(ek2)}`],
-     ['En juego en 2027',`${c27} <em>gubernaturas · ${cc} congresos</em>`,'',`${c27} gubernaturas, ${cc} congresos locales, ${fmt(na)} ayuntamientos${circ?'':' y 500 diputaciones federales'}`],
+     [mmode==='27'?'En juego en 2027 · <u>quitar del mapa</u>':'En juego en 2027 · <u>ver en el mapa</u>',`${c27} <em>gubernaturas · ${cc} congresos</em>`,'',`${c27} gubernaturas, ${cc} congresos locales, ${fmt(na)} ayuntamientos${circ?'':' y 500 diputaciones federales'}. Clic para verlo en el mapa.`,'27'],
      ['Territorio',`${ESL.length} <em>estados · ${isD?nd:circ?'':300} distritos</em>`.replace(' ·  distritos',''),'',circ?'Circunscripción '+circ:'5 circunscripciones, 300 distritos federales']]);return;}
   const F=M.fi,cg=F.cong,ay=F.ay,lc=top1(cg.s),la=top1(ay.s);
   setFicha([
@@ -622,8 +637,17 @@ function ficha(){if(LV==='mx'){const ESL=NAC.est.filter(e=>!circ||e.circ===circ)
    ['Ayuntamientos',`${ay.s[la]} <em>de ${ay.n} para ${pn(la)}</em>`,sbar(ay.s),`Elección ${ay.y}${ay.u?`; ${ay.u} más por usos y costumbres`:''}`],
    ['Electores',`${fmt(F.ln)} <em>${f1(F.pm)}% mujeres</em>`,'','Lista nominal oct-2026'],
    ['Territorio',`${fmt(F.nsec)} <em>secciones · ${F.nm} municipios</em>`,'',`${F.nm} municipios, ${F.ndl} distritos locales, ${F.ndf} federales`]]);}
-function crumb(){$('bback').hidden=LV==='mx';$('ana').hidden=LV==='mx';if(LV==='st'){$('ana').href='index.html#'+M.cab;$('ana').removeAttribute('target');$('anas').textContent='Escenarios, metas y secciones de '+M.est;}setTimeout(()=>{$('q').style.width=($('q').value.length+2.2)+'ch';});$('csep').hidden=LV==='mx';$('cst').textContent=LV==='mx'?'Vista general · 32 estados':M.est;$('bmex').hidden=LV==='mx';$('q').value=LV==='mx'?'México':M.est;$('elab').textContent=LV==='mx'?'Elección federal':'Elección';}
-$('bmex').onclick=()=>{if(LV==='st')toNation();};$('bback').onclick=()=>{if(LV==='st')toNation();};
+function crumb(){const P=[];let T;
+  if(LV==='mx'){P.push(['México',()=>{circ=0;trShow=null;ficha();setUnit('e0');}]);if(circ)P.push(['Circunscripción '+circ,()=>setUnit('c'+circ)]);
+    if(isRoot(unit))T=P.pop()[0];else{const e='e'+entOf(unit);if(unit!==e)P.push([ES[e].n,()=>setUnit(e)]);T=uname(unit).split(' · ')[0];}}
+  else{P.push(['México',()=>toNation()]);P.push([M.est,()=>setUnit('e')]);if(unit==='e')T=P.pop()[0];else T=uname(unit);}
+  const cr=$('crumb');cr.innerHTML=P.length?P.map((p,i)=>`<button data-i="${i}">${p[0]}</button><span>›</span>`).join(''):'<em>Vista nacional · 32 estados</em>';cr.querySelectorAll('button').forEach(b=>b.onclick=()=>{if(!busy)P[+b.dataset.i][1]();});
+  $('q').value=T;setTimeout(()=>{$('q').style.width=($('q').value.length+2.2)+'ch';});
+  const qx=$('qx');qx.hidden=!P.length;qx.onclick=()=>{if(!busy&&P.length)P[P.length-1][1]();};
+  const g=$('goin');if(LV==='mx'&&!isRoot(unit)){const st=ES['e'+entOf(unit)],ok=AVAIL.has(st.clave);g.hidden=false;g.disabled=!ok;g.innerHTML=ok?`Ver análisis de ${st.n} <svg viewBox="0 0 14 14" width="13" height="13" style="stroke:#fff;fill:none;stroke-width:2.2"><path d="M3 7h8M7.5 3.5L11 7l-3.5 3.5"/></svg>`:`Análisis de ${st.n}: pendiente`;g.onclick=()=>{if(ok)toState(st.clave);};}else g.hidden=true;
+  $('bback').hidden=LV==='mx';$('ana').hidden=LV==='mx';if(LV==='st'){$('ana').href='index.html#'+M.cab;$('ana').removeAttribute('target');$('anas').textContent='Escenarios, metas y secciones de '+M.est;}
+  $('elab').textContent=LV==='mx'?'Elección federal':'Elección';}
+$('bback').onclick=()=>{if(LV==='st')toNation();};
 
 /* ===== resultados: barras verticales (formato de la plataforma) ===== */
 function barsSVG(svgEl,r,pr,opt){const W=svgEl.clientWidth,H=svgEl.clientHeight;if(!W||!H)return;svgEl.setAttribute('viewBox',`0 0 ${W} ${H}`);
@@ -656,7 +680,7 @@ function resultados(){const E=M.EL[ek],r=R(unit,ek),pk=r&&!r.cnt?prevK(ek):null,
   const hb=$('rhero').querySelector('b'),ov=hb?parseFloat(hb.textContent.replace(/,/g,'')):null;
   if(!r){$('rhero').innerHTML=`<span class="emp">${E.t==='GOB'?`${uname(unit)} no eligió gubernatura en ${E.y}. Elige otro año o "Gubernaturas vigentes".`:'Esta zona no tiene resultado en esta elección.'}</span>`;const s=$('rb');cancelAnimationFrame(s._raf);s._st=null;s.innerHTML='';$('rnote').innerHTML='';return;}
   const w=r.bl[0],s=r.bl[1],c=pc(w.parts[0].p);$('res').style.setProperty('--wc',c);
-  $('rhero').innerHTML=r.cnt?`<b class="n"></b><span>de ${r.n} gubernaturas para ${w.n}<small>${r.bl.slice(1,5).map(b=>`${b.n} ${b.v}`).join(' · ')}</small></span>`:`<b class="n"></b><span>${w.n}<small>${s?`${f1(w.p-s.p)} pts de ventaja sobre ${s.s}`:'sin contrincante'}</small></span>`;
+  $('rhero').innerHTML=r.cnt?`<b class="n"></b><span>de ${r.n} gubernaturas son de ${w.n}<small>${r.bl.slice(1,5).map(b=>`${b.n} ${b.v}`).join(' · ')}</small></span>`:`<b class="n"></b><span>Ganó ${w.n}<small>${s?`por ${f1(w.p-s.p)} puntos sobre ${s.s}`:'sin contrincante'}${r.turn?` · votó ${f1(r.turn)}%`:''}</small></span>`;
   const nb=$('rhero').querySelector('b');if(r.cnt)tweenNum(nb,ov,w.v,x=>Math.round(x));else tweenNum(nb,ov,w.p,x=>f1(x)+'%');
   $('rnote').innerHTML=r.cnt?'<span>Estados por partido que encabezó la candidatura ganadora</span>':`<span><i></i>colores: aporte de cada partido</span>`+(pr?`<span><s></s>raya: ${pr.y}</span>`:'<span>sin elección anterior comparable</span>');
   barsSVG($('rb'),r,pr,{});}
@@ -674,7 +698,7 @@ function rank(scroll){const by=rk;let us;
     const bar=by==='p'?`<div class="tq"><i style="width:${Math.min(100,x.p).toFixed(1)}%"></i>${avg?`<s style="left:${Math.min(100,avg).toFixed(1)}%" title="Promedio"></s>`:''}</div>`
       :by==='l'?`<div class="tq"><i style="width:${(100*x.r.ln/mxl).toFixed(1)}%;background:#4CC1BA"></i></div>`
       :`<div class="sh"><i style="width:${w.p.toFixed(1)}%;background:${pc(w.parts[0].p)}"></i>${s?`<i style="width:${s.p.toFixed(1)}%;background:${pc(s.parts[0].p)};opacity:.75"></i>`:''}</div>`;
-    return `<div class="r${x.u===unit?' on':''}" data-u="${x.u}"><span class="k">${i}</span><span>${x.n}</span><b class="n">${by==='m'?'+'+f1(x.m):by==='l'?kf(x.r.ln):f1(v(x))+'%'}</b><span></span>${bar}</div>`;};
+    return `<div class="r${x.u===unit?' on':''}" data-u="${x.u}"><span class="k">${i}</span><span>${x.n}</span><b class="n">${by==='m'?f1(x.m)+' pts':by==='l'?kf(x.r.ln):f1(v(x))+'%'}</b><span></span>${bar}</div>`;};
   const RK=$('rank'),bef={};if(!RM)RK.querySelectorAll('.r').forEach(el=>{bef[el.dataset.u]={y:el.getBoundingClientRect().top,w:[...el.querySelectorAll('.sh i,.tq i')].map(i=>i.style.width)};});
   if(!scroll)RK.scrollTop=0;setTag('lzt',uname(root()));
   $('rank').innerHTML=LV==='st'&&lay==='e'?'<div class="foot">Con la capa Estado completo no hay zonas que comparar.</div>':lim.map(row).join('');
@@ -683,6 +707,7 @@ function rank(scroll){const by=rk;let us;
     bs.forEach((i,j)=>{const w0=b.w[j],w1=i.style.width;if(w0&&w0!==w1)i.animate([{width:w0},{width:w1}],{duration:520,easing:'cubic-bezier(.2,.8,.2,1)'});});});
   $('rank').querySelectorAll('.r').forEach(r=>{const u=r.dataset.u;r.onclick=()=>setUnit(u===unit?root():u);r.ondblclick=()=>{const s=LV==='mx'&&ES['e'+entOf(u)];if(s&&AVAIL.has(s.clave))toState(s.clave);};
     r.onmousemove=e=>{const x=L.find(z=>z.u===u),w=x.r.bl[0],s=x.r.bl[1];tt(e,`<b>${x.n}</b><br>1º ${w.n} ${f1(w.p)}%`+(s?`<br>2º ${s.n} ${f1(s.p)}%`:'')+`<br>Participación ${f1(x.p)}%`);};r.onmouseleave=th;});
+  $('rkc').textContent=by==='m'?'Puntos de ventaja del ganador sobre el segundo lugar':by==='p'?'Votó este % de la lista nominal; la raya es el promedio':'Personas en la lista nominal';
   const mb=$('more');mb.hidden=few||(LV==='st'&&lay==='e');mb.textContent=showAll?'Ver menos':`Ver los ${tot}`;
   $('rkt').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.r===by));
   if(scroll){const el=$('rank').querySelector('.r.on');if(el)el.scrollIntoView({block:'nearest',behavior:RM?'auto':'smooth'});}}
@@ -866,8 +891,8 @@ function mkAC(inp,box,src,go,keep){let I=-1,Lx=[];const mark=()=>box.querySelect
   inp.onblur=()=>setTimeout(()=>{box.hidden=true;inp.setAttribute('aria-expanded','false');if(keep)crumb();else inp.value='';},140);
   inp.onkeydown=e=>{if(box.hidden)return;if(!Lx.length)return;if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();I=(I+(e.key==='ArrowDown'?1:-1)+Lx.length)%Lx.length;mark();}else if(e.key==='Enter'){e.preventDefault();pick(I);}else if(e.key==='Escape'){box.hidden=true;inp.blur();}};}
 mkAC($('q'),$('ac'),q=>{const st=NAC.est.filter(e=>!q||norm(e.n).includes(q)).map(e=>({c:e.clave,u:'e'+e.ent,n:e.n,em:AVAIL.has(e.clave)?'con detalle':'Circunscripción '+e.circ}));
-  const mx=!q||'mexico'.includes(q)?[{mx:1,n:'México',em:'vista general'}]:[];return {items:mx.concat(st),groups:[['País',mx],['Estados',st]]};},
-  x=>{if(x.mx){circ=0;if(LV==='st')toNation();else{controls();ficha();setUnit('e0');}return;}if(AVAIL.has(x.c)){if(LV==='st'){if(M.cab!==x.c)switchState(x.c);}else toState(x.c);}else{if(LV==='st')toNation().then(()=>setUnit(x.u));else setUnit(x.u);}},true);
+  const mx=!q||'mexico'.includes(q)?[{mx:1,n:'México',em:'vista nacional'}]:[],cs=[1,2,3,4,5].filter(c=>!q||norm('circunscripcion '+c).includes(q)).map(c=>({cc:c,n:'Circunscripción '+c,em:CIRCS[c].length+' estados'}));return {items:mx.concat(cs,st),groups:[['País',mx],['Circunscripciones',cs],['Estados',st]]};},
+  x=>{if(x.cc){const go=()=>{circ=x.cc;trShow=null;ficha();setUnit(root());};if(LV==='st')toNation().then(go);else go();return;}if(x.mx){circ=0;if(LV==='st')toNation();else{ficha();setUnit('e0');}return;}if(circ&&ES[x.u].circ!==circ){circ=0;ficha();}if(AVAIL.has(x.c)){if(LV==='st'){if(M.cab!==x.c)switchState(x.c);}else toState(x.c);}else{if(LV==='st')toNation().then(()=>setUnit(x.u));else setUnit(x.u);}},true);
 const LTN={m:'municipio',d:'distrito local',f:'distrito federal'};
 mkAC($('q2'),$('ac2'),q=>{const t=lay==='e'?'m':lay,us=M.geo[t].map(x=>t+x.id).filter(u=>!q||norm(uname(u)).includes(q)).sort((a,b)=>q?norm(uname(a)).indexOf(q)-norm(uname(b)).indexOf(q):uname(a).localeCompare(uname(b),'es',{numeric:true})).slice(0,14).map(u=>({u,n:uname(u),em:R(u,ek)?'':'sin dato'}));
   return {items:us,groups:[[`${({m:'Municipios',d:'Distritos locales',f:'Distritos federales'})[t]} de ${M.est}`,us]]};},x=>{const t=x.u[0];if(lay!==t){lay=t;drawLayer();controls();}setUnit(x.u);});
@@ -897,7 +922,7 @@ cuenta();
 controls();fillElec();crumb();ficha();paintMx();rank();refresh();setVB(fitBox([0,0,MX32.w,MX32.h],.25));requestAnimationFrame(()=>animVB(mxFull(),1400));
 {const h=location.hash.slice(1);if(AVAIL.has(h))setTimeout(()=>toState(h),500);}
 let rz;addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(()=>{fitScreen();$('rb')._st=null;$('tr')._tw=null;$('hm')._N=-1;refresh();rank();setVB(unitBox());},150);});
-window.INICIO={toState,toNation,setUnit,estado:()=>({nivel:LV,zona:unit,eleccion:ek,nombre:M.est,ocupado:busy})};
+window.INICIO={toState,toNation,setUnit,setCirc:c=>{circ=c;trShow=null;ficha();setUnit(root());},estado:()=>({nivel:LV,zona:unit,eleccion:ek,nombre:M.est,ocupado:busy})};
 }
 </script>
 </body>
