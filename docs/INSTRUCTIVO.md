@@ -37,9 +37,11 @@ python pipeline/lab.py preparar chis     # paso 1: extrae lo del estado a "Resul
 python pipeline/lab.py construir chis    # paso 2: genera data/chis.json
 python pipeline/lab.py capas chis        # paso 2b: genera las bases adicionales (pipeline/capas.json)
 python pipeline/lab.py proyeccion        # paso 2c: calibra la proyección 2027 (usa todos los data/*.json)
-python pipeline/lab.py sitio             # paso 3: arma index.html, css/, js/ y data/estados.json
+python pipeline/lab.py sitio             # paso 3: arma index.html, inicio.html, css/, js/, data/estados.json y data/inicio/
+python pipeline/lab.py nacional          # paso 4: resumen de los 32 estados para la vista general (data/nacional.json)
 python pipeline/lab.py todo chis oax     # los tres pasos para uno o varios estados
 python tests/prueba_estados.py           # prueba automática de todos los estados
+python tests/prueba_inicio.py            # prueba automática de la página de inicio
 ```
 Al terminar, sube a GitHub los archivos que cambiaron: `data/` y, si cambió el código, `index.html`, `css/`, `js/` y `src/`.
 
@@ -149,3 +151,23 @@ Botón "Estrategia" junto a Tabla y Mapa. Solo muestra los cargos que se eligen 
 - **Voto duro (sección):** aun en su peor elección desde 2018, el partido sacó al menos 30% de los votos esperados en la sección. Prueba con 2018-2021 como entrenamiento: 85% de las secciones así marcadas las ganó el partido en 2024 (umbral 25%: 79%; 35%: 90%). Sustituye al "tercio más alto", que por construcción siempre marcaba un tercio de las secciones.
 - **Switcher:** cambió de partido ganador entre las dos últimas elecciones del mismo cargo en al menos 2 cargos (diputación local, federal, ayuntamiento, gubernatura). Prueba 2018→2021 contra 2024: estas secciones cambiaron de ganador 1.5 a 6 veces más que las demás (antes, en Quintana Roo, la definición anterior no distinguía: 21.6% contra 19.3%). En estados con ola en 2024 (Yucatán, Campeche) muchas secciones salen switcher porque realmente cambiaron.
 - **Registro 2027:** `pipeline/insumos/registro_2027.json`. Nacionales: Morena, PAN, PRI, PVEM, PT, MC (Somos México y PAZ sin historial). PRD con registro local confirmado en Tabasco (IEPCT, oct-2024) y Oaxaca (IEEPCO, ene-2025); Nueva Alianza en Yucatán. Los demás partidos locales se conservan solo con 3% o más en la última elección de diputados o gubernatura. Actualizar con la lista oficial de cada instituto local.
+
+## Página de inicio (inicio.html)
+
+**Qué es.** La entrada al Laboratorio. Abre en México con los 32 estados y, al elegir un estado con datos, baja a su detalle con una transición animada. Todo el tablero sigue a lo que se elige: país, circunscripción, estado, municipio o distrito, y la elección.
+- **Nivel México:** ficha del país, mapa con capas (participación, resultados, quién gobierna y qué se elige en 2027), resultados por partido, lista de estados, evolución del voto y distritos federales ganados. Arranca con la última elección presidencial.
+- **Nivel estado:** ficha del estado, mapa por municipio, distrito local o federal, resultados, lista, evolución, participación por edad y competencia en las secciones. El botón del mapa "Análisis y estrategia 2027" abre la plataforma (index.html) en ese estado. Desde la plataforma, el primer botón del riel regresa al inicio.
+- **Línea de tiempo del encabezado:** sale de `pipeline/insumos/calendario_2027.csv`. Se oculta sola después de la jornada.
+
+**De dónde salen los datos.**
+- `data/nacional.json`: lo genera `python pipeline/lab.py nacional` con los archivos nacionales por sección del INE (`01_FEDERAL`) y la última gubernatura de cada estado (`02_LOCAL`). Se corre de nuevo solo cuando hay una elección nueva o cambia el catálogo 2027.
+- `data/inicio/<clave>.json` y `data/inicio/mx32.json`: los genera `python pipeline/lab.py sitio` a partir de `data/<clave>.json`. No necesitan las bases crudas.
+- Un estado tiene detalle en el inicio cuando existe su `data/<clave>.json`; los demás muestran su información nacional.
+
+**Reglas de cálculo (iguales a la plataforma).**
+- Votos de coalición repartidos en partes iguales entre sus partidos.
+- El ganador de una zona es el bloque con más votos; su color es el del partido que lo encabezó.
+- "Gobierna" es el partido con más votos dentro de la coalición que ganó la última gubernatura (en la CDMX, la Jefatura de Gobierno).
+- Congreso local: estimado con la última elección de diputaciones locales (mayoría por distrito más representación proporcional con umbral y tope de +8 puntos). No es la integración oficial.
+- Distritos federales ganados: los 300 distritos de mayoría relativa. La Cámara tiene 500 curules, así que la mitad y los dos tercios del semicírculo son de los distritos, no de la Cámara.
+- Circunscripción: suma de los resultados de sus estados.

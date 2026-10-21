@@ -4,7 +4,8 @@
   python pipeline/lab.py construir chis     paso 2: genera data/chis.json
   python pipeline/lab.py capas chis         paso 2b: genera las bases adicionales de pipeline/capas.json
   python pipeline/lab.py proyeccion         paso 2c: calibra la proyección 2027 con todos los estados
-  python pipeline/lab.py sitio              paso 3: arma index.html, css/, js/ y data/estados.json
+  python pipeline/lab.py sitio              paso 3: arma index.html, inicio.html, css/, js/, data/estados.json y data/inicio/
+  python pipeline/lab.py nacional           paso 4: resumen de los 32 estados para la vista general (data/nacional.json)
   python pipeline/lab.py todo chis oax      los tres pasos para uno o varios estados
   python pipeline/lab.py estados            lista las claves disponibles
 
@@ -54,8 +55,15 @@ def main(a):
     if cmd in ('sitio', 'todo'):
         from sitio import sitio
         sitio()
-    if cmd not in ('preparar', 'construir', 'capas', 'todo', 'sitio', 'proyeccion'):
-        raise SystemExit(f'Comando no reconocido: {cmd}. Usa: preparar, construir, capas, proyeccion, sitio, todo o estados.')
+    if cmd == 'nacional':
+        print('[nacional] Resumen de los 32 estados con los archivos nacionales del INE')
+        r = subprocess.run([sys.executable, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'nacional.py')])
+        if r.returncode:
+            raise SystemExit('Falló el resumen nacional.')
+        from sitio import sitio
+        sitio()
+    if cmd not in ('preparar', 'construir', 'capas', 'todo', 'sitio', 'proyeccion', 'nacional'):
+        raise SystemExit(f'Comando no reconocido: {cmd}. Usa: preparar, construir, capas, proyeccion, sitio, nacional, todo o estados.')
 
 
 if __name__ == '__main__':

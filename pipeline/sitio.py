@@ -1,7 +1,8 @@
 """Paso 3. Arma el sitio publicable a partir del código fuente (src/) y de data/.
 
 Genera en la raíz del repositorio:
-  index.html, css/estilos.css, js/app.js y data/estados.json (lista de estados disponibles).
+  index.html, inicio.html, css/estilos.css, js/app.js, data/estados.json (lista de estados disponibles)
+  y data/inicio/ (datos ligeros de la página de inicio).
 No hay que editar esos archivos a mano: se editan los de src/ y se vuelve a correr este paso.
 
 uso: python pipeline/lab.py sitio
@@ -19,7 +20,7 @@ def sitio():
     # 1) lista de estados disponibles, a partir de los archivos que existan en data/
     av = []
     for f in sorted(glob.glob(str(REPO / 'data' / '*.json'))):
-        if os.path.basename(f) in ('estados.json', 'capas.json'):
+        if os.path.basename(f) in ('estados.json', 'capas.json', 'nacional.json'):
             continue
         d = json.load(open(f, encoding='utf-8'))
         m = d['meta']
@@ -81,5 +82,10 @@ function APP(DATA){{
 </html>
 """
     (REPO / 'index.html').write_text(html, encoding='utf-8')
-    print(f'[sitio] index.html, css/estilos.css, js/app.js y data/estados.json listos ({len(av)} estados: '
+
+    # 5) página de inicio (vista nacional → estado) y sus datos ligeros
+    from inicio import generar
+    generar()
+    (REPO / 'inicio.html').write_text((SRC / 'inicio.html').read_text(encoding='utf-8'), encoding='utf-8')
+    print(f'[sitio] index.html, inicio.html, css/estilos.css, js/app.js y data/estados.json listos ({len(av)} estados: '
           + ', '.join(x['estado'] for x in av) + ')')
