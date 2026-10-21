@@ -2,7 +2,7 @@
 
 Abre la vista nacional, recorre las capas del mapa, las elecciones federales, las circunscripciones
 y el orden de la lista; entra a cada estado con datos, cambia de elección y de capa, abre las ventanas
-ampliadas y regresa a México. Falla si aparece un error de JavaScript o un texto roto (NaN, undefined…).
+ampliadas, prueba el zoom y regresa a México. Falla si aparece un error de JavaScript o un texto roto (NaN, undefined…).
 
 uso:   python tests/prueba_inicio.py
 """
@@ -51,6 +51,12 @@ async def main():
             await pg.click(f'#lrow [data-z="{z}"]'); await pg.wait_for_timeout(2500); await roto(f'capa {z}')
             if z != 'e':
                 await pg.click('#rank .r >> nth=0'); await pg.wait_for_timeout(1500); await roto(f'zona {z}')
+            elif await pg.evaluate("document.querySelectorAll('#gzn path').length"):
+                prob.append('la capa Estados no borró distritos o municipios')
+        caja = await pg.eval_on_selector('#map', 'e=>{const r=e.getBoundingClientRect();return [r.x+r.width/2,r.y+r.height/2]}')
+        await pg.mouse.move(*caja); await pg.mouse.wheel(0, -400); await pg.wait_for_timeout(500)
+        await pg.mouse.down(); await pg.mouse.move(caja[0] - 80, caja[1] - 40, steps=6); await pg.mouse.up(); await pg.wait_for_timeout(300)
+        await pg.click('#zfit'); await pg.wait_for_timeout(900); await roto('zoom')
         for c in ['1', '2', '3', '4', '5', '0']:
             await pg.select_option('#circ', c); await pg.wait_for_timeout(900); await roto(f'circunscripción {c}')
         for r in ['p', 'l', 'm']:

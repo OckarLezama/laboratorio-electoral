@@ -12,7 +12,7 @@ from comun import CFG, PIPE, REPO, ruta, ESTADOS
 
 MAIN = ['MORENA', 'PAN', 'PRI', 'PRD', 'PVEM', 'PT', 'MC']
 NONVOTE = re.compile(r'^(DEMARCACION|NO_REG|CNR|NULOS|VOTOS_NULOS|CIRCUNSCRIPCION|ID_|NOMBRE_|CABECERA|MUNICIPIO|SECCION|CASILLAS|ACTA|NUM_VOTOS|TOTAL_VOTOS|LISTA_NOMINAL|TIPO|DISTRITO|EXT|OBSERV|RUTA)')
-ALIAS = {'ES': 'PES', 'FXMO': 'FXM', 'FXMV': 'FXM', 'NAO': 'NA', 'NAY': 'NA', 'PNA': 'NA', 'PANAL': 'NA'}
+ALIAS = {'NVA ALIANZA': 'NA', 'NVA_ALIANZA': 'NA', 'NUEVA_ALIANZA': 'NA', 'ES': 'PES', 'FXMO': 'FXM', 'FXMV': 'FXM', 'NAO': 'NA', 'NAY': 'NA', 'PNA': 'NA', 'PANAL': 'NA'}
 FED = [('PRESIDENCIA', 'PRE'), ('SENADURIAS_MR', 'SEN'), ('DIPUTACIONES_FED_MR', 'DIPF')]
 # circunscripciones plurinominales vigentes (acuerdo INE 2023, proceso 2023-2024)
 CIRC = {1: [2, 3, 8, 10, 14, 18, 25, 26], 2: [1, 5, 11, 19, 22, 24, 28, 32], 3: [4, 7, 20, 23, 27, 30, 31],
@@ -30,7 +30,7 @@ def num(x):
 def toks(c):
     if c.startswith('PLANILLA'):
         return ['OTROS']
-    c = re.sub(r'^C_(COMUN_)?', '', c.replace('NVA_ALIANZA', 'NA'))
+    c = re.sub(r'^C_(COMUN_)?', '', c.replace('NVA ALIANZA', 'NA').replace('NVA_ALIANZA', 'NA'))
     return [ALIAS.get(p, p) for p in c.split('_') if p and not p.isdigit() and p not in ('CAND', 'COM', 'COMUN', 'CC')]
 
 
@@ -39,7 +39,7 @@ def leer(f, claves):
     agg, used = {}, []
     with open(f, encoding='utf-8-sig', errors='ignore') as fh:
         r = csv.DictReader(fh)
-        r.fieldnames = [c.strip() for c in r.fieldnames]
+        r.fieldnames = [re.sub(r'\s+', '', c) for c in r.fieldnames]
         cols = [c for c in r.fieldnames if c and not NONVOTE.match(c)]
         ind = [c for c in cols if c.startswith('CAND_IND')]
         combos = [c for c in cols if '_' in c and c not in ind]
@@ -71,7 +71,7 @@ def leer(f, claves):
     return agg, used
 
 
-def bloques(used, partidos):
+def bloques(used, partidos, vv=None):
     par = {}
     def fnd(a):
         par.setdefault(a, a)
@@ -89,7 +89,7 @@ def bloques(used, partidos):
         g.setdefault(fnd(p), []).append(p)
     out = []
     for ms in g.values():
-        lead = next((p for p in MAIN if p in ms), ms[0])
+        lead = max(ms, key=lambda p: vv.get(p, 0)) if vv else next((p for p in MAIN if p in ms), ms[0])
         out.append([lead, sorted(ms, key=lambda p: (p != lead, MAIN.index(p) if p in MAIN else 99))])
     return out
 
@@ -107,6 +107,67 @@ def mapa_secciones():
         return {}
     with gzip.open(f, 'rt', encoding='utf-8') as g:
         return {(int(r['ENTIDAD']), int(r['SECCION'])): (int(r['DISTRITO_F']), int(r['MUNICIPIO'])) for r in csv.DictReader(g)}
+
+
+def gubernaturas(EL, ZON, MS, amin, est):
+    """Cada elección de gubernatura desde anio_minimo (GOB_<año>, solo los estados que votaron ese año)
+    y las vigentes (GOB_vig, la más reciente de cada estado). Las coaliciones son las de cada estado (bls);
+    el total nacional se presenta por partido."""
+    G = {}
+    for ent, e in sorted(est.items()):
+        for d in sorted(glob.glob(str(ruta('local') / e['carpeta_local'] / '*'))):
+            y = os.path.basename(d)
+            if not y.isdigit() or int(y) < amin:
+                continue
+            fs = [f for f in glob.glob(d + '/GUBERNATURA/*_SEC.csv') + glob.glob(d + '/JEFATURA_GOBIERNO/*_SEC.csv') if 'EXT' not in os.path.basename(f)]
+            if not fs:
+                continue
+            def cl(r, ent=ent):
+                k = ['e%d' % ent]
+                z = MS.get((ent, int(num(r.get('SECCION')))))
+                if z:
+                    k += ['F%d_%d' % (ent, z[0]), 'M%d_%d' % (ent, z[1])]
+                return k
+            G.setdefault(int(y), {})[ent] = leer(fs[0], cl)
+    ult = {}
+    for y in sorted(G):
+        for ent in G[y]:
+            ult[ent] = y
+
+    def armar(sel):
+        ps, pall = {}, []
+        for ent, y in sel:
+            tot = G[y][ent][0]['e%d' % ent][2]; val = sum(tot.values()) or 1
+            ps[ent] = [p for p in tot if p != 'OTROS' and (p in MAIN or p == 'IND' or tot[p] / val >= .02)]
+            pall += [p for p in ps[ent] if p not in pall]
+        pall.sort(key=lambda p: MAIN.index(p) if p in MAIN else 99)
+        v, bls, ys, z, e0 = {}, {}, {}, {}, [0, 0, {}]
+        for ent, y in sel:
+            agg, used = G[y][ent]; u = 'e%d' % ent
+            tt, ln, vv, n = agg[u]
+            bls[u] = bloques(used, ps[ent], vv); ys[u] = y
+            o = {p: round(vv.get(p, 0)) for p in ps[ent] if vv.get(p)}
+            o['OTROS'] = round(sum(n for p, n in vv.items() if p not in ps[ent]))
+            v[u] = [round(tt), round(ln), o]
+            e0[0] += round(tt); e0[1] += round(ln)
+            for p, n in o.items():
+                e0[2][p] = e0[2].get(p, 0) + n
+            for k, (t2, l2, w2, n2) in agg.items():
+                if k[0] in 'FM':
+                    z[k[0].lower() + k[1:]] = [round(t2), round(l2)] + [round(w2.get(p, 0)) if p in ps[ent] else 0 for p in pall] + [round(sum(x for q, x in w2.items() if q not in ps[ent]))]
+        v['e0'] = e0
+        return {'t': 'GOB', 'bl': [[p, [p]] for p in pall], 'bls': bls, 'ys': ys, 'v': v}, {'p': pall + ['OTROS'], 'z': z}
+
+    for y in sorted(G):
+        el, zo = armar([(ent, y) for ent in G[y]])
+        el['y'] = y; EL[f'GOB_{y}'] = el
+        if MS:
+            ZON[f'GOB_{y}'] = zo
+        print(f'  GOB {y}: {len(G[y])} estados')
+    el, zo = armar(sorted(ult.items()))
+    el.update(y=max(ult.values()), comp=1, lab='Gubernaturas vigentes'); EL['GOB_vig'] = el
+    if MS:
+        ZON['GOB_vig'] = zo
 
 
 def main():
@@ -154,6 +215,7 @@ def main():
                 ZON[f'{t}_{y}'] = {'p': ps, 'z': {k[0].lower() + k[1:]: [round(tt), round(ln)] + [round(vv.get(p, 0)) if p != 'OTROS' else round(sum(n for q, n in vv.items() if q not in partidos)) for p in ps]
                                               for k, (tt, ln, vv, n) in agg.items() if k[0] in 'FM'}}
             print(f'  {t} {y}: {len(v) - 1} estados')
+    gubernaturas(EL, ZON, MS, amin, est)
     # última gubernatura de cada estado
     cat = {int(r['ID_ESTADO']): r for r in csv.DictReader(open(PIPE / 'insumos' / 'catalogo_eleccion_2027.csv', encoding='utf-8-sig'))}
     out = []

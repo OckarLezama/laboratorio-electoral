@@ -161,7 +161,8 @@ Botón "Estrategia" junto a Tabla y Mapa. Solo muestra los cargos que se eligen 
 - **Línea de tiempo del encabezado:** sale de `pipeline/insumos/calendario_2027.csv`. Se oculta sola después de la jornada.
 
 **De dónde salen los datos.**
-- `data/nacional.json`: lo genera `python pipeline/lab.py nacional` con los archivos nacionales por sección del INE (`01_FEDERAL`) y la última gubernatura de cada estado (`02_LOCAL`). Se corre de nuevo solo cuando hay una elección nueva o cambia el catálogo 2027.
+- `data/nacional.json`: lo genera `python pipeline/lab.py nacional` con los archivos nacionales por sección del INE (`01_FEDERAL`) y las gubernaturas de cada estado desde 2015 (`02_LOCAL`, carpetas `GUBERNATURA` y `JEFATURA_GOBIERNO`).
+- Gubernaturas en la vista general: cada año aparece como elección ("Gubernatura 2021": solo los estados que votaron ese año; los demás salen en gris) y además "Gubernaturas vigentes" (la más reciente de cada estado). Las coaliciones son las de cada estado y el partido que encabeza es el que más votos aportó a la coalición ganadora. El total nacional de un año se presenta por partido; en "vigentes" se cuentan estados gobernados. La evolución de una gubernatura solo se muestra al elegir un estado, porque cada estado vota en años distintos. Se corre de nuevo solo cuando hay una elección nueva o cambia el catálogo 2027.
 - `data/inicio/<clave>.json` y `data/inicio/mx32.json`: los genera `python pipeline/lab.py sitio` a partir de `data/<clave>.json`. No necesitan las bases crudas.
 - Un estado tiene detalle en el inicio cuando existe su `data/<clave>.json`; los demás muestran su información nacional.
 
@@ -172,6 +173,8 @@ Botón "Estrategia" junto a Tabla y Mapa. Solo muestra los cargos que se eligen 
 - Congreso local: estimado con la última elección de diputaciones locales (mayoría por distrito más representación proporcional con umbral y tope de +8 puntos). No es la integración oficial.
 - Distritos federales ganados: los 300 distritos de mayoría relativa. La Cámara tiene 500 curules, así que la mitad y los dos tercios del semicírculo son de los distritos, no de la Cámara.
 - Circunscripción: suma de los resultados de sus estados.
+
+**Mapa: zoom.** Rueda del mouse o botones + − para acercar, arrastrar para mover y el botón de encuadre para volver. El clic sigue eligiendo la zona.
 
 **Mapa nacional por distrito federal y municipio.**
 - Con una elección federal, el mapa de México se puede ver por estados, distritos federales o municipios. Al elegir una diputación federal cambia solo a distritos.
