@@ -126,7 +126,8 @@ async def probar(b, url, cab):
     for sc in [("df", "1"), ("dl", "1")]:
         await js(f"LAB.applyScope('{sc[0]}','{sc[1]}')", str(sc)); await pg.wait_for_timeout(300); await ver(f'filtro {sc}')
         await js("LAB.applyScope('all','0')", 'todo')
-    await js("LAB.setTerr('1')", 'municipio'); await pg.wait_for_timeout(300); await ver('municipio 1')
+    m1 = min(json.loads((REPO / 'data' / f'{cab}.json').read_text(encoding='utf-8'))['meta']['municipios'], key=int)   # CDMX empieza en 2
+    await js(f"LAB.setTerr('{m1}')", 'municipio'); await pg.wait_for_timeout(300); await ver(f'municipio {m1}')
     await pg.close()
     return prob
 

@@ -54,6 +54,8 @@ def carga(c):
             val[i] = v
             if r[NP + 1]:
                 tp[i] = r[NP] / r[NP + 1]
+        if not sh:
+            continue          # elección sin votos por sección (p. ej. sin archivo): no sirve para calibrar
         E[ek] = {'t': e['type'], 'y': int(e['year']), 'sh': sh, 'tp': tp, 'val': val, 'bl': [[P.index(m) for m in b['members'] if m in P] for b in e['blocs']]}
     return d, P, S, E
 
@@ -81,7 +83,10 @@ def predice(E, L, R, Rks, a, sw):
     base = E[L]['sh']
     if sw:
         sL = estatal(E, L)
-        rs = [estatal(E, k) for k in Rks]
+        rs = [x for x in (estatal(E, k) for k in Rks) if x]
+        if not sL or not rs:
+            sw = False
+    if sw:
         sR = [sum(x[j] for x in rs) / len(rs) for j in range(len(sL))]
         f = [min(5, max(.2, sR[j] / sL[j])) if sL[j] > 1e-4 else 0 for j in range(len(sL))]
     out = {}
@@ -287,7 +292,7 @@ def registro(c, d):
 
 
 def main():
-    cabs = sorted(p.stem for p in DATA.glob('*.json') if p.stem not in ('estados', 'capas'))
+    cabs = sorted(p.stem for p in DATA.glob('*.json') if p.stem not in ('estados', 'capas', 'nacional'))
     todos, tr = {}, []
     for c in cabs:
         d, P, S, E = carga(c)

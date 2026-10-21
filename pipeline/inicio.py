@@ -187,14 +187,7 @@ def mx32():
 
 def generar():
     dst = REPO / 'data' / 'inicio'; dst.mkdir(parents=True, exist_ok=True)
-    for f in sorted(glob.glob(str(REPO / 'data' / '*.json'))):
-        b = os.path.basename(f)
-        if b in ('estados.json', 'capas.json', 'nacional.json'):
-            continue
-        D = json.load(open(f, encoding='utf-8'))
-        out = estado(D)
-        (dst / b).write_text(json.dumps(out, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
-        print(f'  inicio/{b}: {os.path.getsize(dst / b) / 1e6:.1f} MB')
+    # El Panorama nacional (oct 2026) ya no usa data/inicio/<estado>.json; sus datos salen de pipeline/panorama.py.
     if not (dst / 'mx32.json').exists():
         (dst / 'mx32.json').write_text(json.dumps(mx32(), separators=(',', ':')), encoding='utf-8')
         print('  inicio/mx32.json')

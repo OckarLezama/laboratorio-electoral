@@ -1029,3 +1029,6 @@ body.tview .mbar{bottom:auto;top:12px;right:calc(var(--cw) + 34px)}
   .es-big b{font-size:36px}.es-big.sm b{font-size:26px}
   .es-scs{grid-template-columns:1fr 1fr}
 }
+
+/* tablas: los textos largos (coaliciones, alcaldías) se parten en lugar de desbordar (oct 2026) */
+.tbl td:not(.r){white-space:normal}.tbl td .pc{white-space:normal}

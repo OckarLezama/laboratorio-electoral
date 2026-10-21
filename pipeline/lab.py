@@ -6,6 +6,7 @@
   python pipeline/lab.py proyeccion         paso 2c: calibra la proyección 2027 con todos los estados
   python pipeline/lab.py sitio              paso 3: arma index.html, inicio.html, css/, js/, data/estados.json y data/inicio/
   python pipeline/lab.py nacional           paso 4: resumen de los 32 estados para la vista general (data/nacional.json y data/inicio/nac_zonas.json)
+  python pipeline/lab.py panorama           paso 4d: datos del Panorama nacional (data/inicio/panorama.json); requiere el padrón
   python pipeline/lab.py zonas              paso 4b: mapas nacionales de estados, distritos federales y municipios (solo si cambia la cartografía)
   python pipeline/lab.py todo chis oax      los tres pasos para uno o varios estados
   python pipeline/lab.py estados            lista las claves disponibles
@@ -56,6 +57,14 @@ def main(a):
     if cmd in ('sitio', 'todo'):
         from sitio import sitio
         sitio()
+    if cmd == 'panorama':
+        print('[panorama] Datos del Panorama nacional')
+        r = subprocess.run([sys.executable, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'panorama.py')])
+        if r.returncode:
+            raise SystemExit('Falló la generación del Panorama nacional.')
+        from sitio import sitio
+        sitio()
+        return
     if cmd == 'zonas':
         print('[zonas] Mapas nacionales de estados, distritos federales y municipios (Marco Geográfico Seccional)')
         r = subprocess.run([sys.executable, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'zonas_mx.py')])
@@ -69,7 +78,7 @@ def main(a):
             raise SystemExit('Falló el resumen nacional.')
         from sitio import sitio
         sitio()
-    if cmd not in ('preparar', 'construir', 'capas', 'todo', 'sitio', 'proyeccion', 'nacional', 'zonas'):
+    if cmd not in ('preparar', 'construir', 'capas', 'todo', 'sitio', 'proyeccion', 'nacional', 'zonas', 'panorama'):
         raise SystemExit(f'Comando no reconocido: {cmd}. Usa: preparar, construir, capas, proyeccion, sitio, nacional, zonas, todo o estados.')
 
 

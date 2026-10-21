@@ -40,6 +40,9 @@ python pipeline/lab.py proyeccion        # paso 2c: calibra la proyección 2027 
 python pipeline/lab.py sitio             # paso 3: arma index.html, inicio.html, css/, js/, data/estados.json y data/inicio/
 python pipeline/lab.py nacional          # paso 4: resumen de los 32 estados para la vista general (data/nacional.json y data/inicio/nac_zonas.json)
 python pipeline/lab.py zonas             # paso 4b: mapas nacionales por estado, distrito federal y municipio (solo si cambia la cartografía)
+python pipeline/extra_inicio.py         # paso 4c: partido de cada ayuntamiento y participación 2024 por edad (insumos/ayuntamientos_edad.json)
+python pipeline/nac_extra.py            # paso 4d: Cámara y Senado con nombres, padrón y concentración del voto (data/inicio/nac_extra.json; requiere openpyxl)
+python pipeline/lab.py panorama          # paso 4e: datos del Panorama nacional (data/inicio/panorama.json): votos por estado, distrito y municipio, padrón y secciones, congresos locales; luego arma el sitio
 python pipeline/lab.py todo chis oax     # los tres pasos para uno o varios estados
 python tests/prueba_estados.py           # prueba automática de todos los estados
 python tests/prueba_inicio.py            # prueba automática de la página de inicio
@@ -56,6 +59,7 @@ Al terminar, sube a GitHub los archivos que cambiaron: `data/` y, si cambió el 
 **Nuevo corte del padrón**
 1. Pon el Excel nuevo en la carpeta.
 2. Actualiza `rutas.padron` y `cortes.padron` en `config.json`.
+3. Corre `python pipeline/nac_extra.py` y `python pipeline/lab.py panorama` para que el Panorama nacional use el corte nuevo.
 3. Corre `todo` para los estados cargados.
 
 **Resultados de una elección nueva** (por ejemplo, 2027)
@@ -176,9 +180,16 @@ Botón "Estrategia" junto a Tabla y Mapa. Solo muestra los cargos que se eligen 
 
 **Cómo se usa el inicio.** Cada cosa se decide en un solo lugar: la elección, en el selector de arriba; la zona, con clic en el mapa o la lista, o con el buscador del encabezado (estados y circunscripciones). El encabezado muestra la ruta (México › Nuevo León › Distrito 11); se regresa con la ✕ o con clic en la ruta. El botón "Ver análisis de…" entra al detalle del estado. En el mapa solo hay "Ver por" (estados, distritos o municipios) y "Color" (quién ganó o participación); "Qué se elige en 2027" se ve con clic en esa casilla de la franja oscura.
 
+**Inicio nacional: Congreso y gobiernos.** La tarjeta del Congreso muestra la integración de la Cámara (2015, 2018, 2021, 2024) o del Senado (2012, 2018, 2024) según el año de la elección elegida, con nombres al pasar el cursor; antes de 2024 los ganadores en coalición se cuentan con el partido que la encabezó, porque el INE no registra su partido de origen. El color "Quién gobierna" pinta estados por gubernatura o municipios por su último ayuntamiento.
+
 **Mapa: zoom.** Rueda del mouse o botones + − para acercar, arrastrar para mover y el botón de encuadre para volver. El clic sigue eligiendo la zona.
 
 **Mapa nacional por distrito federal y municipio.**
 - Con una elección federal, el mapa de México se puede ver por estados, distritos federales o municipios. Al elegir una diputación federal cambia solo a distritos.
 - Cartografía: Marco Geográfico Seccional del INE (`CARTO/MGS`). Para regenerarla, descomprime `MGSAN_Shapefile.zip` y el `SHAPEFILE.7z` que trae dentro en `CARTO/MGS/SHAPEFILE/` y corre `python pipeline/lab.py zonas`. Crea `data/inicio/mx32.json`, `mx_df.json`, `mx_mun.json` y `pipeline/insumos/secciones_mgs.csv.gz` (sección → distrito federal y municipio vigentes).
 - Resultados por zona: `python pipeline/lab.py nacional` suma cada sección en su distrito y municipio **vigentes**. En elecciones anteriores a 2024 el mapa los muestra así ("resultados sumados en los distritos actuales"); por eso pueden no coincidir con quién ganó cada distrito en esa elección. El semicírculo de distritos ganados sí usa los distritos de cada elección.
+
+## Panorama nacional (inicio.html)
+- El código está en `src/inicio.html`; `lab.py sitio` lo copia a la raíz. Carga `data/inicio/panorama.json`, `mx32.json`, `mx_df.json` y `mx_mun.json`.
+- El orden para actualizarlo: `lab.py nacional` → `extra_inicio.py` → `nac_extra.py` → `lab.py panorama`.
+- **Congresos locales:** la integración por partido de los 7 congresos con datos está escrita en `src/inicio.html` (constantes `CLO` y `SPL`), tomada de Wikipedia y prensa local (consulta oct 2026). Validarla con el instituto electoral de cada estado y corregir ahí. Al agregar un estado, agregar su congreso en `CLO`; si no está, la tarjeta muestra la Cámara federal con el estado resaltado.

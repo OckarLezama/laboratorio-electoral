@@ -23,6 +23,17 @@ from comun import CFG, ruta, temporal
 
 FED = [('PRESIDENCIA', 'FED_PRE'), ('SENADURIAS_MR', 'FED_SEN'), ('DIPUTACIONES_FED_MR', 'FED_DIP')]
 LOC = {'GUBERNATURA': 'LOC_GUBERNATURA', 'DIPUTACIONES_LOC_MR': 'LOC_DIPUTACIONES_LOC_MR', 'AYUNTAMIENTOS': 'LOC_AYUNTAMIENTOS'}
+# nombres de carpeta equivalentes (Ciudad de México usa jefatura de gobierno y alcaldías)
+LOC_ALIAS = {'GUBERNATURA': ('GUBERNATURA', 'JEFATURA_GOBIERNO'), 'DIPUTACIONES_LOC_MR': ('DIPUTACIONES_LOC_MR',), 'AYUNTAMIENTOS': ('AYUNTAMIENTOS', 'ALCALDIAS', 'JEFE_DELEGACIONAL')}
+
+
+def _sec(d, carpetas):
+    """Archivo *_SEC.csv de la primera carpeta que exista (sin distinguir mayúsculas en la extensión)."""
+    for c in carpetas:
+        fs = [f for f in glob.glob(f'{d}/{c}/*') if f.upper().endswith('_SEC.CSV') and 'EXT' not in os.path.basename(f).upper()]
+        if fs:
+            return sorted(fs)
+    return []
 CAPAS = ('SECCION', 'MUNICIPIO', 'DISTRITO_LOCAL', 'DISTRITO_FEDERAL', 'ENTIDAD')
 
 
@@ -51,12 +62,12 @@ def resultados(e, out):
             y = os.path.basename(d)
             if not y.isdigit() or int(y) < amin:
                 continue
-            fs = [f for f in glob.glob(d + '/*NAL_SEC.csv') if 'EXT' not in os.path.basename(f)]
+            fs = [f for f in glob.glob(d + '/*') if f.upper().endswith('NAL_SEC.CSV') and 'EXT' not in os.path.basename(f).upper()]
             if fs:
                 print(f'  {tag} {y}: {_filtrar(fs[0], out / f"{tag}_{y}.csv", ent):,} filas')
     for d in sorted(glob.glob(str(ruta('local') / e['carpeta_local'] / '*'))):
         for cargo, tag in LOC.items():
-            fs = [f for f in glob.glob(f'{d}/{cargo}/*_SEC.csv') if 'EXT' not in os.path.basename(f)]
+            fs = _sec(d, LOC_ALIAS[cargo])
             if fs:
                 y = re.match(r'(\d{4})', os.path.basename(fs[0])).group(1)
                 if int(y) < amin:
