@@ -1,5 +1,20 @@
 [
  {
+  "cab": "ags",
+  "estado": "Aguascalientes",
+  "info": "11 municipios · 736 secciones"
+ },
+ {
+  "cab": "bc",
+  "estado": "Baja California",
+  "info": "7 municipios · 2,254 secciones"
+ },
+ {
+  "cab": "bcs",
+  "estado": "Baja California Sur",
+  "info": "5 municipios · 535 secciones"
+ },
+ {
   "cab": "camp",
   "estado": "Campeche",
   "info": "13 municipios · 555 secciones"
@@ -10,9 +25,89 @@
   "info": "124 municipios · 2,296 secciones"
  },
  {
+  "cab": "chih",
+  "estado": "Chihuahua",
+  "info": "67 municipios · 3,311 secciones"
+ },
+ {
+  "cab": "cdmx",
+  "estado": "Ciudad de México",
+  "info": "16 municipios · 5,589 secciones"
+ },
+ {
+  "cab": "coah",
+  "estado": "Coahuila",
+  "info": "38 municipios · 1,872 secciones"
+ },
+ {
+  "cab": "col",
+  "estado": "Colima",
+  "info": "10 municipios · 430 secciones"
+ },
+ {
+  "cab": "dgo",
+  "estado": "Durango",
+  "info": "39 municipios · 1,415 secciones"
+ },
+ {
+  "cab": "mex",
+  "estado": "Estado de México",
+  "info": "125 municipios · 7,052 secciones"
+ },
+ {
+  "cab": "gto",
+  "estado": "Guanajuato",
+  "info": "46 municipios · 3,357 secciones"
+ },
+ {
+  "cab": "gro",
+  "estado": "Guerrero",
+  "info": "85 municipios · 2,718 secciones"
+ },
+ {
+  "cab": "hgo",
+  "estado": "Hidalgo",
+  "info": "84 municipios · 1,894 secciones"
+ },
+ {
+  "cab": "jal",
+  "estado": "Jalisco",
+  "info": "125 municipios · 4,080 secciones"
+ },
+ {
+  "cab": "mich",
+  "estado": "Michoacán",
+  "info": "113 municipios · 2,825 secciones"
+ },
+ {
+  "cab": "mor",
+  "estado": "Morelos",
+  "info": "36 municipios · 949 secciones"
+ },
+ {
+  "cab": "nay",
+  "estado": "Nayarit",
+  "info": "20 municipios · 1,011 secciones"
+ },
+ {
+  "cab": "nl",
+  "estado": "Nuevo León",
+  "info": "51 municipios · 3,114 secciones"
+ },
+ {
   "cab": "oax",
   "estado": "Oaxaca",
   "info": "570 municipios · 2,564 secciones"
+ },
+ {
+  "cab": "pue",
+  "estado": "Puebla",
+  "info": "217 municipios · 2,965 secciones"
+ },
+ {
+  "cab": "qro",
+  "estado": "Querétaro",
+  "info": "18 municipios · 1,090 secciones"
  },
  {
   "cab": "qroo",
@@ -20,9 +115,34 @@
   "info": "11 municipios · 1,151 secciones"
  },
  {
+  "cab": "slp",
+  "estado": "San Luis Potosí",
+  "info": "58 municipios · 1,901 secciones"
+ },
+ {
+  "cab": "sin",
+  "estado": "Sinaloa",
+  "info": "20 municipios · 3,855 secciones"
+ },
+ {
+  "cab": "son",
+  "estado": "Sonora",
+  "info": "72 municipios · 1,667 secciones"
+ },
+ {
   "cab": "tab",
   "estado": "Tabasco",
   "info": "17 municipios · 1,191 secciones"
+ },
+ {
+  "cab": "tam",
+  "estado": "Tamaulipas",
+  "info": "43 municipios · 2,220 secciones"
+ },
+ {
+  "cab": "tlax",
+  "estado": "Tlaxcala",
+  "info": "60 municipios · 634 secciones"
  },
  {
   "cab": "ver",
@@ -33,5 +153,10 @@
   "cab": "yuc",
   "estado": "Yucatán",
   "info": "106 municipios · 1,240 secciones"
+ },
+ {
+  "cab": "zac",
+  "estado": "Zacatecas",
+  "info": "58 municipios · 1,793 secciones"
  }
 ]
