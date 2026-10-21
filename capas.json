@@ -1,0 +1,76 @@
+[
+ {
+  "id": "conapo",
+  "nombre": "Marginación (CONAPO 2020)",
+  "fuente": "CONAPO, Índice de marginación por municipio 2020",
+  "nivel": "municipio",
+  "estados": [
+   "ags",
+   "bc",
+   "bcs",
+   "camp",
+   "chis",
+   "chih",
+   "cdmx",
+   "coah",
+   "col",
+   "dgo",
+   "mex",
+   "gto",
+   "gro",
+   "hgo",
+   "jal",
+   "mich",
+   "mor",
+   "nay",
+   "nl",
+   "oax",
+   "pue",
+   "qro",
+   "qroo",
+   "slp",
+   "sin",
+   "son",
+   "tab",
+   "tam",
+   "tlax",
+   "ver",
+   "yuc",
+   "zac"
+  ],
+  "variables": [
+   {
+    "id": "im",
+    "nombre": "Índice de marginación",
+    "descripcion": "índice municipal de CONAPO (escala 2020): más alto = menos marginación",
+    "unidad": "indice",
+    "decimales": 1,
+    "sentido": "mayor_mejor"
+   },
+   {
+    "id": "analf",
+    "nombre": "Analfabetismo",
+    "descripcion": "población de 15 años o más analfabeta, % del municipio",
+    "unidad": "pct",
+    "decimales": 1,
+    "sentido": "mayor_peor"
+   },
+   {
+    "id": "sbasc",
+    "nombre": "Sin educación básica",
+    "descripcion": "población de 15 años o más sin educación básica, % del municipio",
+    "unidad": "pct",
+    "decimales": 1,
+    "sentido": "mayor_peor"
+   },
+   {
+    "id": "po2sm",
+    "nombre": "Ingresos bajos",
+    "descripcion": "población ocupada con ingresos de hasta 2 salarios mínimos, % del municipio",
+    "unidad": "pct",
+    "decimales": 1,
+    "sentido": "mayor_peor"
+   }
+  ]
+ }
+]
