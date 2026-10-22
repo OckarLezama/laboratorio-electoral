@@ -698,8 +698,11 @@ const EPARTIES=[...new Set(EBL.bl.flat())].sort((a,b)=>(MAIN.indexOf(a)<0?99:MAI
 if(!st.es.rv) st.es.rv='sep';
 /* candidaturas comunes: coaliciones cuyos partidos aparecen con votos casi idénticos (el INE repartió el voto común).
    Ahí no existe el voto "propio" de cada partido: se analizan solo como coalición. */
-const ESPL=(()=>{const out=[],ks=new Set([EBL.ek].concat(EOBJ.map(o=>lastOf(o[0]))));
-  ks.forEach(ek=>{if(!ek||!D.E[ek]) return; const t=totals(ek,ALL).tot; D.E[ek].blocs.forEach(b=>{const ms=b.members.filter(m=>m!=='OTROS'&&!NOREG.includes(m)); if(ms.length<2) return; const v=ms.map(m=>t[m]||0),mx=Math.max(...v),mn=Math.min(...v); if(mn>0&&mx/mn<1.25&&!out.some(o=>o.join()===ms.join())) out.push(ms);});}); return out;})();
+const ESPL=(()=>{const out=[],seen=new Set(),ix={}; D.P8.forEach((q,j)=>ix[q]=j);
+  /* se revisa sección por sección: en candidatura común los partidos traen el mismo voto (±2) en casi todas las secciones */
+  Object.keys(D.E).filter(ek=>+D.E[ek].year>=2021).forEach(ek=>{const E=D.E[ek]; E.blocs.forEach(b=>{const ms=b.members.filter(m=>m!=='OTROS'&&ix[m]!=null); if(ms.length<2) return; let k=0,n=0;
+    E.r.forEach(r=>{if(!r) return; const v=ms.map(m=>r[ix[m]]),mx=Math.max(...v); if(mx<=5) return; n++; if(mx-Math.min(...v)<=2) k++;});
+    if(n&&k/n>.5){const mm=ms.filter(m=>EPARTIES.includes(m)),key=mm.slice().sort().join('+'); if(mm.length>1&&!seen.has(key)){seen.add(key); out.push(mm);}}});}); return out;})();
 const eSplitOf=p=>ESPL.find(b=>b.includes(p));
 const eRv=()=>ESPL.length?'ali':st.es.rv;
 const ESOLO=EPARTIES.map(q=>[q]);
@@ -891,7 +894,7 @@ function estPanel(){const p=st.party,lv=eLv(),nat=eNat(),ii=eSelII(),F=eFocus();
   let h=`<div class="colh"><button class="es-back" id="eback">← Volver al mapa</button><b style="margin-left:8px">Estrategia 2027</b></div><div class="cd es">`;
   h+=`<details class="es-cfg" ${st.es.cfgOpen===true?'open':''}><summary><span>Cambiar elección, rivales o territorio</span><b>${sumTxt} · ${esc(st.es.u!=null&&lv!=='est'?eName(lv,st.es.u):EST)}</b></summary>`;
   h+=`<div class="es-row"><span>¿Qué se elige en 2027 en ${esc(EST)}?</span><div class="es-ch">${chips(EOBJ.map(x=>[x[0],x[1]]),st.es.obj,'eobj')}</div></div>`;
-  h+=`<div class="es-row"><span>Supuesto sobre los rivales ${ei('rival')}</span><div class="es-ch"><button data-erv="sep" aria-pressed="${eRv()!=='ali'}" ${ESPL.length?'disabled':''}>Cada partido por separado</button><button data-erv="ali" aria-pressed="${eRv()==='ali'}">En posible alianza (como en ${EBL.year})</button></div></div>${ESPL.length?`<p class="es-hint">${ESPL.map(b=>b.map(m=>NM[m]).join('-')).join(' y ')} compitió en candidatura común: el INE reparte su voto entre los partidos, así que no hay voto propio de cada uno y se analiza como coalición.</p>`:''}`;
+  h+=`<div class="es-row"><span>Supuesto sobre los rivales ${ei('rival')}</span><div class="es-ch"><button data-erv="sep" aria-pressed="${eRv()!=='ali'}" ${ESPL.length?'disabled':''}>Cada partido por separado</button><button data-erv="ali" aria-pressed="${eRv()==='ali'}">En posible alianza (como en ${EBL.year})</button></div></div>${ESPL.length?`<p class="es-hint">${ESPL.map(b=>b.map(m=>NM[m]).join('-')).join(' y ')} ${ESPL.length>1?'compitieron':'compitió'} en candidatura común desde 2021: el INE reparte ese voto entre los partidos, así que no existe el voto propio de cada uno y se analiza${ESPL.length>1?'n':''} como coalición.</p>`:''}`;
   if(p) h+=`<div class="es-row"><span>Armar otra alianza para ${esc(NM[p])}</span><div class="es-ch">${EPARTIES.filter(q=>q!==p).map(q=>`<button data-eal="${q}" aria-pressed="${A0.includes(q)}"><i style="background:${C[q]}"></i>${NM[q]}</button>`).join('')}</div></div>`;
   const lvs=Object.keys(ELV).filter(k=>k==='est'?nat==='est':true),G=lv==='est'?[]:eGroups(lv).sort((a,b)=>lv==='mun'?String(MUN[a.k]).localeCompare(MUN[b.k]):a.k-b.k);
   h+=`<div class="es-row es-terr"><span>Territorio</span><div class="es-ch">${chips(lvs.map(k=>[k,k==='est'?EST:ELV[k]]),lv,'elv')}</div>${lv!=='est'?`<select class="es-sel" data-eunit="1"><option value="">${lv===nat?'Todos los '+ENN[lv][1]:'Todo '+EST+' (por '+ENN[lv][0]+')'}</option>${G.map(u=>`<option value="${u.k}" ${String(st.es.u)===String(u.k)?'selected':''}>${esc(eName(lv,u.k))}</option>`).join('')}</select>`:''}</div></details>`;
