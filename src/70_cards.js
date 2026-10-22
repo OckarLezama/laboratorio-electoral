@@ -85,5 +85,7 @@ function render(fresh){TARJ.forEach(c=>{if(!CAT.find(x=>x[0]===c.id)) CAT.push([
   if(fresh) C2.querySelectorAll('.gg b,.kv b').forEach(el=>{const t=el.firstChild; if(!t||t.nodeType!==3) return; const m=t.nodeValue.match(/^([\d,]+(?:\.\d+)?)(.*)$/); if(!m) return; const to=parseFloat(m[1].replace(/,/g,'')),dec=(m[1].split('.')[1]||'').length,suf=m[2],t0=performance.now(); const f=x=>x.toLocaleString('es-MX',{minimumFractionDigits:dec,maximumFractionDigits:dec})+suf; const step=now=>{const q2=Math.min(1,(now-t0)/900),e=1-Math.pow(1-q2,3); t.nodeValue=f(to*e); if(q2<1) requestAnimationFrame(step);}; requestAnimationFrame(step);});
   if(st.view==='est') estRender();
   renderFP(); paint(); if(st.view==='tbl') renderTbl(idx); if($('res')) updRes(); if($('big')) updBig();}
-function setTerr(m){st.terr=m; st.sel=null; if(st.view==='est'&&st.es){st.es.u=m==null?null:+m; st.es.lv=m==null?null:'mun'; st.es.seg=null;} render(true); setTimeout(()=>fit(ALL.filter(munScope)),30);}
+/* primero el mapa (respuesta inmediata) y en el siguiente cuadro el panel */
+let RSP=0; function renderSoon(fresh){paint(); cancelAnimationFrame(RSP); RSP=requestAnimationFrame(()=>setTimeout(()=>render(fresh),0));}
+function setTerr(m){st.terr=m; st.sel=null; if(st.view==='est'&&st.es){st.es.u=m==null?null:+m; st.es.lv=m==null?null:'mun'; st.es.seg=null;} if(st.view==='est') render(true); else renderSoon(true); setTimeout(()=>fit(ALL.filter(munScope)),30);}
 

@@ -112,7 +112,16 @@ const CEN=paths.map(p=>{const b=p.getBBox(); return [b.x+b.width/2,b.y+b.height/
 const labs=GEO.lab.filter(l=>l.r===1||l.r===0).map(l=>{const t=mk('text',{x:l.x,y:l.y,'text-anchor':'middle'},$('glab')); t.textContent=l.n; if(!l.r) t.classList.add('c'); t._r=l.r; return t;});
 const BKEY=MANY?'df':'m',BUBS=(MANY?DFS.map(String):Object.keys(MUN)).map(m=>{const ii=ALL.filter(i=>S[i][BKEY]===+m); let x=0,y=0,w=0; ii.forEach(i=>{const q=S[i].ln||1; x+=CEN[i][0]*q; y+=CEN[i][1]*q; w+=q;}); const g=mk('g',{},$('gbub')); g.dataset.m=m; const c=mk('circle',{cx:0,cy:0},g),t=mk('text',{'text-anchor':'middle',x:0,y:0},g); return {m,g,c,t,x0:x/w,y0:y/w,ln:lnOf(ii)};});
 const BMX=Math.max(...BUBS.map(b=>b.ln));
-function setView(v){view=v; svg.setAttribute('viewBox',v.map(x=>x.toFixed(2)).join(' ')); const px=Math.max(v[2]/Math.max(1,svg.clientWidth),v[3]/Math.max(1,svg.clientHeight)),bOn=st.view!=='est'&&!st.terr&&v[2]>350&&VB[2]/px>220&&!(st.L&&(st.L.dl||st.L.df));
+/* Durante un gesto (arrastrar, rueda, animación) el mapa se mueve como imagen con una transformación CSS, que la
+   tarjeta gráfica resuelve sin volver a dibujar las secciones; al terminar se fija el viewBox y se redibuja una vez. */
+let G0=null,G0R=null,GCT=0;
+/* modo ligero (pantallas táctiles o estados muy grandes): sin transición de color sección por sección, que obliga a recalcular miles de figuras en cada cuadro */
+document.body.classList.toggle('lite',matchMedia('(pointer:coarse)').matches||N>4500);
+const baseRect=()=>G0R||svg.getBoundingClientRect();
+function preview(v){if(!G0){G0=[...view]; G0R=svg.getBoundingClientRect(); svg.style.transformOrigin='0 0'; svg.style.willChange='transform';}
+  view=v; const k0=G0R.width/G0[2],sc=G0[2]/v[2]; svg.style.transform=`translate(${((G0[0]-v[0])*k0*sc).toFixed(1)}px,${((G0[1]-v[1])*k0*sc).toFixed(1)}px) scale(${sc.toFixed(5)})`;}
+function commit(){clearTimeout(GCT); setView(view);}
+function setView(v){if(G0){svg.style.transform=''; svg.style.willChange=''; G0=null; G0R=null;} view=v; svg.setAttribute('viewBox',v.map(x=>x.toFixed(2)).join(' ')); const px=Math.max(v[2]/Math.max(1,svg.clientWidth),v[3]/Math.max(1,svg.clientHeight)),bOn=st.view!=='est'&&!st.terr&&v[2]>350&&VB[2]/px>220&&!(st.L&&(st.L.dl||st.L.df));
   /* tamaño de etiquetas: una sola variable CSS por cuadro (antes se reescribía cada texto en cada cuadro de la animación) */
   svg.style.setProperty('--px',px.toFixed(4));
   labs.forEach(t=>{const d=(t._r===0?v[2]>700:st.view==='est'?(!!st.terr||v[2]<450):!bOn)?'':'none'; if(t.style.display!==d) t.style.display=d; if(!t._k){t._k=1; if(t._r) t.classList.add('r1');}});
@@ -125,7 +134,7 @@ let BLAY=0,MOVING=0;
 function layBubs(px){const VB2=BUBS.filter(b=>b.n); BUBS.forEach(b=>{b.x=b.x0; b.y=b.y0;}); for(let it=0;it<300;it++){let mv=0; for(let a=0;a<VB2.length;a++) for(let c=a+1;c<VB2.length;c++){const A=VB2[a],B=VB2[c],dx=B.x-A.x,dy=B.y-A.y,d=Math.hypot(dx,dy)||.01,need=A.r+B.r+10*px; if(d<need-.01){const p=(need-d)/2*1.02,ux=dx/d,uy=dy/d; A.x-=ux*p; A.y-=uy*p; B.x+=ux*p; B.y+=uy*p; mv=1;}} if(!mv) break;}
   BUBS.forEach(b=>{if(!b.n) return; const x0=b.px,y0=b.py,x1=b.x,y1=b.y; b.px=x1; b.py=y1; if(Math.abs(x1-x0)+Math.abs(y1-y0)<1e-3) return; const t0=performance.now(),st2=n=>{const u=Math.min(1,(n-t0)/350),k=1-Math.pow(1-u,3); b.g.setAttribute('transform',`translate(${x0+(x1-x0)*k},${y0+(y1-y0)*k})`); if(u<1) requestAnimationFrame(st2);}; requestAnimationFrame(st2);});}
 let anim=null,WHT=0;
-function animateTo(t){cancelAnimationFrame(anim); const f=[...view],t0=performance.now(),dur=matchMedia('(prefers-reduced-motion: reduce)').matches?0:750; MOVING=1; const step=now=>{const q=dur?Math.min(1,(now-t0)/dur):1,e=q<.5?4*q*q*q:1-Math.pow(-2*q+2,3)/2; if(q>=1) MOVING=0; setView(f.map((x,j)=>x+(t[j]-x)*e)); if(q<1) anim=requestAnimationFrame(step);}; anim=requestAnimationFrame(step);}
+function animateTo(t){cancelAnimationFrame(anim); const f=[...view],t0=performance.now(),dur=matchMedia('(prefers-reduced-motion: reduce)').matches?0:750; MOVING=1; const step=now=>{const q=dur?Math.min(1,(now-t0)/dur):1,e=q<.5?4*q*q*q:1-Math.pow(-2*q+2,3)/2; const v=f.map((x,j)=>x+(t[j]-x)*e); if(q>=1){MOVING=0; setView(v);} else {preview(v); anim=requestAnimationFrame(step);}}; anim=requestAnimationFrame(step);}
 function free(){const W=svg.clientWidth,H=svg.clientHeight; if(innerWidth<=860) return {l:10,t:50,r:W-10,b:H-70}; const mb=svg.getBoundingClientRect(),cl=$('col').getBoundingClientRect(); const mc=$('metric'),mr=mc&&mc.offsetParent?mc.getBoundingClientRect():null,mt=mr?mr.bottom-mb.top+14:90,pb=document.querySelector('.mbar'),pr=pb&&pb.offsetParent?pb.getBoundingClientRect():null,bt=pr&&pr.top>mb.top+H*.5?pr.top-mb.top-12:H-30; if(st.view==='est'&&mr) return {l:mr.right-mb.left+24,t:60,r:cl.left-mb.left-30,b:Math.max(bt,H*.6)}; return {l:st.fp?$('fp').getBoundingClientRect().right-mb.left+30:70,t:Math.max(60,Math.min(mt,H*.38)),r:cl.left-mb.left-30,b:Math.max(bt,H*.6)};}
 let LASTFIT=null,FITT=null;
 function fit(idx,a=true){LASTFIT=idx&&idx.length?idx.slice():null; let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9; (idx.length?idx:ALL).forEach(i=>{const b=paths[i].getBBox(); x0=Math.min(x0,b.x); y0=Math.min(y0,b.y); x1=Math.max(x1,b.x+b.width); y1=Math.max(y1,b.y+b.height);}); const mw=120; if(x1-x0<mw){const c=(x0+x1)/2; x0=c-mw/2; x1=c+mw/2;} if(y1-y0<mw){const c=(y0+y1)/2; y0=c-mw/2; y1=c+mw/2;}
@@ -141,11 +150,11 @@ const maxW=()=>ctryView()[2];
 function zoomView(f,cx,cy){const [x,y,w,h]=view,C=ctryView(),nw=Math.max(8,Math.min(C[2],w*f)),nh=nw*h/w,v=[cx-(cx-x)*nw/w,cy-(cy-y)*nh/h,nw,nh]; if(f>1){const s0=Math.min(VB[2],C[2]*.5),k=Math.max(0,Math.min(1,(nw-s0)/Math.max(1,C[2]-s0))),e=k*k; v[0]+= (C[0]-v[0])*e; v[1]+=(C[1]-v[1])*e;} return v;}
 function zoomAt(f,cx,cy){animateTo(zoomView(f,cx,cy));}
 $('zi').onclick=()=>zoomAt(1/1.5,view[0]+view[2]/2,view[1]+view[3]/2); $('zo').onclick=()=>zoomAt(1.5,view[0]+view[2]/2,view[1]+view[3]/2); $('zf').onclick=refit;
-svg.addEventListener('wheel',e=>{e.preventDefault(); cancelAnimationFrame(anim); const r=svg.getBoundingClientRect(),cx=view[0]+(e.clientX-r.left)/r.width*view[2],cy=view[1]+(e.clientY-r.top)/r.height*view[3],f=e.deltaY>0?1.15:1/1.15; MOVING=1; clearTimeout(WHT); WHT=setTimeout(()=>{MOVING=0;},200); setView(zoomView(f,cx,cy));},{passive:false});
+svg.addEventListener('wheel',e=>{e.preventDefault(); cancelAnimationFrame(anim); const r=baseRect(),cx=view[0]+(e.clientX-r.left)/r.width*view[2],cy=view[1]+(e.clientY-r.top)/r.height*view[3],f=e.deltaY>0?1.15:1/1.15; MOVING=1; clearTimeout(WHT); WHT=setTimeout(()=>{MOVING=0;},200); preview(zoomView(f,cx,cy)); clearTimeout(GCT); GCT=setTimeout(commit,180);},{passive:false});
 let drag=null,moved=false;
 svg.addEventListener('pointerdown',e=>{cancelAnimationFrame(anim); svg.setPointerCapture(e.pointerId); drag={x:e.clientX,y:e.clientY,v:[...view],t:e.target}; moved=false;});
-svg.addEventListener('pointermove',e=>{if(!drag){hover(e); return;} const r=svg.getBoundingClientRect(); if(Math.abs(e.clientX-drag.x)+Math.abs(e.clientY-drag.y)>4) moved=true; if(moved){hideTip(); setView([drag.v[0]-(e.clientX-drag.x)/r.width*drag.v[2],drag.v[1]-(e.clientY-drag.y)/r.height*drag.v[3],drag.v[2],drag.v[3]]);}});
-svg.addEventListener('pointerup',()=>{if(drag&&!moved){const b=drag.t.closest&&drag.t.closest('#gbub g'); if(b){if(MANY) applyScope('df',b.dataset.m); else setTerr(b.dataset.m);} else if(drag.t.dataset&&drag.t.dataset.i!=null){const i=+drag.t.dataset.i; if(!st.terr) setTerr(String(S[i].m)); else {st.sel=st.sel===i?null:i; paint();}}} drag=null;});
+svg.addEventListener('pointermove',e=>{if(!drag){hover(e); return;} const r=baseRect(); if(Math.abs(e.clientX-drag.x)+Math.abs(e.clientY-drag.y)>4) moved=true; if(moved){hideTip(); preview([drag.v[0]-(e.clientX-drag.x)/r.width*drag.v[2],drag.v[1]-(e.clientY-drag.y)/r.height*drag.v[3],drag.v[2],drag.v[3]]);}});
+svg.addEventListener('pointerup',()=>{if(drag&&(moved||G0)) commit(); if(drag&&!moved){const b=drag.t.closest&&drag.t.closest('#gbub g'); if(b){if(MANY) applyScope('df',b.dataset.m); else setTerr(b.dataset.m);} else if(drag.t.dataset&&drag.t.dataset.i!=null){const i=+drag.t.dataset.i; if(!st.terr) setTerr(String(S[i].m)); else {st.sel=st.sel===i?null:i; paint();}}} drag=null;});
 svg.addEventListener('pointerleave',()=>{hideTip(); hotL([]);});
 
 
@@ -572,7 +581,9 @@ function render(fresh){TARJ.forEach(c=>{if(!CAT.find(x=>x[0]===c.id)) CAT.push([
   if(fresh) C2.querySelectorAll('.gg b,.kv b').forEach(el=>{const t=el.firstChild; if(!t||t.nodeType!==3) return; const m=t.nodeValue.match(/^([\d,]+(?:\.\d+)?)(.*)$/); if(!m) return; const to=parseFloat(m[1].replace(/,/g,'')),dec=(m[1].split('.')[1]||'').length,suf=m[2],t0=performance.now(); const f=x=>x.toLocaleString('es-MX',{minimumFractionDigits:dec,maximumFractionDigits:dec})+suf; const step=now=>{const q2=Math.min(1,(now-t0)/900),e=1-Math.pow(1-q2,3); t.nodeValue=f(to*e); if(q2<1) requestAnimationFrame(step);}; requestAnimationFrame(step);});
   if(st.view==='est') estRender();
   renderFP(); paint(); if(st.view==='tbl') renderTbl(idx); if($('res')) updRes(); if($('big')) updBig();}
-function setTerr(m){st.terr=m; st.sel=null; if(st.view==='est'&&st.es){st.es.u=m==null?null:+m; st.es.lv=m==null?null:'mun'; st.es.seg=null;} render(true); setTimeout(()=>fit(ALL.filter(munScope)),30);}
+/* primero el mapa (respuesta inmediata) y en el siguiente cuadro el panel */
+let RSP=0; function renderSoon(fresh){paint(); cancelAnimationFrame(RSP); RSP=requestAnimationFrame(()=>setTimeout(()=>render(fresh),0));}
+function setTerr(m){st.terr=m; st.sel=null; if(st.view==='est'&&st.es){st.es.u=m==null?null:+m; st.es.lv=m==null?null:'mun'; st.es.seg=null;} if(st.view==='est') render(true); else renderSoon(true); setTimeout(()=>fit(ALL.filter(munScope)),30);}
 
 
 /* ===== módulo: Contexto socioeconómico =====
@@ -1211,7 +1222,7 @@ if($('presb')) $('presb').onclick=()=>openSlides($('presb'));
 $('elec').innerHTML=YEARS.map(y=>`<optgroup label="${y}">${Object.keys(TY).filter(t=>D.E[t+'_'+y]).map(t=>`<option value="${t}_${y}">${TY[t]} ${y}</option>`).join('')}</optgroup>`).join(''); $('elec').value=st.elec;
 $('elec').onchange=()=>setElec($('elec').value);
 $('party').innerHTML='<option value="">Vista general</option>'+['MORENA','MC','PRI','PAN','PT','PVEM','PRD'].map(p=>`<option value="${p}">${NM[p]}</option>`).join('');
-$('party').onchange=()=>{st.party=$('party').value; $('rPa').setAttribute('aria-pressed',!!st.party); if(st.party&&!xCur()) st.metric=st.elec?'pv':'duro'; else if(METRICS[st.metric].needP) st.metric='mar'; render(true); if(st.view==='tbl') renderTbl(scope());};
+$('party').onchange=()=>{st.party=$('party').value; $('rPa').setAttribute('aria-pressed',!!st.party); if(st.party&&!xCur()) st.metric=st.elec?'pv':'duro'; else if(METRICS[st.metric].needP) st.metric='mar'; if(st.view==='map'){renderSoon(true); return;} render(true); if(st.view==='tbl') renderTbl(scope());};
 $('map').setAttribute('aria-label','Mapa de '+EST+' por sección');
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(st.view==='tbl') setView2('map'); else if(st.sel!=null){st.sel=null; paint();} else if(st.terr) setTerr(null);}});
 if(innerWidth<=860) st.fp=false; layout(); render(true); setView([...VB]); requestAnimationFrame(()=>fit(ALL,false));
