@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
 <title>Laboratorio Político · Panorama nacional</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap">
@@ -385,7 +385,7 @@ const f1=x=>x.toFixed(1);
 function vOf(k,s){const V=D.V[k];if(!V)return null;if(s.t==='c'){let t=0,ln=0;const v={};CIR[s.id].forEach(e=>{const x=V.v['e'+e];if(!x)return;t+=x[0];ln+=x[1];for(const p in x[2])v[p]=(v[p]||0)+x[2][p];});return [t,ln,v];}return V.v[s.t==='mx'?'e0':s.t==='e'?'e'+s.id:s.t+s.id]||null;}
 function res(k,s){const x=vOf(k,s);if(!x)return null;const [t,ln,v]=x;let val=0;for(const p in v)val+=v[p];if(!val)return null;const bl=D.V[k].bl.map(([l,ms])=>({l,v:ms.reduce((a,p)=>a+(v[p]||0),0),ms})).filter(b=>b.v).sort((a,b)=>b.v-a.v),per={};for(const p in v)if(p!=='OTROS')per[p]=100*v[p]/val;return {t,ln,per,bl,turn:100*t/ln,w:bl[0].l,wp:100*bl[0].v/val,m:100*(bl[0].v-(bl[1]?bl[1].v:0))/val};}
 function padS(){if(zone){const z=D.pz[zone.t+zone.id];return z?{pad:z[0],ln:z[1],h:z[2],m:z[3],ah:z[4],am:z[5],sec:(D.ps||{})[zone.t+zone.id]||0}:D.pad[String(sel)];}if(sel)return D.pad[String(sel)];if(circ){const o={pad:0,ln:0,h:0,m:0,nb:0,sec:0,nmun:0,ndf:0,ah:[0,0,0,0,0,0,0],am:[0,0,0,0,0,0,0]};CIR[circ].forEach(e=>{const p=D.pad[String(e)];['pad','ln','h','m','nb','sec','nmun','ndf'].forEach(k=>o[k]+=p[k]);p.ah.forEach((x,i)=>{o.ah[i]+=x;o.am[i]+=p.am[i];});});return o;}return D.pad['0'];}
-function fit(){const w=innerWidth,mob=w<1100||(innerHeight>w&&w<1300);document.body.classList.toggle('mob',mob);document.body.classList.toggle('ph',mob&&w<720);if(mob)requestAnimationFrame(()=>document.documentElement.style.setProperty('--hdr',(document.querySelector('.side').offsetHeight)+'px'));const s=$('stage');if(mob){s.style.transform='';s.style.width='';s.style.height='';return;}const z=Math.min(innerWidth/1440,innerHeight/860);s.style.width=innerWidth/z+'px';s.style.height=innerHeight/z+'px';s.style.transform=`scale(${z})`;}
+function fit(){const sw=(screen&&screen.width)||innerWidth,w=Math.min(innerWidth,matchMedia('(pointer:coarse)').matches?sw:innerWidth),mob=w<1100||(innerHeight>w&&w<1300);document.body.classList.toggle('mob',mob);document.body.classList.toggle('ph',mob&&w<720);if(mob)requestAnimationFrame(()=>document.documentElement.style.setProperty('--hdr',(document.querySelector('.side').offsetHeight)+'px'));const s=$('stage');if(mob){s.style.transform='';s.style.width='';s.style.height='';return;}const z=Math.min(innerWidth/1440,innerHeight/860);s.style.width=innerWidth/z+'px';s.style.height=innerHeight/z+'px';s.style.transform=`scale(${z})`;}
 fit();
 const govAt=(e,y)=>{let g=null;(D.gob['e'+e]||[]).forEach(x=>{if(x[0]<=y)g=x;});return g;};
 const YRS={comp:[2015,2018,2021,2024],gob:[2015,2016,2017,2018,2019,2020,2021,2022,2023,2024],dfp:[2015,2018,2021,2024],pre:[2018,2024],mun:[2015,2018,2021,2024]},ALL=YRS.gob;

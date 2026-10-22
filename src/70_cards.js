@@ -76,7 +76,7 @@ function render(fresh){TARJ.forEach(c=>{if(!CAT.find(x=>x[0]===c.id)) CAT.push([
   const C2=$('col'),sc=C2.scrollTop; C2.style.setProperty('--acc',acc2); if(st.view!=='est'){C2.innerHTML=cards.join(''); C2.dataset.v='';} if(tm&&$('tcard')) tgo('card',$('tcard'),W,230,tm,TCS.card?'tween':'draw'); C2.scrollTop=sc; if(fresh){C2.classList.remove('anim'); void C2.offsetWidth; C2.classList.add('anim');}
   C2.querySelectorAll('[data-terr]').forEach(g=>g.onclick=()=>setTerr(g.dataset.terr));
   C2.querySelectorAll('[data-big]').forEach(b=>b.onclick=openBig);
-  if($('pdfb')) $('pdfb').onclick=()=>exportPDF($('pdfb')); if($('addb')) $('addb').onclick=()=>{st.cat=!st.cat; render();};
+  if($('pdfb')) $('pdfb').onclick=()=>slDownload($('pdfb')); if($('addb')) $('addb').onclick=()=>{st.cat=!st.cat; render();};
   C2.querySelectorAll('[data-cat]').forEach(b=>b.onclick=()=>{const c=b.dataset.cat,j=st.cards.indexOf(c); j>=0?st.cards.splice(j,1):st.cards.splice(1,0,c); render(true); if(j<0) C2.scrollTo({top:0,behavior:'smooth'});});
   C2.querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{if(b.dataset.rm==='lec') st.lec=false; else st.cards=st.cards.filter(c=>c!==b.dataset.rm); render();});
   if($('lecb')) $('lecb').onclick=()=>{st.lec=true; render(true);};

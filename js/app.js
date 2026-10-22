@@ -561,7 +561,7 @@ function render(fresh){TARJ.forEach(c=>{if(!CAT.find(x=>x[0]===c.id)) CAT.push([
   const C2=$('col'),sc=C2.scrollTop; C2.style.setProperty('--acc',acc2); if(st.view!=='est'){C2.innerHTML=cards.join(''); C2.dataset.v='';} if(tm&&$('tcard')) tgo('card',$('tcard'),W,230,tm,TCS.card?'tween':'draw'); C2.scrollTop=sc; if(fresh){C2.classList.remove('anim'); void C2.offsetWidth; C2.classList.add('anim');}
   C2.querySelectorAll('[data-terr]').forEach(g=>g.onclick=()=>setTerr(g.dataset.terr));
   C2.querySelectorAll('[data-big]').forEach(b=>b.onclick=openBig);
-  if($('pdfb')) $('pdfb').onclick=()=>exportPDF($('pdfb')); if($('addb')) $('addb').onclick=()=>{st.cat=!st.cat; render();};
+  if($('pdfb')) $('pdfb').onclick=()=>slDownload($('pdfb')); if($('addb')) $('addb').onclick=()=>{st.cat=!st.cat; render();};
   C2.querySelectorAll('[data-cat]').forEach(b=>b.onclick=()=>{const c=b.dataset.cat,j=st.cards.indexOf(c); j>=0?st.cards.splice(j,1):st.cards.splice(1,0,c); render(true); if(j<0) C2.scrollTo({top:0,behavior:'smooth'});});
   C2.querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{if(b.dataset.rm==='lec') st.lec=false; else st.cards=st.cards.filter(c=>c!==b.dataset.rm); render();});
   if($('lecb')) $('lecb').onclick=()=>{st.lec=true; render(true);};
@@ -1018,114 +1018,177 @@ async function exportPDF(btn){if(!window.jspdf||!window.html2canvas){toast('No s
   catch(e){console.error(e); toast('No se pudo generar el informe.');}
   finally{btn.disabled=false; btn.innerHTML=o;}}
 
-/* ===== presentación (diapositivas 16:9) de la selección actual =====
-   Se arma con los mismos datos del panel: territorio y filtros vigentes, elección de referencia y partido elegido.
-   Se proyecta en pantalla completa y se descarga en PDF. */
-const SLW=1280,SLH=720,TYS={GOB:'Gub.',DIPL:'Dip. loc.',AYU:'Ayunt.',PRE:'Presid.',SEN:'Senado',DIPF:'Dip. fed.'};
+/* ===== presentación (diapositivas 16:9) e informe PDF de la selección actual =====
+   Usa el territorio y filtros vigentes, la elección de referencia y el combo "Analizar como":
+   - con partido elegido, toda la presentación es de ese partido (y su coalición en cada elección);
+   - en "Vista general", es una lectura de la competencia entre todas las fuerzas.
+   El botón Informe PDF descarga exactamente estas mismas diapositivas. */
+const SLW=1280,SLH=720,TYS={GOB:'Gubernatura',DIPL:'Dip. locales',AYU:'Ayuntamiento',PRE:'Presidencia',SEN:'Senado',DIPF:'Dip. federales'};
+const SLF='Manrope,Inter,Arial,sans-serif',SLI2='Inter,Arial,sans-serif',SLG='#8A9393',SLK='#1C2121',SLL='#E9EEEE';
 const slTitle=()=>st.terr?MUN[st.terr]:(()=>{const s=scopeLabel(); return !s||/^todo|^estado/i.test(s)?EST:s;})();
-function slData(){const ii=scope().length?scope():ALL,ref=st.elec||lastOf(BASE.split('_')[0])||Object.keys(D.E).pop(),T=totals(ref,ii);
-  const P=st.party||(T.bl[0]?T.bl[0].lead:'MORENA'),blocOf=(ek,p)=>D.E[ek].blocs.find(b=>b.members.includes(p));
-  const els=Object.keys(D.E).filter(ek=>totals(ek,ii).val).sort((a,b)=>D.E[a].year-D.E[b].year||a.localeCompare(b));
-  return {ii,ref,T,P,blocOf,els};}
-/* gráficas en SVG con colores literales (se proyectan y se exportan igual) */
-function slBars(W,H,rows,{max,lab=v=>pct(v,0),gap=18}={}){const n=rows.length,bw=Math.min(90,(W-gap*(n+1))/n),mx=max||Math.max(...rows.map(r=>r.v),1),base=H-34;
-  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${rows.map((r,j)=>{const x=gap+j*((W-gap)/n)+((W-gap)/n-gap-bw)/2,h=Math.max(2,(base-26)*r.v/mx);
-    return `${r.v2!=null?`<rect x="${x+bw*.55}" y="${base-(base-26)*r.v2/mx}" width="${bw*.45}" height="${(base-26)*r.v2/mx}" rx="4" fill="#B9C1C1"/>`:''}<rect x="${x}" y="${base-h}" width="${r.v2!=null?bw*.5:bw}" height="${h}" rx="5" fill="${r.c}"/><text x="${x+(r.v2!=null?bw*.25:bw/2)}" y="${base-h-8}" text-anchor="middle" font-family="Manrope,Arial" font-weight="800" font-size="15" fill="#1C2121">${lab(r.v)}</text><text x="${x+bw/2}" y="${base+20}" text-anchor="middle" font-family="Inter,Arial" font-size="12.5" fill="#4E5656">${esc(r.l)}</text>`;}).join('')}<line x1="0" x2="${W}" y1="${base}" y2="${base}" stroke="#E6EAEA"/></svg>`;}
-function slLines(W,H,xs,series,{fmtY=v=>pct(v,0),max}={}){const l=46,r=46,t=18,b=44,mx=max||Math.max(...series.flatMap(s=>s.v.filter(v=>v!=null)),1)*1.12,X=j=>l+(xs.length<2?.5:j/(xs.length-1))*(W-l-r),Y=v=>t+(H-t-b)*(1-v/mx);
+const slPN=p=>NM[p]||p,slSgn=(v,d=1,u=' pts')=>(v>=0?'+':'−')+Math.abs(v).toFixed(d)+u;
+/* ---------- gráficas (SVG con colores literales: se ven igual en pantalla y en PDF) ---------- */
+function gHBar(W,rows,{max,fv=v=>pct(v,1),lw=170,rh=34}={}){const mx=max||Math.max(...rows.map(r=>r.v),1),bw=W-lw-80,H=rows.length*rh;
+  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${rows.map((r,j)=>{const y=j*rh,w=Math.max(3,bw*r.v/mx),op=r.dim?.35:1;
+    return `<text x="0" y="${y+rh/2+5}" font-family="${SLI2}" font-size="14" font-weight="${r.hl?700:500}" fill="${r.hl?SLK:'#4E5656'}">${esc(fitT(r.l,22))}</text><rect x="${lw}" y="${y+7}" width="${bw}" height="${rh-14}" rx="${(rh-14)/2}" fill="#F2F5F5"/><rect x="${lw}" y="${y+7}" width="${w}" height="${rh-14}" rx="${(rh-14)/2}" fill="${r.c}" opacity="${op}"/><text x="${lw+bw+12}" y="${y+rh/2+6}" font-family="${SLF}" font-size="16" font-weight="800" fill="${r.hl?SLK:'#4E5656'}">${fv(r.v)}</text>`;}).join('')}</svg>`;}
+function gCols(W,H,rows,{max,fv=v=>pct(v,0),leg}={}){const n=rows.length,slot=W/n,bw=Math.min(52,slot*.55),mx=max||Math.max(...rows.flatMap(r=>[r.v,r.v2||0]),1),base=H-30,hh=base-26;
+  let s=`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><line x1="0" x2="${W}" y1="${base}" y2="${base}" stroke="${SLL}"/>`;
+  rows.forEach((r,j)=>{const x=j*slot+(slot-bw)/2,h=Math.max(2,hh*r.v/mx); s+=`<rect x="${x}" y="${base-h}" width="${bw}" height="${h}" rx="6" fill="${r.c}"/>`;
+    if(r.v2!=null){const y2=base-hh*r.v2/mx; s+=`<line x1="${x-6}" x2="${x+bw+6}" y1="${y2}" y2="${y2}" stroke="${SLK}" stroke-width="2.5" stroke-linecap="round"/>`;}
+    s+=`<text x="${x+bw/2}" y="${base-h-9}" text-anchor="middle" font-family="${SLF}" font-weight="800" font-size="15" fill="${SLK}">${fv(r.v)}</text><text x="${x+bw/2}" y="${base+20}" text-anchor="middle" font-family="${SLI2}" font-size="12.5" fill="#4E5656">${esc(r.l)}</text>`;});
+  return s+'</svg>';}
+function gLine(W,H,xs,series,{fv=v=>pct(v,0),max,min=0}={}){const l=44,r=150,t=16,b=46,vals=series.flatMap(s=>s.v.filter(v=>v!=null)),mx=max||Math.max(...vals,1)*1.1,X=j=>l+(xs.length<2?.5:j/(xs.length-1))*(W-l-r),Y=v=>t+(H-t-b)*(1-(v-min)/(mx-min));
   let s=`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">`;
-  [0,.25,.5,.75,1].forEach(q=>{s+=`<line x1="${l}" x2="${W-r}" y1="${Y(mx*q)}" y2="${Y(mx*q)}" stroke="#EEF2F2"/><text x="${l-8}" y="${Y(mx*q)+4}" text-anchor="end" font-family="Inter,Arial" font-size="11" fill="#8A9393">${fmtY(mx*q)}</text>`;});
-  xs.forEach((x,j)=>{s+=`<text x="${X(j)}" y="${H-24}" text-anchor="middle" font-family="Inter,Arial" font-size="11" fill="#4E5656">${esc(x[0])}</text><text x="${X(j)}" y="${H-10}" text-anchor="middle" font-family="Inter,Arial" font-size="10.5" fill="#8A9393">${esc(x[1]||'')}</text>`;});
-  series.forEach(sr=>{const pts=sr.v.map((v,j)=>v==null?null:[X(j),Y(v)]),seg=[]; let cur=[]; pts.forEach(p=>{if(p) cur.push(p); else if(cur.length){seg.push(cur); cur=[];}}); if(cur.length) seg.push(cur);
-    seg.forEach(c=>{s+=`<polyline points="${c.map(p=>p.map(v=>v.toFixed(1)).join(',')).join(' ')}" fill="none" stroke="${sr.c}" stroke-width="${sr.w||3}" stroke-linejoin="round" stroke-linecap="round"/>`;});
-    pts.forEach((p,j)=>{if(p) s+=`<circle cx="${p[0]}" cy="${p[1]}" r="${sr.w?5:4}" fill="#fff" stroke="${sr.c}" stroke-width="2.5"/>`;});
-    const lj=pts.map((p,j)=>p?j:-1).filter(j=>j>=0).pop(); if(lj!=null&&lj>=0) s+=`<text x="${pts[lj][0]+8}" y="${pts[lj][1]-8}" font-family="Manrope,Arial" font-weight="800" font-size="13" fill="${sr.c}">${fmtY(sr.v[lj])}</text>`;});
+  [0,.5,1].forEach(q=>{const v=min+(mx-min)*q; s+=`<line x1="${l}" x2="${W-r+20}" y1="${Y(v)}" y2="${Y(v)}" stroke="${SLL}"/><text x="${l-10}" y="${Y(v)+4}" text-anchor="end" font-family="${SLI2}" font-size="11" fill="${SLG}">${fv(v)}</text>`;});
+  xs.forEach((x,j)=>{s+=`<text x="${X(j)}" y="${H-26}" text-anchor="middle" font-family="${SLI2}" font-size="11.5" font-weight="600" fill="#4E5656">${esc(x[0])}</text><text x="${X(j)}" y="${H-11}" text-anchor="middle" font-family="${SLI2}" font-size="10.5" fill="${SLG}">${esc(x[1]||'')}</text>`;});
+  const ends=[]; series.slice().sort((a,b)=>(a.hl?1:0)-(b.hl?1:0)).forEach(sr=>{const pts=sr.v.map((v,j)=>v==null?null:[X(j),Y(v)]); let cur=[]; const seg=[]; pts.forEach(p=>{if(p) cur.push(p); else if(cur.length){seg.push(cur); cur=[];}}); if(cur.length) seg.push(cur);
+    const op=sr.dim?.28:1,sw=sr.hl?4:2.2; seg.forEach(c=>{s+=`<polyline points="${c.map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ')}" fill="none" stroke="${sr.c}" stroke-width="${sw}" stroke-linejoin="round" stroke-linecap="round" opacity="${op}"/>`;});
+    if(sr.hl) pts.forEach((p,j)=>{if(p) s+=`<circle cx="${p[0]}" cy="${p[1]}" r="4.5" fill="#fff" stroke="${sr.c}" stroke-width="2.5"/><text x="${p[0]}" y="${p[1]-11}" text-anchor="middle" font-family="${SLF}" font-weight="800" font-size="12" fill="${sr.c}">${fv(sr.v[j])}</text>`;});
+    const lj=pts.map((p,j)=>p?j:-1).filter(j=>j>=0).pop(); if(lj!=null&&lj>=0) ends.push({y:pts[lj][1],x:pts[lj][0],t:`${sr.l} ${fv(sr.v[lj])}`,c:sr.c,op,hl:sr.hl});});
+  ends.sort((a,b)=>a.y-b.y); for(let k=1;k<ends.length;k++) if(ends[k].y-ends[k-1].y<15) ends[k].y=ends[k-1].y+15;
+  ends.forEach(e=>{s+=`<text x="${W-r+30}" y="${e.y+4}" font-family="${SLI2}" font-size="12" font-weight="${e.hl?800:600}" fill="${e.c}" opacity="${e.op<1?.6:1}">${esc(e.t)}</text>`;});
   return s+'</svg>';}
-function slDonut(R,parts){let a=-Math.PI/2,s=`<svg width="${2*R}" height="${2*R}" viewBox="0 0 ${2*R} ${2*R}">`; const tot=parts.reduce((x,p)=>x+p.v,0)||1;
-  parts.forEach(p=>{const da=2*Math.PI*p.v/tot,a2=a+da,r=R-14,x1=R+r*Math.cos(a),y1=R+r*Math.sin(a),x2=R+r*Math.cos(a2-.001),y2=R+r*Math.sin(a2-.001); s+=`<path d="M${x1} ${y1}A${r} ${r} 0 ${da>Math.PI?1:0} 1 ${x2} ${y2}" fill="none" stroke="${p.c}" stroke-width="26"/>`; a=a2;});
+function gSlope(W,H,a,b,rows,fv=v=>pct(v,1)){const l=110,r=190,t=34,bt=16,vals=rows.flatMap(x=>[x.a,x.b].filter(v=>v!=null)),mx=Math.max(...vals,1)*1.08,Y=v=>t+(H-t-bt)*(1-v/mx);
+  let s=`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><text x="${l}" y="16" text-anchor="middle" font-family="${SLI2}" font-size="13" font-weight="700" fill="${SLG}">${esc(a)}</text><text x="${W-r}" y="16" text-anchor="middle" font-family="${SLI2}" font-size="13" font-weight="700" fill="${SLG}">${esc(b)}</text><line x1="${l}" x2="${l}" y1="${t-6}" y2="${H-bt}" stroke="${SLL}"/><line x1="${W-r}" x2="${W-r}" y1="${t-6}" y2="${H-bt}" stroke="${SLL}"/>`;
+  rows.forEach(x=>{const op=x.dim?.35:1,sw=x.hl?4:2.4; if(x.a!=null&&x.b!=null) s+=`<line x1="${l}" x2="${W-r}" y1="${Y(x.a)}" y2="${Y(x.b)}" stroke="${x.c}" stroke-width="${sw}" opacity="${op}"/>`;
+    if(x.a!=null) s+=`<circle cx="${l}" cy="${Y(x.a)}" r="5" fill="${x.c}" opacity="${op}"/><text x="${l-12}" y="${Y(x.a)+5}" text-anchor="end" font-family="${SLF}" font-size="14" font-weight="800" fill="${x.c}" opacity="${op}">${fv(x.a)}</text>`;
+    if(x.b!=null) s+=`<circle cx="${W-r}" cy="${Y(x.b)}" r="5" fill="${x.c}" opacity="${op}"/><text x="${W-r+12}" y="${Y(x.b)+5}" font-family="${SLF}" font-size="14" font-weight="800" fill="${x.c}" opacity="${op}">${fv(x.b)} <tspan font-family="${SLI2}" font-weight="600" font-size="12">${esc(fitT(x.l,18))}</tspan></text>`;});
   return s+'</svg>';}
-const slHead=(n,t,sub)=>`<div class="sl-h"><span class="sl-n">${n}</span><div><h2>${t}</h2>${sub?`<p>${sub}</p>`:''}</div><span class="sl-tag">${esc(slTitle())}</span></div>`;
-const slFoot=()=>`<div class="sl-f">Laboratorio Político · ${esc(EST)} · Fuente: ${esc(SRC.res||'INE')}; ${esc(SRC.pad||'DERFE')}. Voto duro, participación esperada y metas: estimación propia.</div>`;
-const slK=(v,l,c)=>`<div class="sl-k"><b${c?` style="color:${c}"`:''}>${v}</b><span>${l}</span></div>`;
-async function slBuild(){const {ii,ref,T,P,blocOf,els}=slData(),title=slTitle(),yr=D.E[ref].year,PN=NM[P]||P,PC=C[P]||'#1C7F79',out=[];
-  const date=new Date().toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'});
+function gBullet(W,{mine,riv,meta,lbl,rl,c,rc}){const mx=Math.max(mine,riv,meta)*1.12||1,X=v=>W*v/mx;
+  return `<svg width="${W}" height="96" viewBox="0 0 ${W} 96"><rect x="0" y="34" width="${W}" height="26" rx="13" fill="#F2F5F5"/><rect x="0" y="34" width="${X(mine)}" height="26" rx="13" fill="${c}"/>
+    <line x1="${X(riv)}" x2="${X(riv)}" y1="26" y2="68" stroke="${rc}" stroke-width="3"/><text x="${X(riv)}" y="84" text-anchor="${X(riv)>W*.7?'end':X(riv)<W*.3?'start':'middle'}" font-family="${SLI2}" font-size="12" font-weight="600" fill="${rc}">${esc(rl)} ${fmt(riv)}</text>
+    <line x1="${X(meta)}" x2="${X(meta)}" y1="22" y2="72" stroke="${SLK}" stroke-width="2" stroke-dasharray="4 3"/><text x="${X(meta)}" y="16" text-anchor="${X(meta)>W*.7?'end':'middle'}" font-family="${SLI2}" font-size="12" font-weight="700" fill="${SLK}">Meta ${fmt(meta)}</text>
+    <text x="10" y="52" font-family="${SLF}" font-size="13" font-weight="800" fill="#fff">${esc(lbl)} ${fmt(mine)}</text></svg>`;}
+const gStack=(parts)=>`<div class="sl-stk">${parts.filter(p=>p.v>0).map(p=>`<i style="flex:${p.v};background:${p.c}" title="${esc(p.l)}"></i>`).join('')}</div><div class="sl-stl">${parts.map(p=>`<span><i style="background:${p.c}"></i>${esc(p.l)} <b>${fmt(p.v)}</b></span>`).join('')}</div>`;
+/* ---------- datos ---------- */
+function slData(){const ii=scope().length?scope():ALL,ref=st.elec||lastOf(BASE.split('_')[0])||Object.keys(D.E).pop(),T=totals(ref,ii),P=st.party||null;
+  const blocOf=(ek,p)=>D.E[ek].blocs.find(b=>b.members.includes(p)),els=Object.keys(D.E).filter(ek=>totals(ek,ii).val).sort((a,b)=>D.E[a].year-D.E[b].year||a.localeCompare(b));
+  const won=ek=>{const c={}; ii.forEach(i=>{const w=winner(ek,[i]); if(w) c[w.lead]=(c[w.lead]||0)+1;}); return c;};
+  return {ii,ref,T,P,blocOf,els,won,pv:prevOf(ref)};}
+/* margen por sección del partido (o de su coalición) contra la mejor fuerza rival */
+function slMargins(ref,ii,PB){const out=[]; ii.forEach(i=>{const r=row(ref,i); if(!r||!r.val) return; const mine=PB.members.reduce((a,m)=>a+(m==='OTROS'?0:(r.v[m]||0)),0); let rv=0;
+  D.E[ref].blocs.forEach(b=>{if(b===PB) return; const v=b.members.reduce((a,m)=>a+(m==='OTROS'?0:(r.v[m]||0)),0); if(v>rv) rv=v;}); out.push({i,mine,rv,mg:100*(mine-rv)/r.val,tp:r.ln?100*r.t/r.ln:0,ln:S[i].ln||0});}); return out;}
+/* ---------- armado ---------- */
+async function slBuild(){const {ii,ref,T,P,blocOf,els,won,pv}=slData(),title=slTitle(),yr=D.E[ref].year,TYP=ref.split('_')[0],CARGO=TY[TYP]||'';
+  const PB=P?blocOf(ref,P):null,PBT=PB?T.bl.find(b=>b.lead===PB.lead):null,AC=P?(C[P]||'#1C7F79'):'#1C7F79',party=!!(P&&PBT),W0=T.bl[0],W1=T.bl[1];
+  const pName=party?(PBT.members.filter(m=>m!=='OTROS').length>1?`${slPN(P)} y aliados`:slPN(P)):'',N=[];
+  const date=new Date().toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'}),tot=8;
+  const head=(t,sub)=>`<header class="sl-h"><div><h2>${t}</h2>${sub?`<p>${sub}</p>`:''}</div><span class="sl-pg">${esc(title)}<b>${N.length+1}</b></span></header>`;
+  const foot=`<footer class="sl-f"><span>Laboratorio Político</span><span>Fuente: ${esc(SRC.res||'INE')}; ${esc(SRC.pad||'DERFE')}. Voto duro, participación esperada y metas: estimación propia.</span></footer>`;
+  const K=(v,l,c,sub)=>`<div class="sl-k"><b${c?` style="color:${c}"`:''}>${v}</b><span>${l}</span>${sub?`<em>${sub}</em>`:''}</div>`;
+  const slide=(h,body,cls='')=>{N.push(`<section class="sl ${cls}" style="--ac:${AC}">${h}<div class="sl-b">${body}</div>${foot}</section>`);};
+  const ln=lnOf(ii),dm=demo(ii),nm=new Set(ii.map(i=>S[i].m)).size,ndl=new Set(ii.map(i=>S[i].dl)).size,ndf=new Set(ii.map(i=>S[i].df)).size,W=won(ref),Wp=pv?won(pv):{},T0=pv?totals(pv,ii):null;
+  const nSecR=Object.values(W).reduce((a,b)=>a+b,0)||1;
   /* 1 · portada */
-  out.push(`<section class="sl sl-cover"><div class="sl-cv"><i></i><i></i><i></i></div><div class="sl-ct"><small>${esc(EST)}${st.terr?'':' · '+esc(scopeLabel())}</small><h1>${esc(title)}</h1><p>Análisis político electoral</p><div class="sl-cm"><span>Elección de referencia: <b>${esc(eLabel(ref))}</b></span><span>Partido en foco: <b style="color:${PC}">${esc(PN)}</b></span></div><em>${date}</em></div></section>`);
-  /* 2 · contexto: electorado */
-  const dm=demo(ii),ln=lnOf(ii),agL=[0,0,0,0,0,0,0]; ii.forEach(i=>{const r=DM[i]; if(r) for(let j=0;j<7;j++) agL[j]+=(r[4+j]||0)+(r[11+j]||0);}); const agT=agL.reduce((a,b)=>a+b,0)||1;
-  const AGN=['18–24','25–29','30–39','40–49','50–59','60–64','65+'],nm=new Set(ii.map(i=>S[i].m)).size,ndl=new Set(ii.map(i=>S[i].dl)).size,ndf=new Set(ii.map(i=>S[i].df)).size;
+  N.push(`<section class="sl sl-cover" style="--ac:${AC}"><div class="sl-cv"><span class="sl-dot"></span><small>${esc(EST)}${(()=>{const l=scopeLabel(); return st.terr||!l||l===EST||/^todo/i.test(l)||l===title?'':' · '+esc(l);})()}</small><h1>${esc(title)}</h1>
+    <p>${party?`Análisis político electoral de <b style="color:${AC}">${esc(slPN(P))}</b>`:'Análisis político electoral · panorama de la competencia'}</p>
+    <dl><div><dt>Elección de referencia</dt><dd>${esc(eLabel(ref))}</dd></div><div><dt>Lista nominal</dt><dd>${fmt(ln)}</dd></div><div><dt>Fecha</dt><dd>${date}</dd></div></dl></div><footer class="sl-f"><span>Laboratorio Político</span><span>${esc(CORTE)}</span></footer></section>`);
+  /* 2 · resumen ejecutivo */
+  const M=party?slMargins(ref,ii,PB):null,mp=M?{con:M.filter(x=>x.mg>=10),cui:M.filter(x=>x.mg>=0&&x.mg<10),dis:M.filter(x=>x.mg<0&&x.mg>-10),dif:M.filter(x=>x.mg<=-10)}:null;
+  const rank=party?T.bl.indexOf(PBT)+1:1,rivB=party?(rank===1?W1:W0):W1,gapP=party&&rivB?PBT.pct-rivB.pct:0;
+  const P0=party&&T0?T0.bl.find(b=>b.members.includes(P)):null,dP=P0?PBT.pct-P0.pct:null,secP=party?(W[PBT.lead]||0):0,secP0=party&&pv&&P0?(Wp[P0.lead]||0):null;
+  const bal=balance(ii,party?P:null),expT=wavg(EXPT,ii)||0,expV=ln*expT/100,vr=T.t?T.val/T.t:.96,expVal=expV*vr;
+  const own=party?(T.tot[P]||0):0;
+  let pts=[],kp='';
+  if(party){kp=K(pct(PBT.pct,1),`${esc(pName)} · ${CARGO} ${yr}`,AC,`${fmt(PBT.votes)} votos`)+K(`${rank}º`,'lugar',null,rivB?`${slSgn(gapP)} vs ${esc(fitT(rivB.name,22))}`:'')+K(`${fmt(secP)}`,`secciones ganadas de ${fmt(nSecR)}`,null,secP0!=null?`${slSgn(secP-secP0,0,'')} vs ${D.E[pv].year}`:'')+(bal.own>=1?K(pct(bal.own,1),`voto duro de ${esc(slPN(P))}`,AC,'estimación por sección'):K(pct(100*own/(T.val||1),1),`votos propios de ${esc(slPN(P))}`,AC,`${fmt(own)} votos, sin aliados`));
+    pts.push(`<b>${esc(pName)}</b> obtuvo <b>${pct(PBT.pct,1)}</b> en ${esc(eLabel(ref))} y quedó en <b>${rank}º lugar</b>${rivB?`, ${gapP>=0?'con':'a'} <b>${Math.abs(gapP).toFixed(1)} puntos</b> ${gapP>=0?'de ventaja sobre':'de'} ${esc(rivB.name)}`:''}.`);
+    if(dP!=null) pts.push(`Frente a ${D.E[pv].year} ${dP>=0?'creció':'cayó'} <b>${Math.abs(dP).toFixed(1)} puntos</b>${secP0!=null?` y ${secP-secP0>=0?'sumó':'perdió'} <b>${fmt(Math.abs(secP-secP0))} secciones</b>`:''}.`);
+    if(own&&PBT.members.length>1) pts.push(`De los votos de la coalición, <b>${pct(100*own/PBT.votes,0)}</b> fueron de ${esc(slPN(P))} por sí solo.`);
+    pts.push(`Hay <b>${fmt(mp.dis.length)} secciones por disputar</b> (pierde por menos de 10 puntos) con <b>${k(mp.dis.reduce((a,x)=>a+x.ln,0))}</b> electores: ahí está el crecimiento más rápido.`);}
+  else{const cl=ii.map(i=>winner(ref,[i])).filter(Boolean),c5=cl.filter(w=>w.m<5).length;
+    kp=K(pct(W0.pct,1),`${esc(fitT(W0.name,26))}`,W0.c,`${fmt(W0.votes)} votos`)+K(W1?(W0.pct-W1.pct).toFixed(1)+' pts':'—','margen sobre el 2º lugar',null,W1?esc(fitT(W1.name,26)):'')+K(pct(T.turn,1),`participación ${yr}`,null,`${fmt(T.t)} votos`)+K(fmt(c5),'secciones con menos de 5 pts',null,`de ${fmt(cl.length)} con resultado`);
+    pts.push(`<b>${esc(W0.name)}</b> ganó ${esc(eLabel(ref))} con <b>${pct(W0.pct,1)}</b>${W1?`, <b>${(W0.pct-W1.pct).toFixed(1)} puntos</b> arriba de ${esc(W1.name)}`:''}.`);
+    if(T0&&T0.bl[0]) pts.push(`En ${D.E[pv].year} ganó ${esc(T0.bl[0].name)} con ${pct(T0.bl[0].pct,1)}${T0.bl[0].lead===W0.lead?': la misma fuerza repite':': hubo alternancia'}.`);
+    pts.push(`Encabezó <b>${fmt(W[W0.lead]||0)}</b> de ${fmt(nSecR)} secciones; <b>${fmt(c5)}</b> se definieron por menos de 5 puntos.`);
+    pts.push(`Participación de <b>${pct(T.turn,1)}</b>; la esperada para la próxima elección es <b>${pct(expT,0)}</b>.`);}
+  slide(head('Resumen ejecutivo',esc(eLabel(ref))+' · '+esc(title)),`<div class="sl-kr">${kp}</div><ul class="sl-pts">${pts.map(p=>`<li>${p}</li>`).join('')}</ul>`);
+  /* 3 · electorado */
+  const agL=[0,0,0,0,0,0,0]; ii.forEach(i=>{const r=DM[i]; if(r) for(let j=0;j<7;j++) agL[j]+=(r[4+j]||0)+(r[11+j]||0);}); const agT=agL.reduce((a,b)=>a+b,0)||1,AGN=['18–24','25–29','30–39','40–49','50–59','60–64','65+'];
+  const at=a=>{const L=[0,0,0,0,0,0,0],V=[0,0,0,0,0,0,0]; a.forEach(i=>{const r=V2.age[AGEY]&&V2.age[AGEY][i]; if(!r) return; for(let j=0;j<7;j++){L[j]+=r[j]; V[j]+=r[7+j];}}); return L.map((l,j)=>l?100*V[j]/l:0);},A1=at(ii),A0=at(ALL);
   let mapImg=''; try{const {s,H}=mapSVG(1400); mapImg=await rasterSVG(s,1400,H);}catch(e){}
-  out.push(`<section class="sl">${slHead(1,'Contexto político','Quién compone el electorado · '+esc(CORTE))}<div class="sl-g2"><div class="sl-col">
-    <div class="sl-ks">${slK(fmt(ln),'lista nominal')}${slK(fmt(dm.pe||ln),'padrón')}${slK(fmt(nSec(ii)),'secciones')}</div>
-    <div class="sl-ks">${slK(fmt(nm),nm===1?'municipio':'municipios')}${slK(fmt(ndl),'distritos locales')}${slK(fmt(ndf),'distritos federales')}</div>
-    <div class="sl-sex">${slDonut(70,[{v:dm.m,c:'#F46883'},{v:dm.h,c:'#4CC1BA'}])}<div><p><b style="color:#F46883">${pct(dm.mj,0)}</b> mujeres</p><p><b style="color:#2FA59D">${pct(100-dm.mj,0)}</b> hombres</p></div></div>
-    <h3>Lista nominal por edad</h3>${slBars(560,200,agL.map((v,j)=>({v:100*v/agT,l:AGN[j],c:j<2?'#1C7F79':j>4?'#8A9393':'#4CC1BA'})),{gap:12})}</div>
-    <div class="sl-map">${mapImg?`<img src="${mapImg}" alt="">`:''}<p>${esc(METRICS[st.metric]?METRICS[st.metric].n:'')} · ${esc(eLabel(st.elec||ref))}</p></div></div>${slFoot()}</section>`);
-  /* 3 · votantes por edad y resultado */
-  const at=a=>{const L=[0,0,0,0,0,0,0],V=[0,0,0,0,0,0,0]; a.forEach(i=>{const r=V2.age[AGEY][i]; if(!r) return; for(let j=0;j<7;j++){L[j]+=r[j]; V[j]+=r[7+j];}}); return L.map((l,j)=>l?100*V[j]/l:0);},A1=at(ii),A0=at(ALL);
-  const pv=prevOf(ref),T0=pv?totals(pv,ii):null,top=T.bl.filter(b=>b.votes>0).slice(0,4),wonS=ek=>{const c={}; ii.forEach(i=>{const w=winner(ek,[i]); if(w) c[w.lead]=(c[w.lead]||0)+1;}); return c;},W1=wonS(ref),W0=pv?wonS(pv):{};
-  const cmpRow=b=>{const o=T0&&T0.bl.find(x=>x.members.some(m=>b.members.includes(m)&&m===b.lead)); return {d:o?b.votes-o.votes:null,dp:o?b.pct-o.pct:null,ds:pv?(W1[b.lead]||0)-(W0[b.lead]||0):null};};
-  out.push(`<section class="sl">${slHead(2,'Votantes y resultado',`Participación por edad en ${AGEY} (verde: ${esc(title)}; gris: ${esc(EST)}) · ${esc(eLabel(ref))}`)}<div class="sl-g2"><div class="sl-col">
-    <div class="sl-ks">${slK(pct(T.turn,1),'participación '+yr)}${slK(fmt(T.t),'votos totales')}${slK(pct(A1[0],0),'votó de 18–24 años')}</div>
-    <h3>¿Quién sale a votar?</h3>${slBars(560,300,A1.map((v,j)=>({v,v2:A0[j],l:AGN[j],c:'#2FA59D'})),{max:100,gap:12})}</div>
-    <div class="sl-col"><h3>Resultado ${esc(eLabel(ref))}</h3><div class="sl-res">${top.map(b=>{const c=cmpRow(b),up=v=>v==null?'':`<em class="${v>=0?'up':'dn'}">${v>=0?'▲':'▼'} ${typeof v==='number'&&Math.abs(v)<100&&v%1?Math.abs(v).toFixed(1)+' pts':fmt(Math.abs(v))}</em>`;
-      return `<div class="sl-rr"><i style="background:${b.c}"></i><span class="nm">${esc(b.name)}</span><b>${pct(b.pct,1)}</b><span class="vv">${fmt(b.votes)} votos</span><span class="ss">${fmt(W1[b.lead]||0)} secc.</span>${pv?`<span class="cm">vs ${D.E[pv].year}: ${up(c.dp)} ${c.ds!=null?`<em class="${c.ds>=0?'up':'dn'}">${c.ds>=0?'+':'−'}${Math.abs(c.ds)} secc.</em>`:''}</span>`:''}</div>`;}).join('')}</div>
-    ${T.bl[1]?`<p class="sl-note"><b>${esc(T.bl[0].name)}</b> ganó por <b>${(T.bl[0].pct-T.bl[1].pct).toFixed(1)} puntos</b> (${fmt(T.bl[0].votes-T.bl[1].votes)} votos) sobre ${esc(T.bl[1].name)}.</p>`:''}</div></div>${slFoot()}</section>`);
-  /* 4 · escenario: qué secciones conservar, cuidar, disputar */
-  const CAT=[['con','Conservar','gana por 10 pts o más','#1C7F79'],['cui','Cuidar','gana por menos de 10 pts','#4CC1BA'],['dis','Disputar','pierde por menos de 10 pts','#F5A47C'],['dif','Difícil','pierde por 10 pts o más','#B9C1C1']];
-  const G={}; CAT.forEach(c=>G[c[0]]={n:0,ln:0,mine:0,riv:0,L:[]}); const PB=blocOf(ref,P);
-  ii.forEach(i=>{const r=row(ref,i); if(!r||!r.val) return; const mine=PB?PB.members.reduce((a,m)=>a+(r.v[m]||0),0):0; let rv=0; D.E[ref].blocs.forEach(b=>{if(b===PB) return; const v=b.members.reduce((a,m)=>a+(m==='OTROS'?0:(r.v[m]||0)),0); if(v>rv) rv=v;});
-    const mg=100*(mine-rv)/r.val,k=mg>=10?'con':mg>=0?'cui':mg>-10?'dis':'dif',g=G[k]; g.n++; g.ln+=S[i].ln||0; g.mine+=mine; g.riv+=rv; if(k==='dis') g.L.push({i,f:Math.round(rv-mine)+1,tp:r.ln?100*r.t/r.ln:0});});
-  const nT=ii.length||1,dis=G.dis.L.sort((a,b)=>a.f-b.f).slice(0,8);
-  out.push(`<section class="sl">${slHead(3,'Escenario electoral',`${esc(PN)}${PB&&PB.members.length>1?' y su coalición':''} sección por sección · ${esc(eLabel(ref))}`)}<div class="sl-g2"><div class="sl-col">
-    <div class="sl-cats">${CAT.map(c=>{const g=G[c[0]]; return `<div style="--c:${c[3]}"><b>${fmt(g.n)}</b><span class="t">${c[1]}</span><span>${c[2]}</span><span class="m">${pct(100*g.n/nT,0)} de las secciones · ${k(g.ln)} electores</span></div>`;}).join('')}</div>
-    <div class="sl-stack">${CAT.map(c=>`<i style="width:${(100*G[c[0]].n/nT).toFixed(2)}%;background:${c[3]}"></i>`).join('')}</div>
-    <p class="sl-note">Con su votación de ${yr}, ${esc(PN)} ganaría <b>${fmt(G.con.n+G.cui.n)}</b> de ${fmt(ii.length)} secciones. Las <b>${fmt(G.dis.n)}</b> por disputar suman <b>${k(G.dis.ln)}</b> electores: ahí se define la elección.</p></div>
-    <div class="sl-col"><h3>Secciones por disputar más cercanas</h3>${dis.length?`<table class="sl-t"><thead><tr><th>Sección</th><th>Municipio</th><th>Le faltaron</th><th>Participación</th></tr></thead><tbody>${dis.map(x=>`<tr><td><b>${S[x.i].s}</b></td><td>${esc(MUN[S[x.i].m]||'')}</td><td>${fmt(x.f)} votos</td><td>${pct(x.tp,0)}</td></tr>`).join('')}</tbody></table>`:'<p class="sl-note">No hay secciones perdidas por menos de 10 puntos.</p>'}</div></div>${slFoot()}</section>`);
-  /* 5 · votación esperada y meta */
-  const expT=wavg(EXPT,ii)||0,expV=ln*expT/100,vr=T.t?T.val/T.t:.96,expVal=expV*vr,bal=balance(ii,P),shP=PB?PB.members.reduce((a,m)=>a+(T.tot[m]||0),0)/(T.val||1):0;
-  let rvB=null; T.bl.forEach(b=>{if(PB&&b.lead===PB.lead) return; if(!rvB||b.votes>rvB.votes) rvB=b;}); const shR=rvB?rvB.votes/(T.val||1):0,eP2=shP*expVal,eR=shR*expVal,meta=Math.max(eR+1,expVal*.5*(shR>0?0:1));
-  const sameT=els.filter(ek=>ek.split('_')[0]===ref.split('_')[0]),secW=sameT.map(ek=>{const c=wonS(ek),b=blocOf(ek,P); return b?c[b.lead]||0:0;}),secR=rvB?sameT.map(ek=>{const c=wonS(ek),b=blocOf(ek,rvB.lead); return b?c[b.lead]||0:0;}):null;
-  out.push(`<section class="sl">${slHead(4,'Votación esperada y meta',`Próxima elección de ${esc(TY[ref.split('_')[0]]||'')} con la lista nominal vigente`)}<div class="sl-g2"><div class="sl-col">
-    <div class="sl-ks">${slK(fmt(expV),'votos esperados')}${slK(pct(expT,1),'participación esperada')}${slK(fmt(ln-expV),'abstención esperada')}</div>
-    <div class="sl-ks">${slK(fmt(eP2),'votos esperados de '+esc(PN),PC)}${rvB?slK(fmt(eR),'de '+esc(rvB.name),rvB.c):''}</div>
-    <div class="sl-meta"><span>Meta de votación de ${esc(PN)}</span><b>${fmt(meta)}</b><small>${eP2>=eR?'Mantener la ventaja: ':'Le faltan '+fmt(meta-eP2)+' votos. '}uno más que lo esperado del rival principal si se repite ${yr}.</small></div>
-    <div class="sl-ks">${slK(pct(bal.own,1),'voto duro de '+esc(PN),PC)}${slK(pct(bal.vol,1),'voto volátil')}${slK(pct(bal.est,1),'abstención estructural')}</div></div>
-    <div class="sl-col"><h3>Secciones ganadas en ${esc(TY[ref.split('_')[0]]||'')}</h3>${slLines(560,330,sameT.map(ek=>[String(D.E[ek].year)]),[{v:secW,c:PC,w:4}].concat(secR?[{v:secR,c:rvB.c}]:[]),{fmtY:v=>fmt(v)})}
-    <div class="sl-lg"><span><i style="background:${PC}"></i>${esc(PN)}${PB&&PB.members.length>1?' y aliados':''}</span>${rvB?`<span><i style="background:${rvB.c}"></i>${esc(rvB.name)}</span>`:''}</div></div></div>${slFoot()}</section>`);
-  /* 6 · histórico */
-  const EL=els.slice(-10),LB=(t,p)=>t.bl.find(b=>b.lead===p),inA=(t,p)=>t.bl.find(b=>b.lead!==p&&b.members.includes(p)),PS=MAIN.filter(p=>EL.some(ek=>LB(totals(ek,ii),p))).slice(0,6);
-  out.push(`<section class="sl">${slHead(5,'Histórico electoral',`${esc(title)} · ${D.E[EL[0]].year}–${D.E[EL[EL.length-1]].year} · porcentaje de la votación válida del partido o de la coalición que encabeza`)}<div class="sl-hist">
-    <table class="sl-t sl-th"><thead><tr><th>Elección</th>${PS.map(p=>`<th style="color:${C[p]}">${NM[p]}</th>`).join('')}<th>Particip.</th><th>Ganó</th><th>Ventaja</th></tr></thead><tbody>${EL.map(ek=>{const t=totals(ek,ii),w=t.bl[0];
-      return `<tr><td><b>${TYS[ek.split('_')[0]]||ek}</b> ${D.E[ek].year}</td>${PS.map(p=>{const b=LB(t,p),a=inA(t,p); return `<td>${b?pct(b.pct,1):a?`<small>con ${esc(NM[a.lead]||a.lead)}</small>`:'—'}</td>`;}).join('')}<td>${pct(t.turn,1)}</td><td><i style="background:${w.c}"></i>${esc(NM[w.lead]||w.lead)}</td><td>${t.bl[1]?(w.pct-t.bl[1].pct).toFixed(1)+' pts':'—'}</td></tr>`;}).join('')}</tbody></table>
-    ${slLines(1180,250,EL.map(ek=>[TYS[ek.split('_')[0]]||'',String(D.E[ek].year)]),PS.map(p=>({v:EL.map(ek=>{const b=LB(totals(ek,ii),p); return b?b.pct:null;}),c:C[p],w:p===P?4:null})))}</div>${slFoot()}</section>`);
-  return out;}
-/* visor */
+  slide(head('Quién vota',`Lista nominal ${esc(CORTE)} · participación por edad en ${AGEY}`),`<div class="sl-g2"><div>
+    <div class="sl-kr k3">${K(fmt(ln),'lista nominal')}${K(fmt(nSec(ii)),'secciones')}${K(nm>1?fmt(nm):fmt(ndl),nm>1?'municipios':'distritos locales')}</div>
+    <div class="sl-sx"><div style="flex:${dm.m};background:#F46883"><b>${pct(dm.mj,0)}</b> mujeres</div><div style="flex:${dm.h};background:#2FA59D"><b>${pct(100-dm.mj,0)}</b> hombres</div></div>
+    <h3>Peso de cada edad en la lista nominal</h3>${gCols(560,170,agL.map((v,j)=>({v:100*v/agT,l:AGN[j],c:j<2?AC:'#C9D6D5'})))}
+    <h3>Cuánto vota cada edad <small>barra: ${esc(fitT(title,24))} · línea: ${esc(EST)}</small></h3>${gCols(560,170,A1.map((v,j)=>({v,v2:A0[j],l:AGN[j],c:v>=A0[j]?'#2FA59D':'#9FD9D4'})),{max:100})}</div>
+    <figure class="sl-map">${mapImg?`<img src="${mapImg}" alt="">`:''}<figcaption>${esc(METRICS[st.metric]?METRICS[st.metric].n:'')} · ${esc(eLabel(st.elec||ref))}</figcaption></figure></div>`);
+  /* 4 · resultado */
+  const bars=T.bl.filter(b=>b.votes>0).slice(0,6).map(b=>({l:b.name,v:b.pct,c:b.c,hl:party?b===PBT:b===W0,dim:party&&b!==PBT}));
+  const slR=T0?T.bl.filter(b=>b.votes>0).slice(0,4).map(b=>{const o=T0.bl.find(x=>x.lead===b.lead); return {l:b.name,a:o?o.pct:null,b:b.pct,c:b.c,hl:party?b===PBT:false,dim:party&&b!==PBT};}):[];
+  slide(head(`Resultado ${esc(eLabel(ref))}`,party?`${esc(pName)} frente a las demás fuerzas`:'Porcentaje de la votación válida por coalición'),`<div class="sl-g2"><div><h3>Votación por coalición</h3>${gHBar(560,bars,{lw:190})}
+    <div class="sl-kr k3 sm">${K(pct(T.turn,1),'participación')}${K(fmt(T.t),'votos totales')}${K(fmt(nSecR),'secciones con resultado')}</div></div>
+    <div>${T0?`<h3>Cambio frente a ${esc(eLabel(pv))}</h3>${gSlope(560,340,String(D.E[pv].year),String(yr),slR)}`:`<h3>Secciones ganadas</h3>${gHBar(560,T.bl.filter(b=>W[b.lead]).map(b=>({l:b.name,v:W[b.lead],c:b.c,hl:party&&b===PBT,dim:party&&b!==PBT})),{fv:v=>fmt(v),lw:190})}`}</div></div>`);
+  /* 5 · territorio */
+  const UK=nm>1?'m':ndl>1?'dl':ndf>1?'df':null;
+  const secTop=()=>{const L=ii.slice().sort((a,b)=>(S[b].ln||0)-(S[a].ln||0)).slice(0,9-Math.max(2,0)).map(i=>{const t=totals(ref,[i]),w=t.bl[0],pb=party?t.bl.find(b=>b.members.includes(P)):null; return {i,w,m:w&&t.bl[1]?w.pct-t.bl[1].pct:0,pp:pb?pb.pct:null,pm:pb?pb.pct-(t.bl.find(b=>b!==pb)||{pct:0}).pct:null};}).filter(x=>x.w);
+    return `<h3>Secciones con más electores</h3><table class="sl-t"><thead><tr><th>Sección</th><th>${nm>1?'Municipio':'Distrito local'}</th><th class="r">Electores</th><th>Ganó</th><th class="r">Margen</th>${party?`<th class="r">${esc(slPN(P))}</th><th class="r">Ventaja</th>`:''}</tr></thead><tbody>${L.slice(0,7).map(x=>`<tr><td><b>${S[x.i].s}</b></td><td>${esc(nm>1?MUN[S[x.i].m]||'':'DL '+S[x.i].dl)}</td><td class="r">${fmt(S[x.i].ln)}</td><td><i class="sl-d" style="background:${x.w.c}"></i>${esc(fitT(x.w.name,20))}</td><td class="r">${x.m.toFixed(1)} pts</td>${party?`<td class="r"><b style="color:${AC}">${x.pp!=null?pct(x.pp,1):'—'}</b></td><td class="r ${x.pm>=0?'up':'dn'}">${x.pm!=null?slSgn(x.pm):'—'}</td>`:''}</tr>`).join('')}</tbody></table>`;};
+  if(UK){const UN=v=>UK==='m'?MUN[v]:(UK==='dl'?'Distrito local ':'Distrito federal ')+v,G={}; ii.forEach(i=>(G[S[i][UK]]=G[S[i][UK]]||[]).push(i));
+    const U=Object.keys(G).map(u=>{const t=totals(ref,G[u]),w=t.bl[0],pb=party?t.bl.find(b=>b.members.includes(P)):null;
+      return {n:UN(u),ln:lnOf(G[u]),w,m:w&&t.bl[1]?w.pct-t.bl[1].pct:0,pp:pb?pb.pct:null,pm:pb?pb.pct-(t.bl.find(b=>b!==pb)||{pct:0}).pct:null,sw:0};}).sort((a,b)=>b.ln-a.ln).slice(0,9);
+    const lnT=ln||1;
+    slide(head('Dónde está el voto',`${UK==='m'?'Municipios':'Distritos'} con más electores · ${esc(eLabel(ref))}`),`<table class="sl-t"><thead><tr><th>${UK==='m'?'Municipio':'Distrito'}</th><th class="r">Electores</th><th>Peso</th><th>Ganó</th><th class="r">Margen</th>${party?`<th class="r">${esc(slPN(P))}</th><th class="r">Ventaja</th>`:''}</tr></thead><tbody>${U.map(u=>`<tr><td><b>${esc(u.n)}</b></td><td class="r">${fmt(u.ln)}</td><td><i class="sl-mb"><u style="width:${(100*u.ln/lnT).toFixed(1)}%;background:${AC}"></u></i>${pct(100*u.ln/lnT,0)}</td><td><i class="sl-d" style="background:${u.w?u.w.c:'#ccc'}"></i>${esc(u.w?fitT(u.w.name,20):'—')}</td><td class="r">${u.m.toFixed(1)} pts</td>${party?`<td class="r"><b style="color:${AC}">${u.pp!=null?pct(u.pp,1):'—'}</b></td><td class="r ${u.pm>=0?'up':'dn'}">${u.pm!=null?slSgn(u.pm):'—'}</td>`:''}</tr>`).join('')}</tbody></table>${U.length<5?secTop():''}`);}
+  /* 6 · escenario por sección */
+  if(party){const CAT=[['con','Conservar','gana por 10 pts o más',AC],['cui','Cuidar','gana por menos de 10',mix(AC,.45)],['dis','Disputar','pierde por menos de 10','#F5A47C'],['dif','Difícil','pierde por 10 o más','#C9D1D1']],nT=M.length||1;
+    const top=mp.dis.slice().sort((a,b)=>(a.rv-a.mine)-(b.rv-b.mine)).slice(0,8);
+    slide(head('Escenario sección por sección',`${esc(pName)} con su votación de ${yr} contra la fuerza más votada de cada sección`),`<div class="sl-g2"><div>
+      <div class="sl-cats">${CAT.map(c=>{const g=mp[c[0]]; return `<div style="--c:${c[3]}"><b>${fmt(g.length)}</b><span class="t">${c[1]}</span><span>${c[2]}</span><em>${k(g.reduce((a,x)=>a+x.ln,0))} electores · ${pct(100*g.length/nT,0)}</em></div>`;}).join('')}</div>
+      ${gStack(CAT.map(c=>({l:c[1],v:mp[c[0]].length,c:c[3]})))}</div>
+      <div><h3>Secciones por disputar más cercanas</h3>${top.length?`<table class="sl-t"><thead><tr><th>Sección</th><th>${nm>1?'Municipio':'Distrito local'}</th><th class="r">Le faltaron</th><th class="r">Participación</th></tr></thead><tbody>${top.map(x=>`<tr><td><b>${S[x.i].s}</b></td><td>${esc(nm>1?MUN[S[x.i].m]||'':'DL '+S[x.i].dl)}</td><td class="r">${fmt(Math.round(x.rv-x.mine)+1)} votos</td><td class="r">${pct(x.tp,0)}</td></tr>`).join('')}</tbody></table>`:'<p class="sl-note">No hay secciones perdidas por menos de 10 puntos.</p>'}</div></div>`);}
+  else{const cl=ii.map(i=>winner(ref,[i])).filter(Boolean),bands=[['Menos de 5 pts','#1C7F79',cl.filter(w=>w.m<5).length],['5 a 15 pts','#4CC1BA',cl.filter(w=>w.m>=5&&w.m<15).length],['Más de 15 pts','#C9D1D1',cl.filter(w=>w.m>=15).length]];
+    slide(head('Secciones: quién gana y por cuánto',esc(eLabel(ref))),`<div class="sl-g2"><div><h3>Secciones ganadas por coalición</h3>${gHBar(560,T.bl.filter(b=>W[b.lead]).map(b=>({l:b.name,v:W[b.lead],c:b.c,hl:b===W0})),{fv:v=>fmt(v),lw:190})}</div>
+      <div><h3>Qué tan competidas fueron</h3>${gStack(bands.map(b=>({l:b[0],v:b[2],c:b[1]})))}<p class="sl-note">Las secciones definidas por menos de 5 puntos son las que pueden cambiar de manos con poco movimiento.</p></div></div>`);}
+  /* 7 · próxima elección: votación esperada y meta (partido) o fuerza estructural (general) */
+  let rvB=null; if(party) T.bl.forEach(b=>{if(b===PBT) return; if(!rvB||b.votes>rvB.votes) rvB=b;});
+  if(party&&rvB){const eP2=PBT.votes/(T.val||1)*expVal,eR=rvB.votes/(T.val||1)*expVal,meta=Math.round(eR)+1,gap=meta-eP2;
+    const sameT=els.filter(ek=>ek.split('_')[0]===TYP),sw=sameT.map(ek=>{const c=won(ek),b=blocOf(ek,P); return b?(c[b.lead]||0):null;}),sr=sameT.map(ek=>{const c=won(ek),b=blocOf(ek,rvB.lead); return b?(c[b.lead]||0):null;});
+    slide(head('Próxima elección: cuántos votos se necesitan',`${esc(CARGO)} con la lista nominal vigente y la participación esperada`),`<div class="sl-g2"><div>
+      <div class="sl-kr k3">${K(fmt(expV),'votos esperados')}${K(pct(expT,0),'participación esperada')}${K(pct(bal.vol,0),'voto volátil')}</div>
+      <h3>Votación esperada si se repite ${yr}</h3>${gBullet(560,{mine:eP2,riv:eR,meta,lbl:fitT(pName,20),rl:fitT(rvB.name,18),c:AC,rc:rvB.c})}
+      <div class="sl-meta"><b>${fmt(meta)}</b><span>${gap>0?`votos para ganar: le faltan <b>${fmt(gap)}</b> sobre lo esperado`:`votos para ganar: hoy los supera por <b>${fmt(-gap)}</b>; la tarea es retenerlos`}</span></div></div>
+      <div><h3>Secciones ganadas en ${esc(CARGO)}</h3>${gLine(560,330,sameT.map(ek=>[String(D.E[ek].year)]),[{l:slPN(P),v:sw,c:AC,hl:1},{l:fitT(rvB.name,14),v:sr,c:rvB.c}],{fv:v=>fmt(v)})}</div></div>`);}
+  else if(!party){const rows=MAIN.map(q=>({l:slPN(q),v:wavg(V2.duro[q]||[],ii)||0,c:C[q]})).filter(r=>r.v>.5).sort((a,b)=>b.v-a.v);
+    slide(head('Fuerza estructural',`Voto duro estimado por partido y electorado en juego · ${esc(title)}`),`<div class="sl-g2"><div><h3>Voto duro: vota por el partido en todas las elecciones</h3>${gHBar(560,rows,{lw:120})}</div>
+      <div><div class="sl-kr k3">${K(pct(bal.vol,0),'voto volátil','#2FA59D','cambia de partido')}${K(pct(bal.mov,0),'movilizable','#F5A47C','vota a veces')}${K(pct(bal.est,0),'abstención','#8A9393','casi nunca vota')}</div>
+      <p class="sl-note">La elección se decide en el voto volátil y en quienes votan solo a veces: ahí la campaña sí mueve resultados.</p>${(()=>{const bad=MAIN.filter(q=>(T.tot[q]||0)/(T.val||1)>.15&&(wavg(V2.duro[q]||[],ii)||0)<1); return bad.length?`<p class="sl-note sm">No se muestra el voto duro de ${bad.map(slPN).join(' y ')}: en esta entidad sus votos se registran repartidos en candidatura común y la estimación no es confiable.</p>`:'';})()}</div></div>`);}
+  /* 8 · tendencia */
+  const EL=els.slice(-10),LB=(t,p)=>t.bl.find(b=>b.members.includes(p)),LS=MAIN.filter(p=>EL.some(ek=>{const t=totals(ek,ii),b=t.bl.find(b=>b.lead===p); return b;})).slice(0,6);
+  const ser=(party?[P].concat(LS.filter(p=>p!==P)):LS).slice(0,5).map(p=>({l:slPN(p)+(party&&p===P&&PBT.members.length>1?'+':''),v:EL.map(ek=>{const t=totals(ek,ii),b=p===P&&party?LB(t,p):t.bl.find(b=>b.lead===p); return b?b.pct:null;}),c:C[p],hl:party?p===P:false,dim:party&&p!==P}));
+  slide(head(party?`Trayectoria de ${esc(slPN(P))}`:'Trayectoria de las fuerzas',`${D.E[EL[0]].year}–${D.E[EL[EL.length-1]].year} · % de la votación válida${party?' (con su coalición en cada elección)':' por coalición que encabeza cada partido'}`),
+    `${gLine(1168,330,EL.map(ek=>[TYS[ek.split('_')[0]]||ek,String(D.E[ek].year)]),ser)}
+    <table class="sl-t sl-tc"><thead><tr><th></th>${EL.map(ek=>`<th class="r">${TYS[ek.split('_')[0]]||''}<br>${D.E[ek].year}</th>`).join('')}</tr></thead><tbody>
+      <tr><td>Ganó</td>${EL.map(ek=>{const w=totals(ek,ii).bl[0]; return `<td class="r"><i class="sl-d" style="background:${w.c}"></i>${esc(slPN(w.lead))}</td>`;}).join('')}</tr>
+      <tr><td>Participación</td>${EL.map(ek=>`<td class="r">${pct(totals(ek,ii).turn,0)}</td>`).join('')}</tr></tbody></table>`);
+  return N;}
+/* ---------- visor ---------- */
 let SLI=0;
-async function openSlides(btn){const o=btn&&btn.innerHTML; if(btn){btn.disabled=true; btn.textContent='Preparando…';} await new Promise(r=>setTimeout(r,40));
-  let S6; try{S6=await slBuild();}catch(e){console.error(e); toast('No se pudo armar la presentación.'); if(btn){btn.disabled=false; btn.innerHTML=o;} return;}
-  if(btn){btn.disabled=false; btn.innerHTML=o;}
+async function slMake(btn,busy){const o=btn&&btn.innerHTML; if(btn){btn.disabled=true; btn.textContent=busy;} await new Promise(r=>setTimeout(r,40));
+  try{return await slBuild();}catch(e){console.error(e); toast('No se pudo armar la presentación.'); return null;} finally{if(btn){btn.disabled=false; btn.innerHTML=o;}}}
+async function openSlides(btn){const SS=await slMake(btn,'Preparando…'); if(!SS) return;
   const d=document.createElement('div'); d.id='deck'; d.className='deck'; d.setAttribute('role','dialog'); d.setAttribute('aria-label','Presentación');
-  d.innerHTML=`<div class="dk-bar"><b>${esc(slTitle())}</b><span id="dkn"></span><div class="dk-sp"></div><button id="dkfs">Pantalla completa</button><button id="dkpdf">Descargar PDF</button><button id="dkx" aria-label="Cerrar">✕</button></div>
-    <div class="dk-stage" id="dks"><div class="dk-track" id="dkt">${S6.join('')}</div><button class="dk-nav p" id="dkp" aria-label="Anterior">‹</button><button class="dk-nav n" id="dkn2" aria-label="Siguiente">›</button></div>
-    <div class="dk-dots" id="dkd">${S6.map((_,j)=>`<button data-j="${j}" aria-label="Diapositiva ${j+1}"></button>`).join('')}</div>`;
+  const names=SS.map(h=>{const m=h.match(/<h2>(.*?)<\/h2>/); return m?m[1].replace(/<[^>]+>/g,''):'Portada';});
+  d.innerHTML=`<div class="dk-bar"><b>${esc(slTitle())}</b><span id="dkn"></span><div class="dk-sp"></div><button id="dkfs"><svg viewBox="0 0 12 12"><path d="M1 4V1h3M8 1h3v3M11 8v3H8M4 11H1V8"/></svg>Proyectar</button><button id="dkpdf"><svg viewBox="0 0 12 12"><path d="M6 1v6.5M3.3 5 6 7.7 8.7 5M1.5 10.5h9"/></svg>PDF</button><button id="dkx" aria-label="Cerrar">✕</button></div>
+    <div class="dk-stage" id="dks"><div class="dk-track" id="dkt">${SS.join('')}</div><button class="dk-nav p" id="dkp" aria-label="Anterior"><svg viewBox="0 0 12 12"><path d="M7.5 2 3.5 6l4 4"/></svg></button><button class="dk-nav n" id="dkn2" aria-label="Siguiente"><svg viewBox="0 0 12 12"><path d="M4.5 2l4 4-4 4"/></svg></button></div>
+    <nav class="dk-th" id="dkd">${names.map((t,j)=>`<button data-j="${j}"><i>${j+1}</i>${esc(t)}</button>`).join('')}</nav><div class="dk-pr"><i id="dkpr"></i></div>`;
   document.body.appendChild(d); SLI=0;
   const fit=()=>{const s=$('dks'),r=s.getBoundingClientRect(),z=Math.min(r.width/SLW,r.height/SLH); $('dkt').style.transform=`translate(${(r.width-SLW*z)/2}px,${(r.height-SLH*z)/2}px) scale(${z})`;};
-  const show=j=>{SLI=Math.max(0,Math.min(S6.length-1,j)); d.querySelectorAll('.dk-track>.sl').forEach((s,k)=>s.classList.toggle('on',k===SLI)); d.querySelectorAll('#dkd button').forEach((b,k)=>b.setAttribute('aria-pressed',k===SLI)); $('dkn').textContent=`${SLI+1} de ${S6.length}`;};
-  const close=()=>{removeEventListener('keydown',key); removeEventListener('resize',fit); if(document.fullscreenElement) document.exitFullscreen().catch(()=>{}); d.remove();};
-  const key=e=>{if(e.key==='ArrowRight'||e.key==='PageDown'||e.key===' '){e.preventDefault(); show(SLI+1);} else if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault(); show(SLI-1);} else if(e.key==='Escape'&&!document.fullscreenElement) close(); else if(e.key==='f') $('dkfs').click();};
-  addEventListener('keydown',key); addEventListener('resize',fit); document.addEventListener('fullscreenchange',()=>setTimeout(fit,60));
+  const show=j=>{const prev=SLI; SLI=Math.max(0,Math.min(SS.length-1,j)); d.querySelectorAll('.dk-track>.sl').forEach((s,k)=>{s.classList.toggle('on',k===SLI); s.classList.toggle('back',k<SLI);}); d.querySelectorAll('#dkd button').forEach((b,k)=>b.setAttribute('aria-pressed',k===SLI)); const cur=d.querySelector('#dkd button[aria-pressed="true"]'); if(cur) cur.scrollIntoView({block:'nearest',inline:'center',behavior:prev===SLI?'auto':'smooth'}); $('dkn').textContent=`${SLI+1} / ${SS.length}`; $('dkpr').style.width=(100*(SLI+1)/SS.length)+'%';};
+  const close=()=>{removeEventListener('keydown',key); removeEventListener('resize',fit); document.removeEventListener('fullscreenchange',fsc); if(document.fullscreenElement) document.exitFullscreen().catch(()=>{}); d.remove();};
+  const key=e=>{if(['ArrowRight','PageDown',' '].includes(e.key)){e.preventDefault(); show(SLI+1);} else if(['ArrowLeft','PageUp'].includes(e.key)){e.preventDefault(); show(SLI-1);} else if(e.key==='Home') show(0); else if(e.key==='End') show(SS.length-1); else if(e.key==='Escape'&&!document.fullscreenElement) close(); else if(e.key==='f') $('dkfs').click();};
+  const fsc=()=>setTimeout(fit,80); addEventListener('keydown',key); addEventListener('resize',fit); document.addEventListener('fullscreenchange',fsc);
   $('dkx').onclick=close; $('dkp').onclick=()=>show(SLI-1); $('dkn2').onclick=()=>show(SLI+1); d.querySelectorAll('#dkd button').forEach(b=>b.onclick=()=>show(+b.dataset.j));
-  $('dks').addEventListener('click',e=>{if(e.target.closest('button')) return; const r=$('dks').getBoundingClientRect(); show(SLI+(e.clientX>r.left+r.width/2?1:-1));});
+  let tx=null; $('dks').addEventListener('touchstart',e=>{tx=e.touches[0].clientX;},{passive:true}); $('dks').addEventListener('touchend',e=>{if(tx==null) return; const dx=e.changedTouches[0].clientX-tx; if(Math.abs(dx)>40) show(SLI+(dx<0?1:-1)); tx=null;});
   $('dkfs').onclick=()=>{document.fullscreenElement?document.exitFullscreen():d.requestFullscreen&&d.requestFullscreen().catch(()=>{});};
-  $('dkpdf').onclick=()=>slPDF($('dkpdf'),S6);
+  $('dkpdf').onclick=()=>slPDF($('dkpdf'),SS);
   fit(); show(0);}
-async function slPDF(btn,S6){if(!window.jspdf||!window.html2canvas){toast('No se pudo cargar el generador de PDF. Recarga la página.'); return;} const o=btn.textContent; btn.disabled=true; btn.textContent='Generando…';
-  const host=document.createElement('div'); host.className='dk-print'; host.innerHTML=S6.join(''); document.body.appendChild(host);
+async function slPDF(btn,SS){if(!window.jspdf||!window.html2canvas){toast('No se pudo cargar el generador de PDF. Recarga la página.'); return;} const o=btn.innerHTML; btn.disabled=true; btn.textContent='Generando…';
+  const host=document.createElement('div'); host.className='dk-print'; host.innerHTML=SS.join(''); document.body.appendChild(host);
   try{await (document.fonts?document.fonts.ready:Promise.resolve()); const {jsPDF}=window.jspdf,doc=new jsPDF({orientation:'landscape',unit:'px',format:[SLW,SLH],hotfixes:['px_scaling']}); const sl=[...host.children];
-    for(let j=0;j<sl.length;j++){btn.textContent=`Generando ${j+1}/${sl.length}…`; const cv=await html2canvas(sl[j],{scale:1.6,width:SLW,height:SLH,backgroundColor:'#ffffff',logging:false}); if(j) doc.addPage([SLW,SLH],'landscape'); doc.addImage(cv.toDataURL('image/jpeg',.9),'JPEG',0,0,SLW,SLH);}
-    await saveFile(('Presentacion_'+norm(slTitle())+'_'+(st.elec||'')+(st.party?'_'+st.party:'')).replace(/[^\w]+/g,'_')+'.pdf',doc.output('blob'));}
-  catch(e){console.error(e); toast('No se pudo generar el PDF de la presentación.');}
-  finally{host.remove(); btn.disabled=false; btn.textContent=o;}}
+    for(let j=0;j<sl.length;j++){btn.textContent=`Generando ${j+1}/${sl.length}…`; const cv=await html2canvas(sl[j],{scale:1.6,width:SLW,height:SLH,backgroundColor:'#ffffff',logging:false}); if(j) doc.addPage([SLW,SLH],'landscape'); doc.addImage(cv.toDataURL('image/jpeg',.92),'JPEG',0,0,SLW,SLH);}
+    await saveFile(('Analisis_'+norm(slTitle())+'_'+(st.elec||'')+(st.party?'_'+st.party:'_general')).replace(/[^\w]+/g,'_')+'.pdf',doc.output('blob'));}
+  catch(e){console.error(e); toast('No se pudo generar el PDF.');}
+  finally{host.remove(); btn.disabled=false; btn.innerHTML=o;}}
+/* Informe PDF del panel = las mismas diapositivas */
+async function slDownload(btn){const SS=await slMake(btn,'Preparando…'); if(SS) await slPDF(btn,SS);}
 if($('presb')) $('presb').onclick=()=>openSlides($('presb'));
 
 /* ===== arranque ===== */
