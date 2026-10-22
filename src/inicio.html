@@ -110,7 +110,7 @@ button,input{font:inherit;color:inherit}:focus-visible{outline:2px solid var(--t
 /* rejilla: cámara = alto de "quién sale a votar"; resultados ocupa el resto; evolución bajo el mapa, mismo ancho */
 .body{grid-template-columns:minmax(0,.92fr) minmax(0,1.72fr) minmax(0,.86fr);grid-template-rows:300px minmax(0,1fr) 232px;grid-template-areas:"cam map dem" "res map rk" "res evo cmp"}
 #cCam{grid-area:cam}#cMap{grid-area:map}#cDem{grid-area:dem}#cRk{grid-area:rk}#cRes{grid-area:res}#cEvo{grid-area:evo}#cCmp{grid-area:cmp}
-.body.zon{grid-template-rows:250px minmax(0,1fr) 274px;grid-template-areas:"map map dem" "map map rk" "res evo cmp"}.body.zon #cCam{display:none}
+.body.zon{grid-template-areas:"res map dem" "evo map rk" "evo map cmp"}.body.zon #cCam{display:none}
 .body.big-res{grid-template-areas:"res res dem" "res res rk" "res res cmp"}.body.big-res #cCam,.body.big-res #cMap,.body.big-res #cEvo{display:none}
 .body.big-evo{grid-template-areas:"evo evo dem" "evo evo rk" "evo evo cmp"}.body.big-evo #cCam,.body.big-evo #cMap,.body.big-evo #cRes{display:none}
 .bx{display:none!important}.body.big-res #cRes .bx,.body.big-evo #cEvo .bx{display:flex!important}
@@ -255,7 +255,7 @@ path.st.on{stroke:var(--strong);stroke-width:2.4}
 
 /* ===== escritorio con el mismo marco que Análisis ===== */
 #stage.mini{grid-template-columns:60px minmax(0,1fr)}
-body:not(.mob) .side{align-items:center}body:not(.mob) .stog,body:not(.mob) .sbtn{display:none!important}
+#stage.mini .side{align-items:center}#stage.mini .stog{display:none}
 #stage.mini .logo{padding:0 0 18px}#stage.mini .orb{width:34px;height:34px;box-shadow:0 0 18px rgba(76,193,186,.55)}
 #stage.mini .nav a.on:before{left:-10px}
 .side .av{display:none}#stage.mini .side .av{display:grid;margin-top:auto;width:34px;height:34px;border-radius:50%;background:#F5A47C;color:#4A2E20;place-items:center;font:800 12px var(--c)}
@@ -409,11 +409,11 @@ const f1=x=>x.toFixed(1);
 function vOf(k,s){const V=D.V[k];if(!V)return null;if(s.t==='c'){let t=0,ln=0;const v={};CIR[s.id].forEach(e=>{const x=V.v['e'+e];if(!x)return;t+=x[0];ln+=x[1];for(const p in x[2])v[p]=(v[p]||0)+x[2][p];});return [t,ln,v];}return V.v[s.t==='mx'?'e0':s.t==='e'?'e'+s.id:s.t+s.id]||null;}
 function res(k,s){const x=vOf(k,s);if(!x)return null;const [t,ln,v]=x;let val=0;for(const p in v)val+=v[p];if(!val)return null;const bl=D.V[k].bl.map(([l,ms])=>({l,v:ms.reduce((a,p)=>a+(v[p]||0),0),ms})).filter(b=>b.v).sort((a,b)=>b.v-a.v),per={};for(const p in v)if(p!=='OTROS')per[p]=100*v[p]/val;return {t,ln,per,bl,turn:100*t/ln,w:bl[0].l,wp:100*bl[0].v/val,m:100*(bl[0].v-(bl[1]?bl[1].v:0))/val};}
 function padS(){if(zone){const z=D.pz[zone.t+zone.id];return z?{pad:z[0],ln:z[1],h:z[2],m:z[3],ah:z[4],am:z[5],sec:(D.ps||{})[zone.t+zone.id]||0}:D.pad[String(sel)];}if(sel)return D.pad[String(sel)];if(circ){const o={pad:0,ln:0,h:0,m:0,nb:0,sec:0,nmun:0,ndf:0,ah:[0,0,0,0,0,0,0],am:[0,0,0,0,0,0,0]};CIR[circ].forEach(e=>{const p=D.pad[String(e)];['pad','ln','h','m','nb','sec','nmun','ndf'].forEach(k=>o[k]+=p[k]);p.ah.forEach((x,i)=>{o.ah[i]+=x;o.am[i]+=p.am[i];});});return o;}return D.pad['0'];}
-function fit(){const sw=(screen&&screen.width)||innerWidth,w=Math.min(innerWidth,matchMedia('(pointer:coarse)').matches?sw:innerWidth),mob=w<1100||(innerHeight>w&&w<1300);document.body.classList.toggle('mob',mob);document.body.classList.toggle('ph',mob&&w<720);$('stage').classList.toggle('mini',!mob);placeCtl(mob);if(mob)requestAnimationFrame(()=>document.documentElement.style.setProperty('--hdr',(document.querySelector('.side').offsetHeight)+'px'));const s=$('stage');if(mob){s.style.transform='';s.style.width='';s.style.height='';return;}const z=Math.min(innerWidth/1440,innerHeight/860);s.style.width=innerWidth/z+'px';s.style.height=innerHeight/z+'px';s.style.transform=`scale(${z})`;}
+function fit(){const sw=(screen&&screen.width)||innerWidth,w=Math.min(innerWidth,matchMedia('(pointer:coarse)').matches?sw:innerWidth),mob=w<1100||(innerHeight>w&&w<1300);document.body.classList.toggle('mob',mob);document.body.classList.toggle('ph',mob&&w<720);if(fit._m!==mob){$('stage').classList.toggle('mini',!mob);fit._m=mob;}placeCtl(mob);if(mob)requestAnimationFrame(()=>document.documentElement.style.setProperty('--hdr',(document.querySelector('.side').offsetHeight)+'px'));const s=$('stage');if(mob){s.style.transform='';s.style.width='';s.style.height='';return;}const z=Math.min(innerWidth/1440,innerHeight/860);s.style.width=innerWidth/z+'px';s.style.height=innerHeight/z+'px';s.style.transform=`scale(${z})`;}
 /* en escritorio, circunscripciones y buscadores van en el encabezado (como en Análisis); en tablet y celular, en la barra superior */
 function placeCtl(mob){const H=$('hctl'),side=document.querySelector('.side'),cur=$('cur'),fd=document.querySelector('.find'),ci=$('cir'),f2=$('f2');if(!H||!fd)return;
   if(mob){if(fd.parentNode!==side){side.insertBefore(fd,cur);side.insertBefore(ci,cur);cur.insertBefore(f2,$('go'));}}
-  else if(fd.parentNode!==H){H.insertBefore(ci,H.firstChild);H.insertBefore(fd,$('go2'));H.insertBefore(f2,$('go2'));}}
+  else{if(ci.parentNode!==H)H.insertBefore(ci,H.firstChild);if(fd.parentNode!==side){side.insertBefore(fd,cur);cur.insertBefore(f2,$('go'));}}}
 fit();
 const govAt=(e,y)=>{let g=null;(D.gob['e'+e]||[]).forEach(x=>{if(x[0]<=y)g=x;});return g;};
 const YRS={comp:[2015,2018,2021,2024],gob:[2015,2016,2017,2018,2019,2020,2021,2022,2023,2024],dfp:[2015,2018,2021,2024],pre:[2018,2024],mun:[2015,2018,2021,2024]},ALL=YRS.gob;
