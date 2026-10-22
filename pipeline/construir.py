@@ -179,7 +179,7 @@ for ek,(t,y,kind,sec,used) in RAW.items():
 YEARS=sorted({e['year'] for e in E.values()})
 
 # ---------- secciones y padrón ----------
-pad={}
+pad={}; pmd={}; DUP={}
 for r in csv.DictReader(open(U+'PADRON.csv',encoding='utf-8')):
     try: s=int(float(r['SECCION']))
     except: continue
@@ -187,12 +187,34 @@ for r in csv.DictReader(open(U+'PADRON.csv',encoding='utf-8')):
     g=lambda c: int(float(r.get(c) or 0))
     grp=[['18','19','20_24'],['25_29'],['30_34','35_39'],['40_44','45_49'],['50_54','55_59'],['60_64'],['65_Y_MAS']]
     hm=[sum(g(f'LISTA_{a}_HOMBRES') for a in G) for G in grp]; mm=[sum(g(f'LISTA_{a}_MUJERES') for a in G) for G in grp]
-    pad[s]=[g('PADRON ELECTORAL'),g('LISTA NOMINAL'),g('LISTA HOMBRES'),g('LISTA MUJERES')]+hm+mm
+    v=[g('PADRON ELECTORAL'),g('LISTA NOMINAL'),g('LISTA HOMBRES'),g('LISTA MUJERES')]+hm+mm
+    if s in pad: DUP[s]=DUP.get(s,1)+1; v=[x+y for x,y in zip(pad[s],v)]  # misma sección repetida en el padrón: se suma
+    pad[s]=v
+    if s not in pmd: pmd[s]=(int(float(r['CLAVE MUNICIPIO'])),int(float(r['CLAVE DISTRITO'])))
+# ---------- reseccionamiento ----------
+# El padrón vigente trae secciones nuevas que aún no existen en la cartografía (reseccionamiento del INE) y la
+# cartografía conserva las secciones que esas nuevas reemplazaron (ya sin electores en el padrón). Cada sección nueva
+# se asigna completa a una sección dada de baja del mismo municipio y distrito federal (si no hay, del mismo municipio;
+# si tampoco, a la sección con más electores de su municipio y distrito), repartiendo las nuevas entre las candidatas
+# para que cada una reciba un volumen parecido. Así la lista nominal y el número de secciones del mapa coinciden
+# exactamente con el padrón. NPS = cuántas secciones vigentes del padrón representa cada polígono.
+CART=[int(x) for x in S.seccion]; CMD={int(r.seccion):(int(r.municipio),int(r.distrito_f)) for r in S.itertuples()}
+NPS={c:(DUP.get(c,1) if c in pad else 0) for c in CART}; GONE=[c for c in CART if c not in pad]; NEW=[x for x in pad if x not in CMD]
+lastE=max(E,key=lambda e:E[e]['year']); lnPrev={c:((E[lastE]['r'][i] or [0])[-1] if E[lastE]['r'][i] else 0) for i,c in enumerate(CART)}
+acc={}
+for x in sorted(NEW,key=lambda x:-pad[x][1]):
+    m,df=pmd[x]; cand=[c for c in GONE if CMD[c]==(m,df)] or [c for c in GONE if CMD[c][0]==m]
+    if cand: c=min(cand,key=lambda c:acc.get(c,0)/max(1,lnPrev.get(c,0)))
+    else:
+        cand=[c for c in CART if CMD[c]==(m,df)] or [c for c in CART if CMD[c][0]==m] or CART
+        c=max(cand,key=lambda c:pad.get(c,[0,0])[1])
+    base=pad.get(c,[0]*18); pad[c]=[u+v for u,v in zip(base,pad[x])]; NPS[c]+=DUP.get(x,1); acc[c]=acc.get(c,0)+pad[x][1]
+if NEW: print(f'  reseccionamiento: {len(NEW)} secciones nuevas del padrón asignadas a {len(acc)} secciones del mapa ({sum(pad[x][1] for x in NEW):,} electores)')
 SEC=[]; PATHS=[]
 lastDL=max((e for e in E if e.startswith('DIPL_')),key=lambda e:E[e]['year'])
 for i,r in S.iterrows():
     s=int(r.seccion); p=pad.get(s,[0]*18)
-    SEC.append([s,int(r.municipio),int(r.distrito_l),int(r.distrito_f),int(r.tipo),p[1],1 if E[lastDL]['r'][i] is None else 0])
+    SEC.append([s,int(r.municipio),int(r.distrito_l),int(r.distrito_f),int(r.tipo),p[1],1 if E[lastDL]['r'][i] is None else 0,NPS[s]])
     PATHS.append(path(r.geometry))
 DM=[pad.get(int(s),[0]*18) for s in S.seccion]
 # etiquetas de municipios (los de más electores, rango 1)

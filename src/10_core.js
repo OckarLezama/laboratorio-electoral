@@ -25,7 +25,7 @@ const mix=(hex,t,b=[238,245,244])=>{const a=hexrgb(hex); return 'rgb('+a.map((v,
 const TEAL=t=>mix('#16716C',.1+.9*Math.max(0,Math.min(1,t)));
 
 /* adaptador: el paquete por estado trae arreglos compactos */
-const S=D.S.map((a,i)=>({s:a[0],m:a[1],dl:a[2],df:a[3],t:a[4],ln:a[5],nw:!!a[6],d:D.paths[i]})),N=S.length,ALL=S.map((s,i)=>i);
+const S=D.S.map((a,i)=>({s:a[0],m:a[1],dl:a[2],df:a[3],t:a[4],ln:a[5],nw:!!a[6],np:a[7]==null?1:a[7],d:D.paths[i]})),nSec=idx=>idx.reduce((t,i)=>t+S[i].np,0),N=S.length,ALL=S.map((s,i)=>i);
 const DM=D.DM,V2=D.V,GEO=D.geo;
 const YEARS=M0.years,TY={GOB:'Gubernatura',DIPL:'Diputaciones locales',AYU:'Ayuntamientos',PRE:'Presidencia',SEN:'Senado',DIPF:'Diputaciones federales'};
 const DLS=[...new Set(S.map(s=>s.dl))].sort((a,b)=>a-b),DFS=[...new Set(S.map(s=>s.df))].sort((a,b)=>a-b),NDL=DLS.length;

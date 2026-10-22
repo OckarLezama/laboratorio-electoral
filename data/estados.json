@@ -2,161 +2,737 @@
  {
   "cab": "ags",
   "estado": "Aguascalientes",
-  "info": "11 municipios · 736 secciones"
+  "ent": 1,
+  "info": "11 municipios · 770 secciones",
+  "ln": 1152948,
+  "sec": 770,
+  "mun": 11,
+  "gob": {
+   "l": "PAN",
+   "y": 2022,
+   "p": 55.2
+  },
+  "c27": {
+   "g": true,
+   "c": true,
+   "a": true,
+   "na": "11",
+   "mr": "18",
+   "rp": "9",
+   "dt": "27"
+  }
  },
  {
   "cab": "bc",
   "estado": "Baja California",
-  "info": "7 municipios · 2,254 secciones"
+  "ent": 2,
+  "info": "7 municipios · 2,310 secciones",
+  "ln": 3445612,
+  "sec": 2310,
+  "mun": 7,
+  "gob": {
+   "l": "MORENA",
+   "y": 2021,
+   "p": 49.7
+  },
+  "c27": {
+   "g": true,
+   "c": true,
+   "a": true,
+   "na": "7",
+   "mr": "17",
+   "rp": "8",
+   "dt": "25"
+  }
  },
  {
   "cab": "bcs",
   "estado": "Baja California Sur",
-  "info": "5 municipios · 535 secciones"
+  "ent": 3,
+  "info": "5 municipios · 538 secciones",
+  "ln": 657301,
+  "sec": 538,
+  "mun": 5,
+  "gob": {
+   "l": "MORENA",
+   "y": 2021,
+   "p": 46.5
+  },
+  "c27": {
+   "g": true,
+   "c": true,
+   "a": true,
+   "na": "5",
+   "mr": "16",
+   "rp": "5",
+   "dt": "21"
+  }
  },
  {
   "cab": "camp",
   "estado": "Campeche",
-  "info": "13 municipios · 555 secciones"
+  "ent": 4,
+  "info": "13 municipios · 563 secciones",
+  "ln": 707072,
+  "sec": 563,
+  "mun": 13,
+  "gob": {
+   "l": "MORENA",
+   "y": 2021,
+   "p": 33.8
+  },
+  "c27": {
+   "g": true,
+   "c": true,
+   "a": true,
+   "na": "13 + 22 juntas",
+   "mr": "21",
+   "rp": "14",
+   "dt": "35"
+  }
  },
  {
   "cab": "chis",
   "estado": "Chiapas",
-  "info": "124 municipios · 2,296 secciones"
+  "ent": 7,
+  "info": "124 municipios · 2,308 secciones",
+  "ln": 4124540,
+  "sec": 2308,
+  "mun": 124,
+  "gob": {
+   "l": "MORENA",
+   "y": 2024,
+   "p": 83.5
+  },
+  "c27": {
+   "g": false,
+   "c": true,
+   "a": true,
+   "na": "124",
+   "mr": "24",
+   "rp": "16",
+   "dt": "40"
+  }
  },
  {
   "cab": "chih",
   "estado": "Chihuahua",
-  "info": "67 municipios · 3,311 secciones"
+  "ent": 8,
+  "info": "67 municipios · 3,348 secciones",
+  "ln": 3204146,
+  "sec": 3348,
+  "mun": 67,
+  "gob": {
+   "l": "PAN",
+   "y": 2021,
+   "p": 43.9
+  },
+  "c27": {
+   "g": true,
+   "c": true,
+   "a": true,
+   "na": "67",
+   "mr": "22",
+   "rp": "11",
+   "dt": "33"
+  }
  },
  {
   "cab": "cdmx",
   "estado": "Ciudad de México",
-  "info": "16 municipios · 5,589 secciones"
+  "ent": 9,
+  "info": "16 municipios · 5,575 secciones",
+  "ln": 8075816,
+  "sec": 5575,
+  "mun": 16,
+  "gob": {
+   "l": "MORENA",
+   "y": 2024,
+   "p": 52.9
+  },
+  "c27": {
+   "g": false,
+   "c": true,
+   "a": true,
+   "na": "16",
+   "mr": "34",
+   "rp": "32",
+   "dt": "66"
+  }
  },
  {
   "cab": "coah",
   "estado": "Coahuila",
-  "info": "38 municipios · 1,872 secciones"
+  "ent": 5,
+  "info": "38 municipios · 1,912 secciones",
+  "ln": 2494449,
+  "sec": 1912,
+  "mun": 38,
+  "gob": {
+   "l": "PRI",
+   "y": 2023,
+   "p": 58.3
+  },
+  "c27": {
+   "g": false,
+   "c": false,
+   "a": true,
+   "na": "38",
+   "mr": "16",
+   "rp": "9",
+   "dt": "25"
+  }
  },
  {
   "cab": "col",
   "estado": "Colima",
-  "info": "10 municipios · 430 secciones"
+  "ent": 6,
+  "info": "10 municipios · 435 secciones",
+  "ln": 603745,
+  "sec": 435,
+  "mun": 10,
+  "gob": {
+   "l": "MORENA",
+   "y": 2021,
+   "p": 27.7
+  },
+  "c27": {
+   "g": true,
+   "c": true,
+   "a": true,
+   "na": "10",
+   "mr": "16",
+   "rp": "9",
+   "dt": "25"
+  }
  },
  {
   "cab": "dgo",
   "estado": "Durango",
-  "info": "39 municipios · 1,415 secciones"
+  "ent": 10,
+  "info": "39 municipios · 1,435 secciones",
+  "ln": 1442250,
+  "sec": 1435,
+  "mun": 39,
+  "gob": {
+   "l": "PRI",
+   "y": 2022,
+   "p": 55.2
+  },
+  "c27": {
+   "g": false,
+   "c": true,
+   "a": false,
+   "na": "0",
+   "mr": "15",
+   "rp": "10",
+   "dt": "25"
+  }
  },
  {
   "cab": "mex",
   "estado": "Estado de México",
-  "info": "125 municipios · 7,052 secciones"
+  "ent": 15,
+  "info": "125 municipios · 7,193 secciones",
+  "ln": 13395047,
+  "sec": 7193,
+  "mun": 125,
+  "gob": {
+   "l": "MORENA",
+   "y": 2023,
+   "p": 54.2
+  },
+  "c27": {
+   "g": false,
+   "c": true,
+   "a": true,
+   "na": "125",
+   "mr": "45",
+   "rp": "30",
+   "dt": "75"
+  }
  },
  {
   "cab": "gto",
   "estado": "Guanajuato",
-  "info": "46 municipios · 3,357 secciones"
+  "ent": 11,
+  "info": "46 municipios · 3,432 secciones",
+  "ln": 5002178,
+  "sec": 3432,
+  "mun": 46,
+  "gob": {
+   "l": "PAN",
+   "y": 2024,
+   "p": 52.3
+  },
+  "c27": {
+   "g": false,
+   "c": true,
+   "a": true,
+   "na": "46",
+   "mr": "22",
+   "rp": "14",
+   "dt": "36"
+  }
  },
  {
   "cab": "gro",
   "estado": "Guerrero",
-  "info": "85 municipios · 2,718 secciones"
+  "ent": 12,
+  "info": "85 municipios · 2,722 secciones",
+  "ln": 2656913,
+  "sec": 2722,
+  "mun": 85,
+  "gob": {
+   "l": "MORENA",
+   "y": 2021,
+   "p": 44.9
+  },
+  "c27": {
+   "g": true,
+   "c": true,
+   "a": true,
+   "na": "85",
+   "mr": "28",
+   "rp": "18",
+   "dt": "46"
+  }
  },
  {
   "cab": "hgo",
   "estado": "Hidalgo",
-  "info": "84 municipios · 1,894 secciones"
+  "ent": 13,
+  "info": "84 municipios · 1,905 secciones",
+  "ln": 2482891,
+  "sec": 1905,
+  "mun": 84,
+  "gob": {
+   "l": "MORENA",
+   "y": 2022,
+   "p": 63.4
+  },
+  "c27": {
+   "g": false,
+   "c": true,
+   "a": true,
+   "na": "84",
+   "mr": "18",
+   "rp": "12",
+   "dt": "30"
+  }
  },
  {
   "cab": "jal",
   "estado": "Jalisco",
-  "info": "125 municipios · 4,080 secciones"
+  "ent": 14,
+  "info": "125 municipios · 4,189 secciones",
+  "ln": 6905187,
+  "sec": 4189,
+  "mun": 125,
+  "gob": {
+   "l": "MC",
+   "y": 2024,
+   "p": 44.3
+  },
+  "c27": {
+   "g": false,
+   "c": true,
+   "a": true,
+   "na": "125",
+   "mr": "20",
+   "rp": "18",
+   "dt": "38"
+  }
  },
  {
   "cab": "mich",
   "estado": "Michoacán",
-  "info": "113 municipios · 2,825 secciones"
+  "ent": 16,
+  "info": "113 municipios · 2,758 secciones",
+  "ln": 3853557,
+  "sec": 2758,
+  "mun": 113,
+  "gob": {
+   "l": "MORENA",
+   "y": 2021,
+   "p": 42.1
+  },
+  "c27": {
+   "g": true,
+   "c": true,
+   "a": true,
+   "na": "113",
+   "mr": "24",
+   "rp": "16",
+   "dt": "40"
+  }
  },
  {
   "cab": "mor",
   "estado": "Morelos",
-  "info": "36 municipios · 949 secciones"
+  "ent": 17,
+  "info": "36 municipios · 956 secciones",
+  "ln": 1583448,
+  "sec": 956,
+  "mun": 36,
+  "gob": {
+   "l": "MORENA",
+   "y": 2024,
+   "p": 49.8
+  },
+  "c27": {
+   "g": false,
+   "c": true,
+   "a": true,
+   "na": "36",
+   "mr": "12",
+   "rp": "8",
+   "dt": "20"
+  }
  },
  {
   "cab": "nay",
   "estado": "Nayarit",
-  "info": "20 municipios · 1,011 secciones"
+  "ent": 18,
+  "info": "20 municipios · 1,015 secciones",
+  "ln": 990369,
+  "sec": 1015,
+  "mun": 20,
+  "gob": {
+   "l": "MORENA",
+   "y": 2021,
+   "p": 50.6
+  },
+  "c27": {
+   "g": true,
+   "c": true,
+   "a": true,
+   "na": "20",
+   "mr": "18",
+   "rp": "12",
+   "dt": "30"
+  }
  },
  {
   "cab": "nl",
   "estado": "Nuevo León",
-  "info": "51 municipios · 3,114 secciones"
+  "ent": 19,
+  "info": "51 municipios · 3,156 secciones",
+  "ln": 4704067,
+  "sec": 3156,
+  "mun": 51,
+  "gob": {
+   "l": "MC",
+   "y": 2021,
+   "p": 37.4
+  },
+  "c27": {
+   "g": true,
+   "c": true,
+   "a": true,
+   "na": "51",
+   "mr": "26",
+   "rp": "16",
+   "dt": "42"
+  }
  },
  {
   "cab": "oax",
   "estado": "Oaxaca",
-  "info": "570 municipios · 2,564 secciones"
+  "ent": 20,
+  "info": "570 municipios · 2,566 secciones",
+  "ln": 3168796,
+  "sec": 2566,
+  "mun": 570,
+  "gob": {
+   "l": "MORENA",
+   "y": 2022,
+   "p": 62.5
+  },
+  "c27": {
+   "g": false,
+   "c": true,
+   "a": true,
+   "na": "152 (+~418 SNI)",
+   "mr": "25",
+   "rp": "17",
+   "dt": "42"
+  }
  },
  {
   "cab": "pue",
   "estado": "Puebla",
-  "info": "217 municipios · 2,965 secciones"
+  "ent": 21,
+  "info": "217 municipios · 3,016 secciones",
+  "ln": 5117042,
+  "sec": 3016,
+  "mun": 217,
+  "gob": {
+   "l": "MORENA",
+   "y": 2024,
+   "p": 61.6
+  },
+  "c27": {
+   "g": false,
+   "c": true,
+   "a": true,
+   "na": "217",
+   "mr": "26",
+   "rp": "15",
+   "dt": "41"
+  }
  },
  {
   "cab": "qro",
   "estado": "Querétaro",
-  "info": "18 municipios · 1,090 secciones"
+  "ent": 22,
+  "info": "18 municipios · 1,121 secciones",
+  "ln": 2009360,
+  "sec": 1121,
+  "mun": 18,
+  "gob": {
+   "l": "PAN",
+   "y": 2021,
+   "p": 55.4
+  },
+  "c27": {
+   "g": true,
+   "c": true,
+   "a": true,
+   "na": "18",
+   "mr": "15",
+   "rp": "10",
+   "dt": "25"
+  }
  },
  {
   "cab": "qroo",
   "estado": "Quintana Roo",
-  "info": "11 municipios · 1,151 secciones"
+  "ent": 23,
+  "info": "11 municipios · 1,180 secciones",
+  "ln": 1571208,
+  "sec": 1180,
+  "mun": 11,
+  "gob": {
+   "l": "MORENA",
+   "y": 2022,
+   "p": 59.4
+  },
+  "c27": {
+   "g": true,
+   "c": true,
+   "a": true,
+   "na": "11",
+   "mr": "15",
+   "rp": "10",
+   "dt": "25"
+  }
  },
  {
   "cab": "slp",
   "estado": "San Luis Potosí",
-  "info": "58 municipios · 1,901 secciones"
+  "ent": 24,
+  "info": "58 municipios · 1,946 secciones",
+  "ln": 2265168,
+  "sec": 1946,
+  "mun": 58,
+  "gob": {
+   "l": "PVEM",
+   "y": 2021,
+   "p": 39.1
+  },
+  "c27": {
+   "g": true,
+   "c": true,
+   "a": true,
+   "na": "59",
+   "mr": "15",
+   "rp": "12",
+   "dt": "27"
+  }
  },
  {
   "cab": "sin",
   "estado": "Sinaloa",
-  "info": "20 municipios · 3,855 secciones"
+  "ent": 25,
+  "info": "20 municipios · 3,591 secciones",
+  "ln": 2410683,
+  "sec": 3591,
+  "mun": 20,
+  "gob": {
+   "l": "MORENA",
+   "y": 2021,
+   "p": 58.4
+  },
+  "c27": {
+   "g": true,
+   "c": true,
+   "a": true,
+   "na": "20",
+   "mr": "24",
+   "rp": "16",
+   "dt": "40"
+  }
  },
  {
   "cab": "son",
   "estado": "Sonora",
-  "info": "72 municipios · 1,667 secciones"
+  "ent": 26,
+  "info": "72 municipios · 1,700 secciones",
+  "ln": 2369123,
+  "sec": 1700,
+  "mun": 72,
+  "gob": {
+   "l": "MORENA",
+   "y": 2021,
+   "p": 53.4
+  },
+  "c27": {
+   "g": true,
+   "c": true,
+   "a": true,
+   "na": "72",
+   "mr": "21",
+   "rp": "12",
+   "dt": "33"
+  }
  },
  {
   "cab": "tab",
   "estado": "Tabasco",
-  "info": "17 municipios · 1,191 secciones"
+  "ent": 27,
+  "info": "17 municipios · 1,199 secciones",
+  "ln": 1842438,
+  "sec": 1199,
+  "mun": 17,
+  "gob": {
+   "l": "MORENA",
+   "y": 2024,
+   "p": 83.0
+  },
+  "c27": {
+   "g": false,
+   "c": true,
+   "a": true,
+   "na": "17",
+   "mr": "21",
+   "rp": "14",
+   "dt": "35"
+  }
  },
  {
   "cab": "tam",
   "estado": "Tamaulipas",
-  "info": "43 municipios · 2,220 secciones"
+  "ent": 28,
+  "info": "43 municipios · 2,260 secciones",
+  "ln": 2933435,
+  "sec": 2260,
+  "mun": 43,
+  "gob": {
+   "l": "MORENA",
+   "y": 2022,
+   "p": 51.5
+  },
+  "c27": {
+   "g": false,
+   "c": true,
+   "a": true,
+   "na": "43",
+   "mr": "22",
+   "rp": "14",
+   "dt": "36"
+  }
  },
  {
   "cab": "tlax",
   "estado": "Tlaxcala",
-  "info": "60 municipios · 634 secciones"
+  "ent": 29,
+  "info": "60 municipios · 636 secciones",
+  "ln": 1083880,
+  "sec": 636,
+  "mun": 60,
+  "gob": {
+   "l": "MORENA",
+   "y": 2021,
+   "p": 49.8
+  },
+  "c27": {
+   "g": true,
+   "c": true,
+   "a": true,
+   "na": "60 + 299 pres. comunidad",
+   "mr": "15",
+   "rp": "10",
+   "dt": "25"
+  }
  },
  {
   "cab": "ver",
   "estado": "Veracruz",
-  "info": "212 municipios · 5,004 secciones"
+  "ent": 30,
+  "info": "212 municipios · 5,018 secciones",
+  "ln": 6106900,
+  "sec": 5018,
+  "mun": 212,
+  "gob": {
+   "l": "MORENA",
+   "y": 2024,
+   "p": 60.4
+  },
+  "c27": {
+   "g": false,
+   "c": true,
+   "a": false,
+   "na": "0",
+   "mr": "30",
+   "rp": "20",
+   "dt": "50"
+  }
  },
  {
   "cab": "yuc",
   "estado": "Yucatán",
-  "info": "106 municipios · 1,240 secciones"
+  "ent": 31,
+  "info": "106 municipios · 1,256 secciones",
+  "ln": 1841525,
+  "sec": 1256,
+  "mun": 106,
+  "gob": {
+   "l": "MORENA",
+   "y": 2024,
+   "p": 52.6
+  },
+  "c27": {
+   "g": false,
+   "c": true,
+   "a": true,
+   "na": "106",
+   "mr": "21",
+   "rp": "14",
+   "dt": "35"
+  }
  },
  {
   "cab": "zac",
   "estado": "Zacatecas",
-  "info": "58 municipios · 1,793 secciones"
+  "ent": 32,
+  "info": "58 municipios · 1,786 secciones",
+  "ln": 1308889,
+  "sec": 1786,
+  "mun": 58,
+  "gob": {
+   "l": "MORENA",
+   "y": 2021,
+   "p": 50.7
+  },
+  "c27": {
+   "g": true,
+   "c": true,
+   "a": true,
+   "na": "58",
+   "mr": "18",
+   "rp": "12",
+   "dt": "30"
+  }
  }
 ]

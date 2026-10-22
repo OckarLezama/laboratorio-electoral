@@ -193,3 +193,9 @@ Botón "Estrategia" junto a Tabla y Mapa. Solo muestra los cargos que se eligen 
 - El código está en `src/inicio.html`; `lab.py sitio` lo copia a la raíz. Carga `data/inicio/panorama.json`, `mx32.json`, `mx_df.json` y `mx_mun.json`.
 - El orden para actualizarlo: `lab.py nacional` → `extra_inicio.py` → `nac_extra.py` → `lab.py panorama`.
 - **Congresos locales:** la integración por partido de los 7 congresos con datos está escrita en `src/inicio.html` (constantes `CLO` y `SPL`), tomada de Wikipedia y prensa local (consulta oct 2026). Validarla con el instituto electoral de cada estado y corregir ahí. Al agregar un estado, agregar su congreso en `CLO`; si no está, la tarjeta muestra la Cámara federal con el estado resaltado.
+
+## Análisis sin estado elegido y presentación
+
+- `index.html` sin `#estado` (o `index.html#mx`) abre la **vista nacional de Análisis**: mapa de los 32 estados (lista nominal, quién gobierna, elección 2027) y lista para elegir uno. Usa solo `data/estados.json` y `data/inicio/mx32.json`; el análisis por sección se carga al elegir el estado. `sitio` agrega a `estados.json` la lista nominal, secciones, gobierno y elección 2027 (de `data/nacional.json`). Código: `src/nacion.js` (fuera de `APP`).
+- En el encabezado, **Cambiar estado** abre el buscador de estados y **México** regresa a la vista nacional.
+- **Presentación** (`src/87_slides.js`) arma 6 diapositivas 16:9 con la selección vigente (territorio, filtros, elección y partido): portada, contexto, votantes y resultado, escenario (conservar/cuidar/disputar/difícil), votación esperada y meta, histórico. Se proyecta en pantalla completa (flechas o clic para avanzar) y se descarga en PDF.

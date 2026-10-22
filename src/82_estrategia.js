@@ -288,7 +288,17 @@ function estEnter(){const t=st.elec?st.elec.split('_')[0]:null; if(t&&EOBJ.find(
   st.es.lv=null; st.es.u=null; st.es.seg=null; const f=st.f;
   if(st.terr){st.es.lv='mun'; st.es.u=+st.terr;} else if(f.dl.length===1){st.es.lv='dl'; st.es.u=f.dl[0];} else if(f.df.length===1){st.es.lv='df'; st.es.u=f.df[0];} else if(f.mun.length===1){st.es.lv='mun'; st.es.u=f.mun[0];}
   st.elec=eRef(); $('elec').value=st.elec;}
-function estRender(){const C2=$('col'); C2.innerHTML=estPanel();
+/* cambio suave al cambiar de escenario, rival o nivel: conserva el desplazamiento y anima cifras y barras en lugar de redibujar */
+function morphPanel(C2,html){const again=C2.dataset.v==='est',sc=C2.scrollTop,RM2=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const numSel='.num,.es-big,b',isN=t=>/^[\s]*[\d,]+(\.\d+)?\s*%?[\s]*$/.test(t),oN=again?[...C2.querySelectorAll(numSel)].map(e=>e.children.length?null:e.textContent):[],oW=again?[...C2.querySelectorAll('[style*="width"]')].map(e=>e.style.width):[];
+  C2.innerHTML=html; C2.dataset.v='est';
+  if(!again) return;
+  C2.classList.remove('anim'); C2.scrollTop=sc;
+  if(RM2) return;
+  [...C2.querySelectorAll('[style*="width"]')].forEach((e,j)=>{const w0=oW[j],w1=e.style.width; if(w0&&w1&&w0!==w1&&/%|px/.test(w0)){e.style.transition='none'; e.style.width=w0; void e.offsetWidth; e.style.transition='width .6s cubic-bezier(.2,.8,.2,1)'; e.style.width=w1;}});
+  [...C2.querySelectorAll(numSel)].forEach((e,j)=>{if(e.children.length) return; const t1=e.textContent,t0=oN[j]; if(!t0||t0===t1||!isN(t0)||!isN(t1)) return; const a=parseFloat(t0.replace(/,/g,'')),b2=parseFloat(t1.replace(/,/g,'')),dec=((t1.match(/\.(\d+)/)||[,''])[1]).length,pc2=/%/.test(t1),cm=/,/.test(t1)||b2>=1000,st0=performance.now();
+    const f=v=>(cm?v.toLocaleString('en-US',{minimumFractionDigits:dec,maximumFractionDigits:dec}):v.toFixed(dec))+(pc2?'%':''),step=n=>{const u=Math.min(1,(n-st0)/550),k=1-Math.pow(1-u,3); e.textContent=f(a+(b2-a)*k); if(u<1) requestAnimationFrame(step); else e.textContent=t1;}; requestAnimationFrame(step);});}
+function estRender(){const C2=$('col'); morphPanel(C2,estPanel());
   const go=()=>{const lv=eLv(); if(st.es.u!=null&&lv!=='est') applyScope(lv,st.es.u); else applyScope('all',0);};
   $('eback').onclick=()=>setView2('map');
   C2.querySelectorAll('[data-eobj]').forEach(b=>b.onclick=()=>{st.es.obj=b.dataset.eobj; st.es.lv=null; st.es.u=null; st.es.seg=null; st.elec=eRef(); $('elec').value=st.elec; go();});
