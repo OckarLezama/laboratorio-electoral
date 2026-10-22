@@ -170,11 +170,37 @@ for ek,(t,y,kind,sec,used) in RAW.items():
         a=[v.get(p,0) for p in P8[:-1]]; a.append(sum(n for p,n in v.items() if p not in P8[:-1]))
         for j in range(NP): tot[j]+=a[j]
         rr[idx[s]]=[round(q) for q in a]+[round(tv),round(ln)]
+    # Candidatura común: el INE reparte el voto del candidato común entre los partidos que lo postulan (mismo voto ±2
+    # en casi todas las secciones). Ese reparto no es preferencia por partido, así que el voto completo se asigna al
+    # partido que encabeza la coalición y los socios quedan en cero en esa elección. 'cc' registra qué se consolidó.
+    cc=[]; grp={}
+    for p in P8[:-1]:
+        if p in par: grp.setdefault(fnd(p),[]).append(p)
+    for g in grp.values():
+        if len(g)<2: continue
+        ix=[P8.index(p) for p in g]; c_eq=c_n=0   # (no usar k ni n: son globales de la proyección del mapa)
+        for r in rr:
+            if not r: continue
+            v=[r[j] for j in ix]; mx=max(v)
+            if mx<=5: continue
+            c_n+=1; c_eq+=(mx-min(v)<=2)
+        if c_n and c_eq/c_n>.5:
+            lead=min(g,key=lambda p:MAIN.index(p) if p in MAIN else 99); li=P8.index(lead)
+            for r in rr:
+                if r:
+                    t_=sum(r[j] for j in ix)
+                    for j in ix: r[j]=0
+                    r[li]=t_
+            cc.append([lead]+[p for p in g if p!=lead])
+    if cc:
+        tot=[sum(r[j] for r in rr if r) for j in range(NP)]
+        print('  candidatura común',ek,cc)
     T={p:tot[j] for j,p in enumerate(P8)}
     blocs={}
     for p in P8: blocs.setdefault(fnd(p) if p in par else p,[]).append(p)
     bl=[{'lead':max(m,key=lambda p:T[p]),'members':sorted(m,key=lambda p:-T[p])} for m in blocs.values()]
     E[ek]={'label':TY[t]+' '+str(y),'type':t,'year':y,'kind':kind,'blocs':bl,'r':rr}
+    if cc: E[ek]['cc']=cc
     print(ek,len(sec),[b['members'] for b in bl if len(b['members'])>1])
 YEARS=sorted({e['year'] for e in E.values()})
 
@@ -233,8 +259,14 @@ LOC=sorted([e for e in OWN],key=lambda e:E[e]['year'])
 CONS={'MORENA':2018}
 lnS=[x[5] for x in SEC]; munS=[x[1] for x in SEC]
 V={'duro':{},'techo':{}}
+# voto duro = mínimo del voto marcado solo para el partido. Una elección sin esa información para el partido (candidatura
+# común reportada en una sola columna, o voto propio menor al 20% de lo que se le atribuye) no cuenta como cero: se omite.
+def own_ok(e,j):
+    ot=sum(o[j] for o in OWN[e].values()); rt=sum(r[j] for r in E[e]['r'] if r)
+    cct=sum(sum(r[P8.index(q)] for q in g if q in P8) for g in E[e].get('cc',[]) if MAIN[j] in g for r in E[e]['r'] if r)
+    return (cct or rt)>0 and ot/(cct or rt)>=.2
 for p in MAIN:
-    j=MAIN.index(p); els=[e for e in LOC if E[e]['year']>=CONS.get(p,0)]
+    j=MAIN.index(p); els=[e for e in LOC if E[e]['year']>=CONS.get(p,0) and own_ok(e,j)]
     raw=[]; te=[]
     for i,s in enumerate(S.seccion):
         vs=[]; ts=[]

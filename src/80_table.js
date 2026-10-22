@@ -10,7 +10,7 @@ function tUnits(idx,ek,g,p){const grp={};
     if(p){u.gp=gapOf(ek,ii,p); if(u.gp){u.sgap=u.gp.lead?u.gp.gap:-u.gp.gap;}}
     return u;}).filter(Boolean);}
 function tViewOk(u,v){if(v==='all') return true; const x=u.gp; if(!x) return false; return v==='def'?x.lead&&x.ptsGap<5:v==='dis'?!x.lead&&x.ptsGap<5:v==='rec'?!x.lead&&x.gap>0&&x.rec>=x.gap:v==='bas'?x.lead&&x.ptsGap>=15:true;}
-function tTrend(u,ek,p){const t=ek.split('_')[0],ys=YEARS.filter(y=>D.E[t+'_'+y]),q=p||u.a.lead; return {ys,v:ys.map(y=>{const T=totals(t+'_'+y,u.ii); return T.val?100*(T.tot[q]||0)/T.val:null;}),q};}
+function tTrend(u,ek,p){const t=ek.split('_')[0],ys=YEARS.filter(y=>D.E[t+'_'+y]),q=p||u.a.lead; return {ys,v:ys.map(y=>{if(ccOff(t+'_'+y,q)) return null; const T=totals(t+'_'+y,u.ii); return T.val?100*(T.tot[q]||0)/T.val:null;}),q};}
 function sparkT(tr){const v=tr.v.map(x=>x==null?0:x),n=v.length,W=74,H=22,mx=Math.max(...v,1),mn=Math.min(...v),X=j=>3+j/Math.max(1,n-1)*(W-6),Y=x=>H-3-(mx===mn?.5:(x-mn)/(mx-mn))*(H-6);
   return `<svg class="tspk" viewBox="0 0 ${W} ${H}" data-tip="${esc(`<b>${NM[tr.q]} · votación propia</b>`+tr.ys.map((y,j)=>y+': '+(tr.v[j]==null?'—':tr.v[j].toFixed(1)+'%')).join('<br>'))}"><polyline points="${v.map((x,j)=>X(j).toFixed(1)+','+Y(x).toFixed(1)).join(' ')}" fill="none" stroke="${C[tr.q]}" stroke-width="1.8" stroke-linejoin="round"/><circle cx="${X(n-1).toFixed(1)}" cy="${Y(v[n-1]).toFixed(1)}" r="2.6" fill="${C[tr.q]}"/></svg>`;}
 function renderTbl(idx){const B=$('tbl'); if(!st.elec){B.innerHTML='<div class="tbar"><span class="cnt" style="margin:0">La tabla compara resultados de una elección: elige una en Explorar.</span></div>'; return;}

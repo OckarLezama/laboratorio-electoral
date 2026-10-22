@@ -42,6 +42,8 @@ function totals(ek,idx){const tot={}; let val=0,t=0,ln=0; idx.forEach(i=>{const 
 const WC={};
 const winner=(ek,idx)=>{if(idx.length===1){const c=WC[ek]||(WC[ek]=[]),i=idx[0]; if(c[i]!==undefined) return c[i]; const T=totals(ek,idx); return c[i]=T.val?{lead:T.bl[0].lead,m:T.bl[0].pct-(T.bl[1]?T.bl[1].pct:0),bl:T.bl,turn:T.turn}:null;}
   const T=totals(ek,idx); if(!T.val) return null; return {lead:T.bl[0].lead,m:T.bl[0].pct-(T.bl[1]?T.bl[1].pct:0),bl:T.bl,turn:T.turn};};
+/* socio de una candidatura común en esa elección: su voto está sumado en el partido que la encabeza */
+const ccOff=(ek,p)=>!!(D.E[ek]&&D.E[ek].cc&&D.E[ek].cc.some(g=>g.indexOf(p)>0)),ccLead=(ek,p)=>{const g=D.E[ek]&&D.E[ek].cc&&D.E[ek].cc.find(g=>g.indexOf(p)>0); return g?g[0]:null;};
 const lnOf=idx=>idx.reduce((a,i)=>a+(S[i].ln||0),0);
 const wavg=(arr,idx)=>{let a=0,b=0; idx.forEach(i=>{if(arr[i]!=null){a+=arr[i]*(S[i].ln||1); b+=S[i].ln||1;}}); return b?a/b:null;};
 function demo(idx){const a={pe:0,ln:0,h:0,m:0,y:0,o:0}; idx.forEach(i=>{const r=DM[i]; if(!r) return; a.pe+=r[0]; a.ln+=r[1]; a.h+=r[2]; a.m+=r[3]; a.y+=r[4]+r[11]+r[5]+r[12]; a.o+=r[10]+r[17];}); const t=a.h+a.m||1; a.mj=100*a.m/t; a.jv=100*a.y/t; a.ma=100*a.o/t; return a;}
