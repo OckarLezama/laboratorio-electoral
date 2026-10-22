@@ -2,7 +2,7 @@
 
 Recorre: capas del mapa y play; circunscripciones; cada estado (congreso, resultados, evolución,
 composición); un municipio y un distrito de cada estado; ampliar mapa, resultados y evolución;
-menú oculto; zoom; tablet y celular. Falla si hay un error de JavaScript o un texto roto
+encabezado con buscador; zoom; tablet y celular. Falla si hay un error de JavaScript o un texto roto
 (NaN, undefined, Infinity…).
 
 uso:   python tests/prueba_inicio.py
@@ -57,7 +57,6 @@ async def main():
             await pg.click('#rpl' if x == 'res' else '#bpl'); await pg.wait_for_timeout(1500)
             await pg.click(f'.xp[data-x={x}]'); await pg.wait_for_timeout(400)
         await pg.click('#mxp'); await pg.wait_for_timeout(600); await pg.click('#mxp'); await pg.wait_for_timeout(400)
-        await pg.click('#stog'); await pg.wait_for_timeout(500); await pg.click('#stog'); await pg.wait_for_timeout(400)
         ents = await pg.evaluate("[...new Set([...document.querySelectorAll('#map path.st')].map(p=>+p.dataset.e))]")
         for e in ents:
             await pg.evaluate(f'setSel({e})'); await pg.wait_for_timeout(350); await roto(pg, f'estado {e}', prob)

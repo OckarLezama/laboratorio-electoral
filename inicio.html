@@ -15,7 +15,6 @@
   --bg:#E6ECEB;--tile:#FFFFFF;--tint:#E2F1EF;--ink:#1B2121;--ink2:#4D5858;--mute:#8A9695;--line:#E3EAE9;
   --rail:#1F2222;--rail2:#2C3232;--onr:#EAF1F0;--onr2:#94A2A1;--teal:#1C7F79;--teal2:#4CC1BA;--tealdk:#13615C;--coral:#F46883;--none:#D5DEDD;--sea:#DCEBEA;--hair:#EEF2F2;--strong:#1C2121;--muted:#86908F;--card:#fff;
   --c:'Manrope','Inter',ui-sans-serif,sans-serif;--d:'Manrope','Inter',ui-sans-serif,sans-serif;--f:'Inter',ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif;color-scheme:light}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111515;--tile:#1A1F1F;--tint:#16302D;--ink:#ECF2F1;--ink2:#B6C2C1;--mute:#7D8A89;--line:#283030;--rail:#0B0E0E;--rail2:#1C2222;--none:#384242;--sea:#151A1A;color-scheme:dark}}
 :root[data-theme="dark"]{--bg:#111515;--tile:#1A1F1F;--tint:#16302D;--ink:#ECF2F1;--ink2:#B6C2C1;--mute:#7D8A89;--line:#283030;--rail:#0B0E0E;--rail2:#1C2222;--none:#384242;--sea:#151A1A;color-scheme:dark}
 [hidden]{display:none!important}*{box-sizing:border-box}html,body{height:100%}
 body{margin:0;background:var(--bg);color:var(--ink);font:13px/1.35 var(--f);overflow:hidden;-webkit-font-smoothing:antialiased}
@@ -253,7 +252,31 @@ path.st.on{stroke:var(--strong);stroke-width:2.4}
 .tip{position:fixed;pointer-events:none;background:var(--rail);color:var(--onr);font-size:12px;padding:7px 10px;border-radius:9px;z-index:60;max-width:300px;box-shadow:0 10px 24px rgba(0,0,0,.25)}
 .tip small{display:block;color:var(--onr2);font-size:10.5px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* ===== escritorio con el mismo marco que Análisis ===== */
+#stage.mini{grid-template-columns:60px minmax(0,1fr)}
+body:not(.mob) .side{align-items:center}body:not(.mob) .stog,body:not(.mob) .sbtn{display:none!important}
+#stage.mini .logo{padding:0 0 18px}#stage.mini .orb{width:34px;height:34px;box-shadow:0 0 18px rgba(76,193,186,.55)}
+#stage.mini .nav a.on:before{left:-10px}
+.side .av{display:none}#stage.mini .side .av{display:grid;margin-top:auto;width:34px;height:34px;border-radius:50%;background:#F5A47C;color:#4A2E20;place-items:center;font:800 12px var(--c)}
+body:not(.mob) .band{min-height:62px;padding:8px 20px}body:not(.mob) .band h1 b{font-size:19px}body:not(.mob) .band .sub{display:none}
+.hctl{display:none}body:not(.mob) .hctl{margin-left:auto;display:flex;align-items:center;gap:10px}
+.hctl .cir{margin:0;display:flex!important;align-items:center;gap:8px}.hctl .cir small{margin:0;color:var(--muted);font-size:11px}
+.hctl .cir div{display:flex;gap:2px;background:#F0F3F3;border-radius:12px;padding:3px}
+.hctl .cir button{background:none;color:var(--ink2);width:30px;height:30px;padding:0;border-radius:9px;font:700 12.5px var(--c)}.hctl .cir button:hover{background:#E3EAEA}.hctl .cir button.on{background:var(--teal);color:#fff}
+.hctl .find,.hctl .find2{display:block!important;margin:0;position:relative;width:300px}body.sel .hctl .find{display:none!important}body:not(.sel) .hctl .find2{display:none!important}
+.hctl input{height:38px;border:1px solid var(--line)!important;border-radius:12px!important;background:#fff!important;color:var(--strong)!important;padding:0 12px 0 34px!important;font-size:12.5px!important}
+.hctl input:focus{outline:0;border-color:var(--teal)!important;box-shadow:0 0 0 3px #E4F5F3}.hctl input::placeholder{color:var(--muted)!important}
+.hctl .find svg{left:12px;stroke:var(--teal)!important}
+.hctl .find2:before{content:"";position:absolute;left:12px;top:50%;width:13px;height:13px;transform:translateY(-50%);background:no-repeat center/13px url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%231C7F79' stroke-width='2'%3E%3Ccircle cx='7' cy='7' r='5'/%3E%3Cpath d='M11 11l3.5 3.5'/%3E%3C/svg%3E")}
+.hctl .ac{top:42px;left:0;right:0}
+.go2{display:none;align-items:center;gap:6px;height:38px;border:0;border-radius:12px;background:var(--teal);color:#fff;font:700 12.5px var(--f);padding:0 14px;cursor:pointer;white-space:nowrap}.go2:hover{background:var(--tealdk)}.go2 svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:1.8}
+body.sel .go2{display:inline-flex}
+.cd27{display:flex;flex-direction:column;align-items:flex-end;line-height:1.15;padding-left:12px;border-left:1px solid var(--line);cursor:default}.cd27 b{font:800 17px var(--c);color:var(--strong)}.cd27 span{font-size:10.5px;color:var(--muted)}
+/* reproducir: solo el símbolo */
+.playb{padding:6px;gap:0}.playb span{display:none}.playb i{width:24px;height:24px;font-size:9.5px}
 /* ===== tablet y celular ===== */
+body.mob path.dz{transition:none}body.mob #gst:not(.bord){filter:none}body.mob .t{box-shadow:0 1px 2px rgba(20,40,40,.08)}
 body.mob{overflow:auto;background:var(--bg)}body.mob #stage{width:auto!important;height:auto!important;transform:none!important;display:block}
 body.mob .side{position:relative;z-index:20;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:8px 10px;padding:10px max(16px,env(safe-area-inset-right,0px)) 10px max(16px,env(safe-area-inset-left,0px));box-shadow:0 4px 16px rgba(0,0,0,.18)}
 body.mob .stog,body.mob .sbtn,body.mob .clock,body.mob .logo small,body.mob .nav a span{display:none!important}
@@ -308,10 +331,11 @@ body.ph .xp span{display:none}
     <div class="cir" id="cir"><small>Circunscripción</small><div><button data-c="1" title="Circunscripción 1">1</button><button data-c="2" title="Circunscripción 2">2</button><button data-c="3" title="Circunscripción 3">3</button><button data-c="4" title="Circunscripción 4">4</button><button data-c="5" title="Circunscripción 5">5</button></div></div>
     <div class="cur" id="cur" hidden><small id="curK">Estado elegido</small><b id="curN"></b><span class="zn" id="curZ" hidden></span><div class="find2" id="f2"><input id="q2" autocomplete="off" aria-label="Buscar municipio o distrito"><div class="ac" id="ac2" hidden></div></div><button class="go" id="go"></button><button class="x" id="curB" hidden></button><button class="x" id="curX"><svg viewBox="0 0 12 12"><path d="M7.5 2.5L4 6l3.5 3.5"/></svg><span>Todo el país</span></button></div>
     <div class="clock" id="clock"></div>
+    <div class="av" aria-hidden="true">O</div>
   </aside>
 
   <div class="main">
-    <header class="band"><h1 id="ttl"><small><span class="pe">Panorama electoral</span></small><b><span class="tn">República Mexicana</span><span class="pin">Vista nacional</span></b></h1><div class="sub" id="bsub"></div></header>
+    <header class="band"><h1 id="ttl"><small><span class="pe">Panorama electoral</span></small><b><span class="tn">República Mexicana</span><span class="pin">Vista nacional</span></b></h1><div class="hctl" id="hctl"><button class="go2" id="go2">Abrir análisis<svg viewBox="0 0 12 12"><path d="M2 6h7.5M6.5 3 9.5 6l-3 3"/></svg></button><div class="cd27" id="cd27"></div></div><div class="sub" id="bsub"></div></header>
 
     <section class="g kpi" id="kpi"></section>
 
@@ -323,7 +347,7 @@ body.ph .xp span{display:none}
         <div class="hd"><div style="min-width:0"><h3 id="mT">Quién gobierna cada estado</h3><div class="s" style="margin-top:2px" id="mS"></div></div><button class="xp" id="mxp"><svg viewBox="0 0 12 12"><path d="M7 1.5h3.5V5M5 10.5H1.5V7M10.5 1.5 7 5M1.5 10.5 5 7"/></svg><span>Ampliar</span></button></div>
         <div class="mrow"><div class="seg" id="lens"><button data-l="comp" aria-pressed="true">Competencia</button><button data-l="gob" aria-pressed="false">Gobiernos</button><button data-l="dfp" aria-pressed="false">Distritos</button><button data-l="pre" aria-pressed="false">Presidencia</button><button data-l="mun" aria-pressed="false">Municipios</button></div><div class="lg" id="mlg"></div></div>
         <div class="mw"><svg id="map" role="img" aria-label="Mapa de México"></svg><div class="wm" id="wm"></div><div class="zm"><button id="zi" title="Acercar">+</button><button id="zo" title="Alejar">−</button></div><div class="mleg" id="mleg"></div></div>
-        <div class="yrs" id="yrs"><button class="playb" id="play"><i>▶</i><span>Reproducir</span></button><div class="trk" id="trk"></div></div>
+        <div class="yrs" id="yrs"><button class="playb" id="play" title="Reproducir" aria-label="Reproducir"><i>▶</i><span>Reproducir</span></button><div class="trk" id="trk"></div></div>
       </div>
       <div class="t" id="cDem"><h3 id="dT">Quién sale a votar</h3><div class="s" id="dS2">Participación 2024 por edad y sexo · INE</div><div class="ages"><svg id="ages"></svg></div><div class="lg" id="al"></div></div>
       <div class="t" id="cRk"><h3 id="rkT">Estados por electores</h3><div class="rk" id="rk"></div></div>
@@ -385,7 +409,11 @@ const f1=x=>x.toFixed(1);
 function vOf(k,s){const V=D.V[k];if(!V)return null;if(s.t==='c'){let t=0,ln=0;const v={};CIR[s.id].forEach(e=>{const x=V.v['e'+e];if(!x)return;t+=x[0];ln+=x[1];for(const p in x[2])v[p]=(v[p]||0)+x[2][p];});return [t,ln,v];}return V.v[s.t==='mx'?'e0':s.t==='e'?'e'+s.id:s.t+s.id]||null;}
 function res(k,s){const x=vOf(k,s);if(!x)return null;const [t,ln,v]=x;let val=0;for(const p in v)val+=v[p];if(!val)return null;const bl=D.V[k].bl.map(([l,ms])=>({l,v:ms.reduce((a,p)=>a+(v[p]||0),0),ms})).filter(b=>b.v).sort((a,b)=>b.v-a.v),per={};for(const p in v)if(p!=='OTROS')per[p]=100*v[p]/val;return {t,ln,per,bl,turn:100*t/ln,w:bl[0].l,wp:100*bl[0].v/val,m:100*(bl[0].v-(bl[1]?bl[1].v:0))/val};}
 function padS(){if(zone){const z=D.pz[zone.t+zone.id];return z?{pad:z[0],ln:z[1],h:z[2],m:z[3],ah:z[4],am:z[5],sec:(D.ps||{})[zone.t+zone.id]||0}:D.pad[String(sel)];}if(sel)return D.pad[String(sel)];if(circ){const o={pad:0,ln:0,h:0,m:0,nb:0,sec:0,nmun:0,ndf:0,ah:[0,0,0,0,0,0,0],am:[0,0,0,0,0,0,0]};CIR[circ].forEach(e=>{const p=D.pad[String(e)];['pad','ln','h','m','nb','sec','nmun','ndf'].forEach(k=>o[k]+=p[k]);p.ah.forEach((x,i)=>{o.ah[i]+=x;o.am[i]+=p.am[i];});});return o;}return D.pad['0'];}
-function fit(){const sw=(screen&&screen.width)||innerWidth,w=Math.min(innerWidth,matchMedia('(pointer:coarse)').matches?sw:innerWidth),mob=w<1100||(innerHeight>w&&w<1300);document.body.classList.toggle('mob',mob);document.body.classList.toggle('ph',mob&&w<720);if(mob)requestAnimationFrame(()=>document.documentElement.style.setProperty('--hdr',(document.querySelector('.side').offsetHeight)+'px'));const s=$('stage');if(mob){s.style.transform='';s.style.width='';s.style.height='';return;}const z=Math.min(innerWidth/1440,innerHeight/860);s.style.width=innerWidth/z+'px';s.style.height=innerHeight/z+'px';s.style.transform=`scale(${z})`;}
+function fit(){const sw=(screen&&screen.width)||innerWidth,w=Math.min(innerWidth,matchMedia('(pointer:coarse)').matches?sw:innerWidth),mob=w<1100||(innerHeight>w&&w<1300);document.body.classList.toggle('mob',mob);document.body.classList.toggle('ph',mob&&w<720);$('stage').classList.toggle('mini',!mob);placeCtl(mob);if(mob)requestAnimationFrame(()=>document.documentElement.style.setProperty('--hdr',(document.querySelector('.side').offsetHeight)+'px'));const s=$('stage');if(mob){s.style.transform='';s.style.width='';s.style.height='';return;}const z=Math.min(innerWidth/1440,innerHeight/860);s.style.width=innerWidth/z+'px';s.style.height=innerHeight/z+'px';s.style.transform=`scale(${z})`;}
+/* en escritorio, circunscripciones y buscadores van en el encabezado (como en Análisis); en tablet y celular, en la barra superior */
+function placeCtl(mob){const H=$('hctl'),side=document.querySelector('.side'),cur=$('cur'),fd=document.querySelector('.find'),ci=$('cir'),f2=$('f2');if(!H||!fd)return;
+  if(mob){if(fd.parentNode!==side){side.insertBefore(fd,cur);side.insertBefore(ci,cur);cur.insertBefore(f2,$('go'));}}
+  else if(fd.parentNode!==H){H.insertBefore(ci,H.firstChild);H.insertBefore(fd,$('go2'));H.insertBefore(f2,$('go2'));}}
 fit();
 const govAt=(e,y)=>{let g=null;(D.gob['e'+e]||[]).forEach(x=>{if(x[0]<=y)g=x;});return g;};
 const YRS={comp:[2015,2018,2021,2024],gob:[2015,2016,2017,2018,2019,2020,2021,2022,2023,2024],dfp:[2015,2018,2021,2024],pre:[2018,2024],mun:[2015,2018,2021,2024]},ALL=YRS.gob;
@@ -721,7 +749,7 @@ function unzone(){zone=null;if(lens0){lens=lens0;lens0=null;}}
 function pickZone(z){setTimeout(()=>{if(zone===z)zoom();},480);stop();if(lens!=='comp'){if(!lens0)lens0=lens;lens=z.t==='m'?'mun':'dfp';}if(!YRS[lens].includes(year))year=YRS[lens].at(-1);zone=z;trT=null;trShow=null;if(big)setBig(big);th();paintAll();}
 function setSel(e){stop();sel=e;unzone();trT=null;trShow=null;if(e)circ=0;th();paintAll();}
 function setCirc(c){stop();circ=c;sel=null;unzone();trT=null;trShow=null;th();paintAll();}
-function paintAll(){const wide=!!zone||mapBig,stv=false,B=$('body');if(wide!==B.classList.contains('zon')||stv!==B.classList.contains('st'))flip(()=>{B.classList.toggle('zon',wide);B.classList.toggle('st',stv);});$('mxp').hidden=!!zone;$('cir').querySelectorAll('button').forEach(b=>b.classList.toggle('on',+b.dataset.c===circ&&!sel));$('cur').hidden=!sel&&!circ;{const cr=[sel||circ?`<button class="cb" data-k="mx">México</button>`:'<span>México</span>'];if(sel&&zone)cr.push(`<button class="cb" data-k="e">${ES[sel].n}</button>`);const T=zone?zone.n:sel?ES[sel].n:circ?`Circunscripción ${circ}`:'República Mexicana',K=zone?(zone.t==='m'?'Municipio':'Distrito federal'):sel?'Estado':circ?'Circunscripción':'Vista nacional';$('ttl').innerHTML=`<small><span class="pe">Panorama electoral</span>${sel||circ?cr.map(x=>'<span class="sep">›</span>'+x).join(''):''}</small><b><span class="tn">${T}</span><span class="pin">${K}</span></b>`;}$('ttl').querySelectorAll('.cb').forEach(b=>b.onclick=()=>{if(b.dataset.k==='mx'){circ=0;setSel(null);}else{unzone();paintAll();}});
+function paintAll(){const wide=!!zone||mapBig,stv=false,B=$('body');if(wide!==B.classList.contains('zon')||stv!==B.classList.contains('st'))flip(()=>{B.classList.toggle('zon',wide);B.classList.toggle('st',stv);});$('mxp').hidden=!!zone;$('cir').querySelectorAll('button').forEach(b=>b.classList.toggle('on',+b.dataset.c===circ&&!sel));$('cur').hidden=!sel&&!circ;document.body.classList.toggle('sel',!!sel);{const cr=[sel||circ?`<button class="cb" data-k="mx">México</button>`:'<span>México</span>'];if(sel&&zone)cr.push(`<button class="cb" data-k="e">${ES[sel].n}</button>`);const T=zone?zone.n:sel?ES[sel].n:circ?`Circunscripción ${circ}`:'República Mexicana',K=zone?(zone.t==='m'?'Municipio':'Distrito federal'):sel?'Estado':circ?'Circunscripción':'Vista nacional';$('ttl').innerHTML=`<small><span class="pe">Panorama electoral</span>${sel||circ?cr.map(x=>'<span class="sep">›</span>'+x).join(''):''}</small><b><span class="tn">${T}</span><span class="pin">${K}</span></b>`;}$('ttl').querySelectorAll('.cb').forEach(b=>b.onclick=()=>{if(b.dataset.k==='mx'){circ=0;setSel(null);}else{unzone();paintAll();}});
   const na=$('navA');na.classList.toggle('dis',!(sel&&AV.has(ES[sel].clave)));$('curK').textContent=circ&&!sel?'Circunscripción elegida':'Estado elegido';$('curN').textContent=sel?ES[sel].n:circ?'Circunscripción '+circ:'';
   $('f2').hidden=!sel;$('q2').placeholder='Municipio o distrito';$('curZ').hidden=!zone;$('curZ').textContent=zone?zone.n:'';$('curB').hidden=!zone;$('curB').innerHTML=sel?`<svg viewBox="0 0 12 12"><path d="M7.5 2.5L4 6l3.5 3.5"/></svg><span>${ES[sel].n}</span>`:'';
   const g=$('go');g.hidden=!sel;if(sel){const ok=AV.has(ES[sel].clave);g.disabled=!ok;g.innerHTML=ok?'Abrir análisis <span>→</span>':'Análisis pendiente';}
@@ -738,9 +766,9 @@ const setBig=x=>{document.body.style.overflow=document.body.classList.contains('
 document.querySelectorAll('.xp[data-x]').forEach(b=>b.onclick=()=>setBig(b.dataset.x));addEventListener('keydown',e=>{if(e.key==='Escape'&&big)setBig(big);});
 const setMini=m=>{$('stage').classList.toggle('mini',m);$('stog').title=m?'Mostrar menú':'Ocultar menú';try{localStorage.setItem('lpMini',m?1:0)}catch(e){}setTimeout(()=>{chambers.k=null;chambers();$('rb')._st=null;bars();delete TCS.tr;tendencia();demo();vb=null;zoom();timeline();},320);};
 $('stog').onclick=()=>setMini(!$('stage').classList.contains('mini'));$('sbtn').onclick=()=>{setMini(false);setTimeout(()=>$('q').focus(),330);};
-try{if(localStorage.getItem('lpMini')==='1')$('stage').classList.add('mini')}catch(e){}
+try{if(localStorage.getItem('lpMini')==='1'&&!document.body.classList.contains('mob'))$('stage').classList.add('mini')}catch(e){}
 $('curX').onclick=()=>{circ=0;setSel(null);};$('curB').onclick=()=>{unzone();paintAll();};
-const goA=()=>{if(sel&&AV.has(ES[sel].clave))location.href='index.html#'+ES[sel].clave;};$('go').onclick=goA;$('navA').onclick=goA;
+const goA=()=>{if(sel&&AV.has(ES[sel].clave))location.href='index.html#'+ES[sel].clave;};$('go').onclick=goA;$('go2').onclick=goA;$('navA').onclick=goA;
 /* buscador */
 (()=>{const q=$('q'),ac=$('ac');let L=[],k=0;const draw=()=>{const t=norm(q.value.trim());L=[1,2,3,4,5].filter(c=>t&&norm('circunscripcion '+c).includes(t)).map(c=>({c,n:'Circunscripción '+c})).concat(D.est.filter(e=>!t||norm(e.n).includes(t)).slice(0,10));k=0;ac.innerHTML=L.map((e,i)=>`<button data-i="${i}" class="${i===k?'k':''}">${e.n}</button>`).join('')||'<button disabled>Sin coincidencias</button>';ac.hidden=false;ac.querySelectorAll('button[data-i]').forEach(b=>b.onmousedown=ev=>{ev.preventDefault();pick(+b.dataset.i);});};
   const pick=i=>{const e=L[i];if(!e)return;ac.hidden=true;q.value='';q.blur();if(e.c)setCirc(e.c);else setSel(e.ent);};
@@ -754,7 +782,8 @@ const goA=()=>{if(sel&&AV.has(ES[sel].clave))location.href='index.html#'+ES[sel]
 (()=>{const now=new Date(),a=new Date('2026-09-01'),j=new Date('2027-06-06T08:00:00');if(now>new Date('2027-06-07')){$('clock').hidden=true;return;}
   const ev=[['2026-12-13','Manifestación de intención de candidaturas independientes'],['2027-01-04','Inicio de precampañas y límite de convenios de coalición'],['2027-02-12','Fin de precampañas'],['2027-02-19','Selección de candidaturas de mayoría relativa'],['2027-03-12','Límite para resolver impugnaciones internas']].map(x=>({d:new Date(x[0]+'T12:00:00'),t:x[1]})),nx=ev.find(e=>e.d>=now),dd=Math.ceil((j-now)/864e5),p=Math.max(0,Math.min(100,100*(now-a)/(j-a)));
   $('clock').innerHTML=`<small>Para la jornada del 6 jun 2027</small><b>${dd}<span>días</span></b><div class="bar"><i style="width:${p}%"></i></div>${nx?`<p>Próximo: <em>${nx.d.toLocaleDateString('es-MX',{day:'numeric',month:'short'}).replace('.','')}</em> · ${nx.t}</p>`:''}`;
-  $('bsub').innerHTML=`Lista nominal al <b>8 oct 2026</b><br>Resultados INE 2015–2024`;})();
+  $('bsub').innerHTML=`Lista nominal al <b>8 oct 2026</b><br>Resultados INE 2015–2024`;
+  $('cd27').innerHTML=`<b>${dd} días</b><span>a la jornada 2027</span>`;$('cd27').title=(nx?`Próximo: ${nx.d.toLocaleDateString('es-MX',{day:'numeric',month:'short'}).replace('.','')} · ${nx.t}\n`:'')+'Lista nominal al 8 oct 2026 · Resultados INE 2015–2024';})();
 /* arranque */
 $('mtabs').querySelectorAll('button').forEach(b=>b.onclick=()=>{$('body').dataset.tab=b.dataset.t;$('mtabs').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));requestAnimationFrame(()=>{chambers.k=null;chambers();$('rb')._st=null;bars();delete TCS.tr;tendencia();demo();$('waf')._w=null;comp();rank();});});
 function layout(){chambers.k=null;paintAll();requestAnimationFrame(()=>{$('waf')._w=null;comp();delete TCS.tr;tendencia();});}

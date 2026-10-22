@@ -10,9 +10,9 @@ const labs=GEO.lab.filter(l=>l.r===1||l.r===0).map(l=>{const t=mk('text',{x:l.x,
 const BKEY=MANY?'df':'m',BUBS=(MANY?DFS.map(String):Object.keys(MUN)).map(m=>{const ii=ALL.filter(i=>S[i][BKEY]===+m); let x=0,y=0,w=0; ii.forEach(i=>{const q=S[i].ln||1; x+=CEN[i][0]*q; y+=CEN[i][1]*q; w+=q;}); const g=mk('g',{},$('gbub')); g.dataset.m=m; const c=mk('circle',{cx:0,cy:0},g),t=mk('text',{'text-anchor':'middle',x:0,y:0},g); return {m,g,c,t,x0:x/w,y0:y/w,ln:lnOf(ii)};});
 const BMX=Math.max(...BUBS.map(b=>b.ln));
 function setView(v){view=v; svg.setAttribute('viewBox',v.map(x=>x.toFixed(2)).join(' ')); const px=Math.max(v[2]/Math.max(1,svg.clientWidth),v[3]/Math.max(1,svg.clientHeight)),bOn=st.view!=='est'&&!st.terr&&v[2]>350&&VB[2]/px>220&&!(st.L&&(st.L.dl||st.L.df));
-  document.querySelectorAll('#gldl text,#gldf text').forEach(t=>{t.setAttribute('font-size',(11*px).toFixed(2)); t.style.strokeWidth=(3*px)+'px';});
-  $('gdiv').querySelectorAll('text').forEach(t=>{t.setAttribute('font-size',(12*px).toFixed(2)); t.style.strokeWidth=(3.5*px)+'px';});
-  labs.forEach(t=>{t.style.display=(t._r===0?v[2]>700:st.view==='est'?(!!st.terr||v[2]<450):!bOn)?'':'none'; t.setAttribute('font-size',((t._r?11:10)*px).toFixed(2)); t.style.strokeWidth=(3*px)+'px';});
+  /* tamaño de etiquetas: una sola variable CSS por cuadro (antes se reescribía cada texto en cada cuadro de la animación) */
+  svg.style.setProperty('--px',px.toFixed(4));
+  labs.forEach(t=>{const d=(t._r===0?v[2]>700:st.view==='est'?(!!st.terr||v[2]<450):!bOn)?'':'none'; if(t.style.display!==d) t.style.display=d; if(!t._k){t._k=1; if(t._r) t.classList.add('r1');}});
   if(!bOn&&$('gbub').style.display!=='none') $('tip').classList.remove('on');
   $('gbub').style.display=bOn?'':'none'; if(!bOn) return; const sc=scope(),cnt={}; sc.forEach(i=>cnt[S[i][BKEY]]=(cnt[S[i][BKEY]]||0)+1);
   BUBS.forEach(b=>{b.n=cnt[b.m]||0; b.r=(MANY?7+11*Math.sqrt(b.ln/BMX):9+Math.sqrt(b.ln)/30)*px; b.x=b.x0; b.y=b.y0;});
