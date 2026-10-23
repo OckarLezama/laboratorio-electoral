@@ -244,6 +244,8 @@ function estPanel(){const p=st.party,lv=eLv(),nat=eNat(),ii=eSelII(),F=eFocus();
   const lvs=Object.keys(ELV).filter(k=>k==='est'?nat==='est':true),G=lv==='est'?[]:eGroups(lv).sort((a,b)=>lv==='mun'?String(MUN[a.k]).localeCompare(MUN[b.k]):a.k-b.k);
   h+=`<div class="es-row es-terr"><span>Territorio</span><div class="es-ch">${chips(lvs.map(k=>[k,k==='est'?EST:ELV[k]]),lv,'elv')}</div>${lv!=='est'?`<select class="es-sel" data-eunit="1"><option value="">${lv===nat?'Todos los '+ENN[lv][1]:'Todo '+EST+' (por '+ENN[lv][0]+')'}</option>${G.map(u=>`<option value="${u.k}" ${String(st.es.u)===String(u.k)?'selected':''}>${esc(eName(lv,u.k))}</option>`).join('')}</select>`:''}</div></details>`;
   h+=`<div class="es-row es-pick"><span>¿Qué partido analizamos?</span><div class="es-ch"><button data-epar="" aria-pressed="${!p}">Todos (panorama)</button>${EPARTIES.map(q=>`<button data-epar="${q}" aria-pressed="${p===q}"><i style="background:${C[q]}"></i>${NM[q]}</button>`).join('')}</div></div>`;
+  /* proyección 2027 del cargo elegido (modelo validado; ver 84_proy.js) */
+  if(typeof pjCard==='function') h+=pjCard(null,ii,true);
   /* nivel 1 */
   const an=eAnswer(),aRel=st.es.obj==='AYU'&&p;
   h+=`${aRel?'<span class="es-badge">Mapa de fuerza · no es un pronóstico</span>':''}${p?eCompare():ePanoCards(ii)}${eDark(an,ii)}`;
@@ -312,7 +314,7 @@ function morphPanel(C2,html){const again=C2.dataset.v==='est',sc=C2.scrollTop,RM
   [...C2.querySelectorAll('[style*="width"]')].forEach((e,j)=>{const w0=oW[j],w1=e.style.width; if(w0&&w1&&w0!==w1&&/%|px/.test(w0)){e.style.transition='none'; e.style.width=w0; void e.offsetWidth; e.style.transition='width .6s cubic-bezier(.2,.8,.2,1)'; e.style.width=w1;}});
   [...C2.querySelectorAll(numSel)].forEach((e,j)=>{if(e.children.length) return; const t1=e.textContent,t0=oN[j]; if(!t0||t0===t1||!isN(t0)||!isN(t1)) return; const a=parseFloat(t0.replace(/,/g,'')),b2=parseFloat(t1.replace(/,/g,'')),dec=((t1.match(/\.(\d+)/)||[,''])[1]).length,pc2=/%/.test(t1),cm=/,/.test(t1)||b2>=1000,st0=performance.now();
     const f=v=>(cm?v.toLocaleString('en-US',{minimumFractionDigits:dec,maximumFractionDigits:dec}):v.toFixed(dec))+(pc2?'%':''),step=n=>{const u=Math.min(1,(n-st0)/550),k=1-Math.pow(1-u,3); e.textContent=f(a+(b2-a)*k); if(u<1) requestAnimationFrame(step); else e.textContent=t1;}; requestAnimationFrame(step);});}
-function estRender(){const C2=$('col'); morphPanel(C2,estPanel());
+function estRender(){const C2=$('col'); morphPanel(C2,estPanel()); if(typeof pjBind==='function') pjBind(C2);
   const go=()=>{const lv=eLv(); if(st.es.u!=null&&lv!=='est') applyScope(lv,st.es.u); else applyScope('all',0);};
   $('eback').onclick=()=>setView2('map');
   C2.querySelectorAll('[data-eobj]').forEach(b=>b.onclick=()=>{st.es.obj=b.dataset.eobj; st.es.lv=null; st.es.u=null; st.es.seg=null; st.elec=eRef(); $('elec').value=st.elec; go();});

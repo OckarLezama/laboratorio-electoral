@@ -20,7 +20,7 @@ def sitio():
     # 1) lista de estados disponibles, a partir de los archivos que existan en data/
     av = []
     for f in sorted(glob.glob(str(REPO / 'data' / '*.json'))):
-        if os.path.basename(f) in ('estados.json', 'capas.json', 'nacional.json'):
+        if os.path.basename(f) in ('estados.json', 'capas.json', 'nacional.json', 'modelo.json'):
             continue
         d = json.load(open(f, encoding='utf-8'))
         m = d['meta']
@@ -59,13 +59,13 @@ def sitio():
     nacion = (SRC / 'nacion.js').read_text(encoding='utf-8')
     mods = '\n'.join(open(f, encoding='utf-8').read() for f in sorted(glob.glob(str(SRC / '[0-9]*.js'))))
     js = f"""/* Laboratorio Político · generado por pipeline/sitio.py desde src/. No editar aquí. */
-let AVAIL=[],CAPAS=[];
+let AVAIL=[],CAPAS=[],MODELO=null;
 function APP(DATA){{
 {mods}
 }}
 {nacion}
 (async()=>{{const msg=t=>{{const b=document.getElementById('bootm'); if(b) b.textContent=t;}};
-  try{{const r0=await fetch('data/estados.json',{{cache:'no-cache'}}); AVAIL=await r0.json(); try{{const r1=await fetch('data/capas.json',{{cache:'no-cache'}}); if(r1.ok) CAPAS=await r1.json();}}catch(e){{}}}}catch(e){{msg('No se pudo cargar la lista de estados.'); console.error(e); return;}}
+  try{{const r0=await fetch('data/estados.json',{{cache:'no-cache'}}); AVAIL=await r0.json(); try{{const r1=await fetch('data/capas.json',{{cache:'no-cache'}}); if(r1.ok) CAPAS=await r1.json();}}catch(e){{}} try{{const r2=await fetch('data/modelo.json',{{cache:'no-cache'}}); if(r2.ok) MODELO=await r2.json();}}catch(e){{}}}}catch(e){{msg('No se pudo cargar la lista de estados.'); console.error(e); return;}}
   addEventListener('hashchange',()=>location.reload());
   const cab=(location.hash||'').slice(1),a=AVAIL.find(x=>x.cab===cab);
   if(!a){{document.getElementById('boot').remove(); NACION(); return;}}

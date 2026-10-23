@@ -199,3 +199,10 @@ Botón "Estrategia" junto a Tabla y Mapa. Solo muestra los cargos que se eligen 
 - `index.html` sin `#estado` (o `index.html#mx`) abre la **vista nacional de Análisis**: mapa de los 32 estados (lista nominal, quién gobierna, elección 2027) y lista para elegir uno. Usa solo `data/estados.json` y `data/inicio/mx32.json`; el análisis por sección se carga al elegir el estado. `sitio` agrega a `estados.json` la lista nominal, secciones, gobierno y elección 2027 (de `data/nacional.json`). Código: `src/nacion.js` (fuera de `APP`).
 - En el encabezado, **Cambiar estado** abre el buscador de estados y **México** regresa a la vista nacional.
 - **Presentación** (`src/87_slides.js`) arma 6 diapositivas 16:9 con la selección vigente (territorio, filtros, elección y partido): portada, contexto, votantes y resultado, escenario (conservar/cuidar/disputar/difícil), votación esperada y meta, histórico. Se proyecta en pantalla completa (flechas o clic para avanzar) y se descarga en PDF.
+
+## Proyección 2027 (modelo con resultados históricos)
+
+- `python pipeline/modelo.py` valida el modelo en los 32 estados (predice 2021 con datos hasta 2018 y 2024 con datos hasta 2021) y escribe `data/modelo.json` (pesos, dispersión, calibración y aciertos por estado y cargo) y el reporte `pipeline/insumos/validacion.json`. Correrlo después de reconstruir estados.
+- Método: base histórica ponderada por sección (cargo, tipo de año y antigüedad) + tendencia amortiguada; probabilidad por simulación de bloques con un cambio común estatal y uno local, calibrada con los resultados reales.
+- La plataforma calcula la proyección en el navegador (`src/84_proy.js`) para el cargo consultado: tarjeta "Proyección 2027" en el panel y en Estrategia, punto 2027 con banda en Evolución del voto y dos diapositivas (Proyección 2027 y ¿Qué tan bien predice?) en la presentación y el PDF.
+- Cuando se carguen encuestas, entran como ajuste del nivel estatal de cada bloque; el reparto territorial sigue saliendo del histórico.
