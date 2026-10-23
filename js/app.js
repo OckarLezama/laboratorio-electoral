@@ -83,7 +83,7 @@ function gapOf(ek,idx,p){const T=totals(ek,idx); if(!T.val||!p) return null; con
   return {lead,gap:Math.round(gap),rec:Math.round(rec),bloc:mine,ref,ptsGap:lead?mine.pct-(second?second.pct:0):first.pct-mine.pct};}
 
 /* estado de la interfaz */
-const st={elec:BASE,party:'',terr:null,metric:'mar',view:'map',fp:true,ft:'t',open:{yr:true},f:{tipo:[],mun:[],dl:[],df:[],sec:[],size:[],part:[],mg:[],cmp:[],age:[],win:[]},sel:null,sort:{k:'ln',d:-1},mq:'',cards:['gen','res','proy','tend','sum','trt'],wl:'sec',cat:false};
+const st={elec:null,party:'',terr:null,metric:'mar',view:'map',fp:true,ft:'t',open:{yr:true},f:{tipo:[],mun:[],dl:[],df:[],sec:[],size:[],part:[],mg:[],cmp:[],age:[],win:[]},sel:null,sort:{k:'ln',d:-1},mq:'',cards:['gen','res','proy','tend','sum','trt'],wl:'sec',cat:false};
 const FL={tipo:{2:'Urbana',3:'Mixta',4:'Rural'},size:{s:'Menos de 600 electores',m:'600 a 1,500',l:'Más de 1,500'},part:{b:'Participación baja',m:'Participación media',a:'Participación alta'},mg:{c:'Alta competencia (margen menor a 5 pts)',p:'Competencia media (5 a 15 pts)',h:'Baja competencia (más de 15 pts)'},cmp:{sw:'Alternancia recurrente',chg:'Cambió vs. elección anterior',vol:'Voto volátil alto',abs:'Abstención alta'},age:{jv:'Más jóvenes',ma:'Más adultos mayores',mj:'Mayoría de mujeres'}};
 const munScope=i=>!st.terr||S[i].m===+st.terr;
 const T3=(()=>{const a=ALL.map(i=>V2.age[AGEY][i]).map(x=>{if(!x) return null; let l=0,s=0; for(let j=0;j<7;j++){l+=x[j]; s+=x[7+j];} return l?100*s/l:null;}),v=a.filter(x=>x!=null).sort((x,y)=>x-y); return {a,lo:v[Math.floor(v.length/3)],hi:v[Math.floor(2*v.length/3)]};})();
@@ -225,7 +225,7 @@ function hover(e){const b=e.target.closest&&e.target.closest('#gbub g'); let ii,
 const XB=(typeof CAPAS!=='undefined'?CAPAS:[]).filter(b=>b.estados.includes(M0.cab));
 const XV={}; XB.forEach(b=>b.variables.forEach(v=>{XV[v.id]={...v,base:b,key:'x_'+v.id};}));
 const XD={},XL={},XFAIL={};   // valores por variable; promesas de carga por base
-function xLoad(bid){if(XL[bid]) return XL[bid]; return XL[bid]=fetch('data/'+M0.cab+'/capas/'+bid+'.json').then(r=>{if(!r.ok) throw new Error(r.status); return r.json();}).then(j=>{for(const k in j.variables) if(XV[k]) xPrep(k,j.variables[k]);}).catch(e=>{XFAIL[bid]=1; console.error(e); toast&&toast('No se pudo cargar la base '+bid+'.');});}
+function xLoad(bid){if(XL[bid]) return XL[bid]; return XL[bid]=fetch('data/'+M0.cab+'/capas/'+bid+'.json').then(r=>{if(!r.ok) throw new Error(r.status); return r.json();}).then(j=>{for(const k in j.variables) if(XV[k]) xPrep(k,window.SUBIDX?window.SUBIDX.map(i=>j.variables[k][i]):j.variables[k]);}).catch(e=>{XFAIL[bid]=1; console.error(e); toast&&toast('No se pudo cargar la base '+bid+'.');});}
 const xLoadAll=()=>Promise.all(XB.map(b=>xLoad(b.id)));
 function xPrep(id,a){const v=XV[id],s=a.filter(x=>x!=null).sort((x,y)=>x-y),q=f=>s.length?s[Math.min(s.length-1,Math.floor(f*s.length))]:null;
   XD[id]=a; v.lo=q(.05); v.hi=q(.95); v.t1=q(1/3); v.t2=q(2/3); if(v.hi===v.lo) v.hi=v.lo+1;}
@@ -658,12 +658,12 @@ let DLNS; async function saveFile(name,data,btn){const o=btn?btn.textContent:'';
 function toast(t){let el=$('toast'); if(!el){el=document.createElement('div'); el.id='toast'; el.className='toast'; document.body.appendChild(el);} el.textContent=t; el.classList.add('on'); clearTimeout(el._t); el._t=setTimeout(()=>el.classList.remove('on'),3200);}
 function setView2(v){if(v==='est'&&st.view!=='est'){estEnter(); } if(v!=='est'&&st.view==='est'){st.es.seg=null;} const wide=x=>x==='tbl'||x==='est'; if(wide(v)&&!wide(st.view)){st.fpWas=st.fp; st.fp=false; layout(); setTimeout(refit,600);} else if(!wide(v)&&wide(st.view)&&st.fpWas!=null){st.fp=st.fpWas; st.fpWas=null; layout(); setTimeout(refit,600);} st.view=v; $('vM').setAttribute('aria-pressed',v==='map'); if($('vE')) $('vE').setAttribute('aria-pressed',v==='est'); document.body.classList.toggle('eview',v==='est'); $('vT').setAttribute('aria-pressed',v==='tbl'); $('rTb').setAttribute('aria-pressed',v==='tbl'); $('tbl').classList.toggle('hide',v!=='tbl'); document.body.classList.toggle('tview',v==='tbl'); $('metric').style.display=v==='tbl'?'none':''; if(v==='tbl') renderTbl(scope()); else render(true);}
 $('vM').onclick=()=>setView2('map'); $('vT').onclick=()=>setView2('tbl'); if($('vE')) $('vE').onclick=()=>setView2('est'); $('rTb').onclick=()=>setView2(st.view==='tbl'?'map':'tbl');
-function statePop(an){let p=$('stp'); if(p){p.remove(); return;} p=document.createElement('div'); p.id='stp'; p.className='epop stp'; p.innerHTML=`<input class="stq" id="stq" placeholder="Buscar estado" autocomplete="off" aria-label="Buscar estado"><div class="stl">${AVAIL.map(x=>`<button data-cab="${x.cab}" data-n="${esc(x.estado.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''))}" aria-pressed="${x.cab===M0.cab}"><b>${esc(x.estado)}</b><span>${x.info}</span></button>`).join('')}</div><button class="stall" id="stall">Ver los 32 estados en el mapa</button>`; document.body.appendChild(p);
-  const qi=$('stq'); qi.oninput=()=>{const q=qi.value.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); p.querySelectorAll('[data-cab]').forEach(b=>b.hidden=!!q&&!b.dataset.n.includes(q));}; qi.onkeydown=e=>{if(e.key==='Enter'){const b=[...p.querySelectorAll('[data-cab]')].find(x=>!x.hidden); if(b) b.click();}}; setTimeout(()=>qi.focus(),30); $('stall').onclick=()=>{location.hash='mx'; location.reload();};
+function statePop(an){let p=$('stp'); if(p){p.remove(); return;} p=document.createElement('div'); p.id='stp'; p.className='epop stp'; p.innerHTML=`<input class="stq" id="stq" placeholder="Buscar estado" autocomplete="off" aria-label="Buscar estado"><div class="stl">${AVAIL.filter(x=>typeof LAB_PUEDE!=='function'||LAB_PUEDE(x.cab)).map(x=>`<button data-cab="${x.cab}" data-n="${esc(x.estado.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''))}" aria-pressed="${x.cab===M0.cab}"><b>${esc(x.estado)}</b><span>${x.info}</span></button>`).join('')}</div><button class="stall" id="stall">Volver a la lista de estados</button>`; document.body.appendChild(p);
+  const qi=$('stq'); qi.oninput=()=>{const q=qi.value.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); p.querySelectorAll('[data-cab]').forEach(b=>b.hidden=!!q&&!b.dataset.n.includes(q));}; qi.onkeydown=e=>{if(e.key==='Enter'){const b=[...p.querySelectorAll('[data-cab]')].find(x=>!x.hidden); if(b) b.click();}}; setTimeout(()=>qi.focus(),30); $('stall').onclick=()=>{location.hash='';};
   const r=an.getBoundingClientRect(),below=an.id==='toMx'; p.style.left=Math.max(8,Math.min(below?r.left:r.right+8,innerWidth-p.offsetWidth-8))+'px'; p.style.top=Math.max(8,below?r.bottom+8:r.top)+'px';
   p.querySelectorAll('[data-cab]').forEach(b=>b.onclick=()=>{if(b.dataset.cab===M0.cab){p.remove(); return;} location.hash=b.dataset.cab; location.reload();});
   setTimeout(()=>document.addEventListener('pointerdown',function h(ev){if(!ev.target.closest('#stp,#rMx,#toMx')){const q=$('stp'); if(q) q.remove(); document.removeEventListener('pointerdown',h);} else if(!$('stp')) document.removeEventListener('pointerdown',h);}),0);}
-$('rMx').onclick=()=>statePop($('rMx')); $('toMx').onclick=()=>statePop($('toMx')); $('toNat').onclick=()=>{location.hash='mx'; location.reload();};
+$('rMx').onclick=()=>statePop($('rMx')); $('toMx').onclick=()=>statePop($('toMx')); $('toNat').onclick=()=>{location.hash='';};
 $('rPa').onclick=()=>{$('party').focus();};
 
 
@@ -1019,7 +1019,7 @@ const pjCycle=y=>[2015,2021,2027].includes(+y)?'mid':[2018,2024].includes(+y)?'p
 const PJC={};
 if(!st.pj) st.pj={s:0};
 const pjOK=()=>typeof MODELO!=='undefined'&&MODELO&&MODELO.pesos;
-function pjType(){const t=(st.elec||BASE).split('_')[0]; return pjOK()&&PJT[t]&&lastOf(t)&&MODELO.a[t]?t:null;}
+function pjType(){if(!st.elec) return null; const t=st.elec.split('_')[0]; return pjOK()&&PJT[t]&&lastOf(t)&&MODELO.a[t]?t:null;}
 /* proporción esperada por sección y partido para el cargo T en 2027 */
 function pjBase(T){if(PJC[T]) return PJC[T]; const W=MODELO.pesos,Y=2027,P=D.P8,eks=Object.keys(D.E).filter(k=>+D.E[k].year<Y);
   let last=null; eks.forEach(k=>{const y=+D.E[k].year; if(!last||y>+D.E[last].year||(y===+D.E[last].year&&k.split('_')[0]===T)) last=k;});
@@ -1362,69 +1362,239 @@ let rt; addEventListener('resize',()=>{clearTimeout(rt); rt=setTimeout(()=>{rend
 window.LAB={st,render,renderTbl,setView2,scope,closeRes,closeBig,applyScope,setTerr,paint,setElec,fit,XV,xEnsure,es:{eSecs,eDuel27,eScen,eAlly,eErr,eP,eContests,eGroups}};
 
 }
-/* Vista nacional de Análisis: se muestra cuando no hay estado en la dirección (index.html o index.html#mx).
-   Usa solo data/estados.json y el contorno de los estados (data/inicio/mx32.json); elegir un estado carga su base por sección. */
-async function NACION(){
-  const $=id=>document.getElementById(id),esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-  const PC={MORENA:'#A9455E',PAN:'#3F72B5',PRI:'#2F8F64',MC:'#E9813F',PVEM:'#7FB24E',PT:'#CF4B42',PRD:'#E5B533'},pc=p=>PC[p]||'#8A9393';
-  const PN={MORENA:'Morena',PVEM:'PVEM'},pn=p=>PN[p]||p,fmt=n=>n>=1e6?(n/1e6).toFixed(n>=1e7?1:2)+' M':n.toLocaleString('es-MX');
-  document.body.classList.add('natmode'); const rm=$('rMx'),re=$('rEd'); if(rm) rm.setAttribute('aria-pressed','true'); if(re) re.setAttribute('aria-pressed','false');
-  if(rm) rm.onclick=()=>$('nq')&&$('nq').focus();
-  const A=AVAIL.filter(x=>x.ent),byE={}; A.forEach(x=>byE[x.ent]=x);
-  const T={ln:A.reduce((s,x)=>s+(x.ln||0),0),sec:A.reduce((s,x)=>s+(x.sec||0),0),mun:A.reduce((s,x)=>s+(x.mun||0),0),g:A.filter(x=>x.c27&&x.c27.g).length,c:A.filter(x=>x.c27&&x.c27.c).length,a:A.filter(x=>x.c27&&x.c27.a).length};
-  const gobN={}; A.forEach(x=>{if(x.gob) gobN[x.gob.l]=(gobN[x.gob.l]||0)+1;});
-  const n=document.createElement('div'); n.id='nat'; n.className='nat';
-  n.innerHTML=`<header class="top"><div class="ttl"><small><span>México</span></small><h1>República Mexicana</h1><div class="nsub">Elige un estado para analizarlo sección por sección</div></div>
-    <div class="ctl"><div class="ac"><svg class="mg" viewBox="0 0 12 12"><circle cx="5" cy="5" r="3.6"/><path d="M8 8l3 3"/></svg><div class="box"><input id="nq" autocomplete="off" placeholder="Buscar estado" aria-label="Buscar estado"><kbd>/</kbd></div></div>
-      <a class="nbtn" href="inicio.html">Panorama nacional</a></div></header>
-  <div class="nbody">
-    <section class="ncard nmap"><div class="nk">
-      <div><b>${fmt(T.ln)}</b><span>Lista nominal</span></div><div><b>${A.length}</b><span>Estados</span></div><div><b>${T.mun.toLocaleString('es-MX')}</b><span>Municipios</span></div><div><b>${T.sec.toLocaleString('es-MX')}</b><span>Secciones</span></div>
-      <div class="k27"><b>${T.g}</b><span>Gubernaturas en 2027</span></div></div>
-      <div class="nseg" role="group" aria-label="Colorear mapa por"><button data-m="ln" aria-pressed="true">Lista nominal</button><button data-m="gob" aria-pressed="false">Quién gobierna</button><button data-m="g27" aria-pressed="false">Elección 2027</button></div>
-      <div class="nsvg"><svg id="nmap" aria-label="Mapa de México por estado"></svg><div class="ntip" id="ntip"></div></div>
-      <div class="nleg" id="nleg"></div></section>
-    <section class="ncard nlist"><div class="nlh"><h2>Estados</h2><span id="ncount">${A.length}</span></div><div class="nl" id="nl"></div></section>
-  </div>`;
-  document.querySelector('.main').appendChild(n);
-  let MX; try{MX=await (await fetch('data/inicio/mx32.json')).json();}catch(e){MX=null;}
-  const svg=$('nmap'),max=Math.max(...A.map(x=>x.ln||0));
-  const tq=t=>{const a=[228,245,243],b=[28,127,121],k=Math.pow(t,.6);return `rgb(${a.map((v,i)=>Math.round(v+(b[i]-v)*k)).join(',')})`;};
-  let mode='ln',hot=null,q='';
-  const fill=x=>{if(!x) return '#E4ECEB'; if(mode==='ln') return tq((x.ln||0)/max); if(mode==='gob') return x.gob?pc(x.gob.l):'#D9E2E1'; return x.c27&&x.c27.g?'#2FA59D':x.c27&&x.c27.c?'#9FD9D4':'#E4ECEB';};
-  if(MX){svg.setAttribute('viewBox',`0 0 ${MX.w} ${MX.h}`); svg.innerHTML=MX.st.map(s=>`<path data-e="${s.ent}" d="${s.d}"/>`).join('');}
-  const paths=[...svg.querySelectorAll('path')];
-  const legend=()=>{const L=$('nleg'); if(mode==='ln') L.innerHTML=`<span>menos electores</span><i class="ramp"></i><span>más electores</span>`;
-    else if(mode==='gob') L.innerHTML=Object.keys(gobN).sort((a,b)=>gobN[b]-gobN[a]).map(p=>`<span><i style="background:${pc(p)}"></i>${pn(p)} <b>${gobN[p]}</b></span>`).join('');
-    else L.innerHTML=`<span><i style="background:#2FA59D"></i>Gubernatura y congreso <b>${A.filter(x=>x.c27&&x.c27.g).length}</b></span><span><i style="background:#9FD9D4"></i>Solo congreso o ayuntamientos <b>${A.filter(x=>x.c27&&!x.c27.g&&(x.c27.c||x.c27.a)).length}</b></span>`;};
-  const paint=()=>{paths.forEach(p=>{const x=byE[+p.dataset.e],m=!q||(x&&x.estado.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').includes(q)); p.style.fill=fill(x); p.classList.toggle('dim',!m);}); legend();};
-  const c27=x=>x.c27?[x.c27.g&&'Gubernatura',x.c27.c&&'Congreso',x.c27.a&&'Ayuntamientos'].filter(Boolean):[];
-  const c27s=x=>x.c27?[x.c27.g&&'gubernatura',x.c27.c&&'congreso',x.c27.a&&'ayuntamientos'].filter(Boolean):[];
-  const list=()=>{const L=A.filter(x=>!q||x.estado.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').includes(q)).sort((a,b)=>(b.ln||0)-(a.ln||0)); $('ncount').textContent=L.length;
-    $('nl').innerHTML=L.map(x=>`<a class="nr" href="#${x.cab}" data-e="${x.ent}"><span class="nn"><b>${esc(x.estado)}</b><small>${x.gob?`<i style="background:${pc(x.gob.l)}"></i>Gobierna ${pn(x.gob.l)}`:''}</small>${c27s(x).length?`<small class="n27">2027: ${c27s(x).join(', ')}</small>`:''}</span><span class="nv"><b>${fmt(x.ln||0)}</b><i><u style="width:${(100*(x.ln||0)/max).toFixed(1)}%"></u></i></span></a>`).join('')||`<p class="nempty">Ningún estado coincide con “${esc($('nq').value)}”.</p>`;};
-  const tip=(x,ev)=>{const t=$('ntip'); if(!x){t.classList.remove('on'); return;} const r=svg.parentNode.getBoundingClientRect();
-    t.innerHTML=`<b>${esc(x.estado)}</b><span>${fmt(x.ln||0)} electores · ${(x.sec||0).toLocaleString('es-MX')} secciones</span>${x.gob?`<span><i style="background:${pc(x.gob.l)}"></i>Gobierna ${pn(x.gob.l)} desde ${x.gob.y}</span>`:''}${c27(x).length?`<span>En 2027: ${c27(x).join(', ')}</span>`:''}<em>Clic para analizar</em>`;
-    t.classList.add('on'); const w=t.offsetWidth,h=t.offsetHeight; let lx=ev.clientX-r.left+14,ly=ev.clientY-r.top+14; if(lx+w>r.width-8) lx=ev.clientX-r.left-w-14; if(ly+h>r.height-8) ly=ev.clientY-r.top-h-14; t.style.transform=`translate(${lx}px,${ly}px)`;};
-  const setHot=e=>{if(hot===e) return; hot=e; paths.forEach(p=>p.classList.toggle('hot',+p.dataset.e===e)); document.querySelectorAll('#nl .nr').forEach(a=>a.classList.toggle('hot',+a.dataset.e===e));};
-  const go=x=>{if(!x) return; n.classList.add('leave'); location.hash=x.cab;};
-  svg.addEventListener('pointermove',ev=>{const p=ev.target.closest('path'),x=p&&byE[+p.dataset.e]; setHot(x?x.ent:null); tip(x,ev);});
-  svg.addEventListener('pointerleave',()=>{setHot(null); tip(null);});
-  svg.addEventListener('click',ev=>{const p=ev.target.closest('path'); if(p) go(byE[+p.dataset.e]);});
-  $('nl').addEventListener('pointerover',ev=>{const a=ev.target.closest('.nr'); setHot(a?+a.dataset.e:null);});
-  $('nl').addEventListener('pointerleave',()=>setHot(null));
-  $('nl').addEventListener('click',ev=>{const a=ev.target.closest('.nr'); if(a){ev.preventDefault(); go(byE[+a.dataset.e]);}});
-  n.querySelectorAll('.nseg button').forEach(b=>b.onclick=()=>{mode=b.dataset.m; n.querySelectorAll('.nseg button').forEach(x=>x.setAttribute('aria-pressed',x===b)); paint();});
-  $('nq').addEventListener('input',e=>{q=e.target.value.trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,''); paint(); list();});
-  $('nq').addEventListener('keydown',e=>{if(e.key==='Enter'){const f=$('nl').querySelector('.nr'); if(f) go(byE[+f.dataset.e]);}});
-  addEventListener('keydown',e=>{if(e.key==='/'&&document.activeElement!==$('nq')){e.preventDefault(); $('nq').focus();}});
-  addEventListener('hashchange',()=>location.reload());
-  paint(); list();
+const ENT_CSS="\n:host{--teal:#4CC1BA;--teal2:#2FA59D;--teal3:#1C7F79;--tealxl:#E4F5F3;--coral:#F46883;--bg:#F4F6F6;--card:#fff;--ink:#4E5656;--strong:#1C2121;--muted:#8A9393;--faint:#B9C1C1;--line:#E6EAEA;--hair:#F0F3F3;--f:'Inter',system-ui,sans-serif;--d:'Manrope','Inter',system-ui,sans-serif}\n*{box-sizing:border-box;margin:0}\n:host{display:block;position:fixed;inset:0;z-index:60;overflow:hidden;background:var(--bg);font:14px/1.45 var(--f);color:var(--ink);-webkit-font-smoothing:antialiased}\n.ent{height:100%}\nbutton{font:inherit;cursor:pointer}\n.wrap{display:grid;grid-template-columns:360px 1fr;gap:20px;padding:24px 28px;height:100vh}\n.side{background:var(--card);border-radius:18px;display:flex;flex-direction:column;overflow:hidden}\n.side h1{font:700 22px var(--d);color:var(--strong);padding:24px 24px 4px}\n.side p.s{color:var(--muted);padding:0 24px 14px;font-size:13px}\n.q{margin:0 24px 12px;display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:12px;padding:0 12px;color:var(--muted);background:#fff}.q:focus-within{border-color:var(--teal2);box-shadow:0 0 0 3px var(--tealxl)}.q input{flex:1;border:0;outline:0;font:inherit;font-size:14px;color:var(--strong);padding:11px 0;background:none;min-width:0}.q kbd{font:11px var(--f);color:var(--faint);border:1px solid var(--line);border-radius:5px;padding:0 5px}\n.q svg{width:14px;height:14px;stroke:var(--muted);fill:none;stroke-width:1.6}\n.last{margin:0 24px 10px;display:flex;align-items:center;justify-content:space-between;background:var(--tealxl);border-radius:12px;padding:10px 12px;font-size:13px;color:var(--teal3)}\n.last b{font-weight:600}\n.list{overflow:auto;padding:4px 12px 16px;flex:1}\n.r{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:10px 12px;border-radius:12px;cursor:pointer;transition:background .15s}\n.r:hover{background:var(--hair)}\n.r.on{background:var(--strong)}.r.on .n,.r.on .v{color:#fff}.r.on .g{color:#B9C1C1}\n.n{font-weight:600;color:var(--strong)}\n.v{font:600 13px var(--f);color:var(--ink);text-align:right;font-variant-numeric:tabular-nums}\n.g{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}\n.g i,.dot{width:7px;height:7px;border-radius:50%;display:inline-block;flex:none}\n.main{background:var(--card);border-radius:18px;padding:28px 36px 22px;display:flex;flex-direction:column;overflow:hidden}\n.hd{display:grid;grid-template-columns:minmax(0,1fr) 230px;gap:32px;align-items:start}\n.eyebrow{font-size:13px;color:var(--muted)}\n.hd h2{font:800 42px/1.05 var(--d);color:var(--strong);letter-spacing:-.02em;margin:6px 0 10px}\n.gobl{display:inline-flex;align-items:center;gap:8px;font-size:14px;color:var(--ink)}\n.gobl i{width:10px;height:10px;border-radius:50%}\n.qgh{font:700 13px var(--d);color:var(--strong);margin-top:16px}\n.qg{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:8px}\n.qg small{display:block;font-size:12px;color:var(--muted);margin-bottom:5px}\n.qg u{display:flex;height:6px;border-radius:3px;overflow:hidden;gap:1px;text-decoration:none;transition:height .15s}\n.qg div:hover u{height:9px}\n.qg em{display:flex;flex-wrap:wrap;gap:2px 8px;font-style:normal;font-size:12.5px;margin-top:6px}\n.qg em i{font-style:normal;display:inline-flex;align-items:center;gap:4px;color:var(--strong);font-weight:600;white-space:nowrap}\n.qg em i.x{color:var(--muted);font-weight:400}\n.loc>svg{width:100%;height:auto;overflow:visible}.btn svg{flex:none}\n.loc path{fill:#E4ECEB;stroke:#fff;stroke-width:.6;cursor:pointer;transition:fill .2s}\n.loc path:hover{fill:#BFE6E2}\n.loc path.on{fill:var(--teal3);stroke:var(--strong);stroke-width:1.4;stroke-dasharray:4 3;animation:ants 1.2s linear infinite}\n@keyframes ants{to{stroke-dashoffset:-14}}\n.pulse circle{pointer-events:none}\n.pulse .c0{fill:var(--teal3);stroke:#fff;stroke-width:2}\n.pulse .c1,.pulse .c2{fill:none;stroke:var(--teal3);stroke-width:2.5;transform-box:fill-box;transform-origin:center;animation:pl 2s ease-out infinite}\n.pulse .c2{animation-delay:1s}\n@keyframes pl{0%{transform:scale(.3);opacity:1}100%{transform:scale(1.8);opacity:0}}\n.body{margin-top:24px;flex:1;display:flex;flex-direction:column;min-height:0}.body .kp{flex:1;max-height:204px}\n.kp{display:grid;grid-template-columns:repeat(5,1fr);grid-auto-rows:1fr;border-top:1px solid var(--line)}\n.kp>div.ed{grid-column:span 2;display:flex;flex-direction:column;justify-content:center}\n.ed>span{font-size:13px;color:var(--muted)}\n.eb{display:flex;height:12px;border-radius:6px;overflow:hidden;gap:2px;margin:8px 0 6px}\n.eb i{display:block;transition:filter .15s}.eb i:hover{filter:brightness(.88)}\n\n.el{display:flex;gap:2px;font-size:10px;color:var(--muted);letter-spacing:-.01em}.el div{min-width:0;white-space:nowrap;text-align:center}\n.kp .el b{display:block;font:700 12.5px/1.2 var(--d);color:var(--strong)}\n.kp>div{display:flex;flex-direction:column;justify-content:center;padding:16px 0 14px 20px;border-bottom:1px solid var(--line);border-left:1px solid var(--line)}\n.kp>div:nth-child(5n+1){border-left:0;padding-left:0}\n.kp b{display:block;font:800 30px/1.15 var(--d);color:var(--strong);font-variant-numeric:tabular-nums}\n.kp b small{font-size:15px;font-weight:600;color:var(--ink)}\n.kp span{display:block;font:400 10.5px var(--f);color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-top:3px}\n.kp em{display:block;font-style:normal;font-size:11.5px;color:var(--ink);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}\n.kp .bar{display:flex;height:5px;border-radius:3px;overflow:hidden;margin-top:7px;gap:2px;max-width:150px}\n.kp .bar.one{background:var(--hair)}\n.py{display:flex;flex-direction:column;min-height:0}.pyb{flex:1;display:flex;flex-direction:column;gap:3px;min-height:150px}.py h3{font:700 15px var(--d);color:var(--strong);display:flex;justify-content:space-between;align-items:baseline}\n.py h3 small{font:400 12px var(--f);color:var(--muted)}\n.pyl{display:grid;grid-template-columns:1fr 54px 1fr;font-size:12px;margin:6px 0 4px}\n.pyl span:first-child{text-align:right;color:var(--coral);font-weight:600}.pyl span:last-child{color:var(--teal2);font-weight:600}\n.pr{display:grid;grid-template-columns:1fr 54px 1fr;align-items:center;gap:0;cursor:default;border-radius:4px;transition:background .15s}\n.pr:hover{background:var(--hair)}\n.pr .l,.pr .rr{display:flex;align-items:center;height:100%;gap:6px;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}\n.pr .l{justify-content:flex-end}\n.pr .l i,.pr .rr i{display:block;height:100%;transition:filter .15s}\n.pr .l i{background:var(--coral);border-radius:3px 0 0 3px}.pr .rr i{background:var(--teal);border-radius:0 3px 3px 0}\n.pr:hover i{filter:brightness(.9)}\n.pr b{text-align:center;font-size:11.5px;font-weight:600;color:var(--strong)}\n.pyn{font-size:11px;color:var(--muted);margin-top:6px;line-height:1.35}\n.hint{font-size:14px;color:var(--muted)}.bigmap{flex:1;display:flex;align-items:center;justify-content:center;min-height:0;padding:20px 0}.bigmap svg{width:100%;height:100%;max-height:560px}.bigmap path{fill:#DCEBEA;stroke:#fff;stroke-width:1;cursor:pointer;transition:fill .15s}.bigmap path:hover{fill:var(--teal)}\n.sb{display:flex;height:6px;border-radius:3px;overflow:hidden;gap:2px;margin-top:8px;max-width:150px;margin-right:12px}.kp>div.ed{padding-right:10px}.sb i{display:block}\n.tn{background:#EAF5F3}\n.kp>div.tn{padding-left:20px}.kp>div:nth-child(6){border-left:0}\n.eh{display:flex;align-items:center;gap:12px}.eh>div span,.eh>div em{display:block}.ew .eb{margin:8px 0 4px}\n.ew>span{font-size:12px;color:var(--muted)}\n.kp>div[data-tip]{position:relative;cursor:pointer}\n.kp>div[data-tip]::after{content:'i';position:absolute;top:10px;right:10px;width:16px;height:16px;border-radius:50%;border:1px solid var(--faint);color:var(--muted);font:600 10px/14px var(--f);text-align:center}\n.qg>div{cursor:pointer;padding:6px 0;margin:-6px 0}\n.tnote{display:block;margin-top:6px;opacity:.75;font-size:11px}\n#tip .x{position:absolute;top:6px;right:8px;background:none;border:0;color:#fff;font-size:16px;line-height:1;opacity:.8;display:none}\n#tip.pin{pointer-events:auto;padding-right:28px}#tip.pin .x{display:block}\n#scrim{position:fixed;inset:0;background:rgba(28,33,33,.3);z-index:19;display:none}\n@media (max-width:700px){#tip.pin{left:0!important;right:0;top:auto!important;bottom:0;max-width:none;border-radius:16px 16px 0 0;padding:20px 20px 28px;font-size:14px}#tip.pin b{font-size:16px;margin-bottom:4px}#tip.pin .x{top:12px;right:14px;font-size:22px}#scrim.on{display:block}}\n.go{display:inline-grid;place-items:center;width:42px;height:42px;border-radius:50%;border:0;background:var(--teal3);color:#fff;vertical-align:middle;margin-left:14px;position:relative;top:-4px;transition:background .15s}\n.go:hover{background:#176B66}.go:active{transform:scale(.96)}\n.go::after{content:attr(data-lbl);position:absolute;left:52px;top:50%;transform:translateY(-50%);white-space:nowrap;font:500 12.5px var(--f);color:var(--ink);opacity:0;transition:opacity .15s;pointer-events:none;letter-spacing:0}\n.go:hover::after,.go:focus-visible::after{opacity:1}\n.bot{margin-top:auto;padding-top:24px}.foot{border-top:1px solid var(--line);margin-top:18px;padding-top:16px}\n.fh{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px}\n.fh h3{font:700 15px var(--d);color:var(--strong)}\n.fh .cd{font-size:13px;color:var(--ink)}.fh .cd b{font:800 18px var(--d);color:var(--teal3)}\n.tlw{display:block}.loc{display:flex;flex-direction:column;align-items:flex-end;gap:10px}.loc .btn{padding:8px 14px;font-size:13px;border-radius:10px;gap:7px}.loc .btn svg{width:13px;height:13px}.src{font-size:11px;color:var(--faint);margin-top:6px}\n.tr{position:relative;height:74px}\n.tr .base{position:absolute;left:0;right:0;top:22px;height:8px;border-radius:4px;background:var(--hair)}\n.tr .done{position:absolute;left:0;top:22px;height:8px;border-radius:4px 0 0 4px;background:linear-gradient(90deg,#CFE3E1,#9FD9D4);width:0;animation:fill 1.4s cubic-bezier(.2,.7,.2,1) forwards}\n@keyframes fill{to{width:var(--w)}}\n.tr .ph{position:absolute;top:22px;height:8px;background:var(--teal);opacity:.55}\n.tr .ph.c{opacity:.9}\n.tr .pl{position:absolute;top:0;font-size:11px;color:var(--muted);white-space:nowrap;transform:translateX(-50%)}\n.tr .pl b{color:var(--strong);font-weight:600}\n.tr .tk{position:absolute;top:56px;font-size:10.5px;color:var(--faint);transform:translateX(-50%)}\n.tr .jd{position:absolute;top:16px;width:20px;height:20px;margin-left:-10px;border-radius:50%;background:var(--teal3);border:4px solid #fff;box-shadow:0 0 0 1px var(--teal3)}\n.tr .jl{position:absolute;top:38px;font-size:11px;font-weight:700;color:var(--teal3);transform:translateX(-50%);white-space:nowrap}\n.tr .hoy{position:absolute;top:14px;width:0;left:0;animation:mv 1.4s cubic-bezier(.2,.7,.2,1) forwards}\n@keyframes mv{to{left:var(--w)}}\n.tr .hoy i{position:absolute;left:-7px;top:6px;width:14px;height:14px;border-radius:50%;background:var(--strong);border:3px solid #fff;box-shadow:0 0 0 1px var(--strong)}\n.tr .hoy i:after{content:'';position:absolute;inset:-6px;border-radius:50%;border:2px solid var(--strong);animation:pl 2s ease-out infinite}\n.tr .hoy span{position:absolute;top:24px;left:0;transform:translateX(-50%);font-size:11px;font-weight:700;color:var(--strong);white-space:nowrap}\n.e27{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding-bottom:4px}\n.e27 h3{font:600 13px var(--f);color:var(--muted);margin:0 4px 0 0}\n.e27 ul{list-style:none;padding:0;display:flex;gap:8px;flex-wrap:wrap}\n.e27 li{background:var(--hair);border-radius:10px;padding:6px 12px;display:flex;align-items:baseline;gap:6px;font-size:13px;color:var(--ink)}\n.e27 li b{font:700 15px var(--d);color:var(--strong)}\n.e27 li.no{background:none;color:var(--faint)}.e27 li.no b{display:none}\n.btn{display:inline-flex;align-items:center;gap:9px;background:var(--teal3);color:#fff;border:0;border-radius:12px;padding:14px 26px;font:600 15px var(--f);white-space:nowrap;transition:transform .15s,box-shadow .15s}\n.btn:hover{background:#176B66}\n#tip{position:fixed;z-index:20;pointer-events:none;background:var(--strong);color:#fff;border-radius:9px;padding:6px 10px;font-size:12px;opacity:0;transition:opacity .12s;max-width:260px}\n#tip b{display:block}#tip.on{opacity:1}\n@media (prefers-reduced-motion:reduce){*{animation-duration:0s!important}}\n@media (max-width:1000px){:host{overflow:auto}.wrap{grid-template-columns:1fr;height:auto;padding:16px}.side{background:none}.side h1,.side .s,.side .last,.list,.ses{display:none}.side.qon .list{display:block;background:#fff;border-radius:14px;margin-top:8px;max-height:55vh;box-shadow:0 12px 30px rgba(28,33,33,.15)}.side .q{margin:0;background:#fff}\n .main{padding:24px}.hd{grid-template-columns:minmax(0,1fr) 180px;gap:16px}.qg{grid-template-columns:repeat(2,1fr)}\n .body{grid-template-columns:1fr}.kp b{font-size:24px}.kp>div{padding:14px 0 12px 12px}.pyb{min-height:220px}\n .tlw{grid-template-columns:1fr}}\n@media (max-width:600px){\n .wrap{padding:12px 12px 88px}.main{padding:18px}.loc{display:none}.hd{grid-template-columns:1fr}\n .hd h2{font-size:30px}.qg{grid-template-columns:1fr 1fr;gap:14px}\n .kp{grid-template-columns:1fr 1fr!important}.kp>div{padding:12px 10px 10px!important;border-left:0!important}.kp>div:nth-child(5),.kp>div:nth-child(10){grid-column:span 2}.kp>div:not(.tn){padding-left:0!important}\n .kp b{font-size:24px}.body .kp{max-height:none}\n .e27{gap:6px}.e27 h3{width:100%}\n .tr,.tlw .tr{display:none}.fh{flex-direction:column;align-items:flex-start;gap:2px;margin-bottom:0}.nx{display:block!important;font-size:13px;color:var(--ink);margin-top:4px}\n .btnm{display:flex!important;position:fixed;left:12px;right:12px;bottom:12px;justify-content:center;z-index:5;box-shadow:0 8px 24px rgba(28,33,33,.2)}\n}\n@media (min-width:1001px) and (max-width:1300px){.wrap{grid-template-columns:270px 1fr;gap:14px;padding:16px}.main{padding:22px 26px 18px}.hd{grid-template-columns:minmax(0,1fr) 190px;gap:20px}.hd h2{font-size:36px}\n .qg{gap:12px}.qg em{font-size:11.5px;gap:2px 6px}.qg small{font-size:11px}.kp b{font-size:24px}.kp>div{padding-left:14px}.kp span{font-size:9.5px}.kp em{font-size:11px}}\n\n/* búsqueda */\n.r.mu .n{font-weight:500}.r.mu .g{gap:4px}.nores{padding:14px;color:var(--muted);font-size:13px}\n.lh{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;padding:10px 10px 4px}\n/* sesión */\n.ses{margin:0 24px 10px;display:flex;align-items:center;justify-content:space-between;font-size:12.5px;color:var(--ink);background:var(--hair);border-radius:10px;padding:8px 12px}\n.ses b{color:var(--strong)}.ses button{border:0;background:none;color:var(--teal3);font:600 12.5px var(--f);cursor:pointer;padding:0}\n.pan{color:var(--teal3);text-decoration:none;font-weight:600}\n/* acceso */\n.mo{position:fixed;inset:0;background:rgba(28,33,33,.38);display:none;align-items:center;justify-content:center;z-index:30;padding:16px}\n.mo.on{display:flex}\n.acc{width:min(380px,100%);background:#fff;border-radius:18px;padding:26px;box-shadow:0 24px 60px rgba(28,33,33,.25);position:relative}\n.acc h4{font:700 20px var(--d);color:var(--strong)}.acc p{color:var(--muted);font-size:13px;margin:4px 0 18px}\n.acc label{display:block;font-size:12px;color:var(--ink);font-weight:600;margin:0 0 6px}\n.acc input[type=text],.acc input[type=password]{width:100%;border:1px solid var(--line);border-radius:10px;padding:11px 12px;margin-bottom:14px;font:inherit;font-size:15px;color:var(--strong);outline:0}\n.acc input:focus{border-color:var(--teal2);box-shadow:0 0 0 3px var(--tealxl)}\n.acc .ck{display:flex;align-items:center;gap:8px;font-size:13px;margin:2px 0 18px;cursor:pointer}\n.acc .ck input{width:16px;height:16px;accent-color:var(--teal3)}\n.acc .btn{width:100%;justify-content:center}.acc .btn[disabled]{opacity:.6;cursor:wait}\n.acc .err{color:#B3261E;font-size:13px;min-height:18px;margin:-6px 0 10px}\n.acc .hl{margin-top:12px;text-align:center;font-size:12px;color:var(--muted)}\n.acc .cl{position:absolute;top:12px;right:14px;border:0;background:none;font-size:22px;color:var(--muted);cursor:pointer;line-height:1}\n.go:focus-visible,.btn:focus-visible,.r:focus-visible{outline:2px solid var(--teal2);outline-offset:2px}\n.ses[hidden]{display:none!important}\n";
+/* Entrada del Laboratorio Político: lista de estados, ficha pública de cada estado y acceso con usuario y clave.
+   Se muestra cuando no hay estado en la dirección (index.html) o cuando falta la clave del estado pedido.
+   La ficha solo usa data/estados.json (totales públicos). Los datos por sección están cifrados en data/seguro/
+   y se abren con la clave de cada usuario (ver pipeline/acceso.py). */
+
+/* ---------- sesión y cifrado (también los usa el cargador del análisis) ---------- */
+const LAB_SK = 'lab_sesion';
+function LAB_SES() {
+  for (const st of [sessionStorage, localStorage]) {
+    try { const s = JSON.parse(st.getItem(LAB_SK) || 'null'); if (s && (!s.exp || s.exp > Date.now())) return s; if (s) st.removeItem(LAB_SK); } catch (e) {}
+  }
+  return null;
+}
+function LAB_PUEDE(cab) { const s = LAB_SES(); return !!(s && s.k && s.k[cab]); }
+function LAB_SALIR() { for (const st of [sessionStorage, localStorage]) { try { st.removeItem(LAB_SK); } catch (e) {} } }
+const _b64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+const _hex = b => [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join('');
+let _ACC = null;
+async function _acceso() { if (_ACC) return _ACC; const r = await fetch('data/acceso.json', { cache: 'no-cache' }); if (!r.ok) throw new Error('sin acceso.json'); return _ACC = await r.json(); }
+async function LAB_ENTRAR(usuario, clave, recordar) {
+  const A = await _acceso(), te = new TextEncoder();
+  const u = usuario.trim().toLowerCase(), h = _hex(await crypto.subtle.digest('SHA-256', te.encode(A.sal + '|' + u)));
+  const e = A.u[h]; if (!e) return { error: 'Usuario o clave incorrectos.' };
+  if (e.vig && new Date(e.vig + 'T23:59:59') < new Date()) return { error: 'Tu acceso venció. Pide a tu administrador que lo renueve.' };
+  const base = await crypto.subtle.importKey('raw', te.encode(clave), 'PBKDF2', false, ['deriveKey']);
+  const kek = await crypto.subtle.deriveKey({ name: 'PBKDF2', salt: _b64(e.s), iterations: A.it, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, false, ['decrypt']);
+  const k = {};
+  try {
+    for (const cab in e.k) { const b = _b64(e.k[cab]); k[cab] = btoa(String.fromCharCode(...new Uint8Array(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b.slice(0, 12) }, kek, b.slice(12))))); }
+  } catch (err) { return { error: 'Usuario o clave incorrectos.' }; }
+  const s = { u: usuario.trim(), n: e.n, a: e.a || [], k, exp: recordar ? Date.now() + 30 * 864e5 : 0 };
+  try { (recordar ? localStorage : sessionStorage).setItem(LAB_SK, JSON.stringify(s)); } catch (err) {}
+  return { ok: s };
+}
+/* descarga, descifra y descomprime los datos de un estado */
+async function LAB_DATOS(cab, avance) {
+  const s = LAB_SES(); if (!s || !s.k[cab]) throw new Error('sin clave');
+  const r = await fetch('data/seguro/' + cab + '.bin', { cache: 'no-cache' }); if (!r.ok) throw new Error(r.status);
+  const tot = +r.headers.get('content-length') || 0; let u;
+  if (r.body && r.body.getReader) { const rd = r.body.getReader(), ch = []; let got = 0; for (;;) { const x = await rd.read(); if (x.done) break; ch.push(x.value); got += x.value.length; avance && avance(got, tot); } u = new Uint8Array(got); let o = 0; ch.forEach(c => { u.set(c, o); o += c.length; }); }
+  else u = new Uint8Array(await r.arrayBuffer());
+  const key = await crypto.subtle.importKey('raw', _b64(s.k[cab]), 'AES-GCM', false, ['decrypt']);
+  const gz = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: u.slice(4, 16) }, key, u.slice(16));
+  const txt = await new Response(new Blob([gz]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
+  return JSON.parse(txt);
+}
+/* niveles 3, 4 y 5: se recortan los datos a su distrito o municipio antes de abrir el análisis */
+function LAB_RECORTE(D, s) {
+  const col = { 3: 3, 4: 2, 5: 1 }[s.n]; if (!col || !s.a || !s.a.length) return D;
+  const ok = new Set(s.a.map(Number)), S = D.S, N = S.length, I = [];
+  for (let i = 0; i < N; i++) if (ok.has(+S[i][col])) I.push(i);
+  if (!I.length) throw new Error('ámbito vacío');
+  const f = o => { if (Array.isArray(o)) return o.length === N ? I.map(i => o[i]) : o; if (o && typeof o === 'object') { for (const k in o) o[k] = f(o[k]); } return o; };
+  ['S', 'paths', 'DM'].forEach(k => D[k] = I.map(i => D[k][i])); for (const ek in D.E) D.E[ek].r = I.map(i => D.E[ek].r[i]); f(D.V);
+  const keep = c => new Set(D.S.map(r => +r[c]));
+  [['mun', 1], ['dl', 2], ['df', 3]].forEach(([g, c]) => { if (Array.isArray(D.geo[g])) { const k = keep(c); D.geo[g] = D.geo[g].filter(x => k.has(+x.id)); } });
+  const km = keep(1); for (const m in D.meta.municipios) if (!km.has(+m)) delete D.meta.municipios[m];
+  let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+  D.paths.forEach(p => { const n = (p || '').match(/-?\d+(\.\d+)?/g) || []; for (let j = 0; j + 1 < n.length; j += 2) { const x = +n[j], y = +n[j + 1]; if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; } });
+  if (x1 > x0) { const p = Math.max(x1 - x0, y1 - y0) * .04; D.vb = [x0 - p, y0 - p, x1 - x0 + 2 * p, y1 - y0 + 2 * p]; }
+  const nom = { 3: 'Distrito federal', 4: 'Distrito local', 5: 'Municipio' }[s.n];
+  const et = s.n === 5 ? s.a.map(m => (D.meta.municipios[m] || m)).join(', ') : (s.a.length > 1 ? { 3: 'Distritos federales', 4: 'Distritos locales' }[s.n] : nom) + ' ' + s.a.join(', ');
+  D.meta.estado = D.meta.estado + ' · ' + et; D.meta.recorte = { n: s.n, a: s.a };
+  window.SUBIDX = I; return D;
+}
+
+/* ---------- pantalla de entrada ---------- */
+async function ENTRADA(pedido) {
+  document.body.classList.add('entmode');
+  const host = document.createElement('div'); host.id = 'ent'; document.body.appendChild(host);
+  const R = host.attachShadow({ mode: 'open' });
+  R.innerHTML = `<style>${ENT_CSS}</style><div class="ent"><div class="wrap">
+ <aside class="side" id="SD"><h1>Elige un estado</h1><p class="s">32 estados · resultados por sección 2015–2024</p>
+  <div class="ses" id="SES" hidden></div>
+  <label class="q"><svg viewBox="0 0 12 12"><circle cx="5" cy="5" r="3.6"/><path d="M8 8l3 3"/></svg><input id="QI" placeholder="Buscar estado o municipio" autocomplete="off" aria-label="Buscar estado o municipio"><kbd>/</kbd></label>
+  <div class="list" id="L" role="listbox"></div></aside>
+ <main class="main" id="M"></main>
+</div></div><div id="scrim"></div><div id="tip" role="tooltip"></div>
+<div class="mo" id="MO" role="dialog" aria-modal="true" aria-labelledby="MT"><form class="acc" id="AF" autocomplete="on"><button type="button" class="cl" id="MC" aria-label="Cerrar">×</button>
+ <h4 id="MT">Acceder al análisis</h4><p id="MS"></p>
+ <label for="AU">Usuario</label><input type="text" id="AU" name="username" autocomplete="username" autocapitalize="none" spellcheck="false" required>
+ <label for="AP">Clave</label><input type="password" id="AP" name="password" autocomplete="current-password" required>
+ <label class="ck"><input type="checkbox" id="AR">Recordar en este dispositivo</label>
+ <div class="err" id="AE" aria-live="polite"></div>
+ <button class="btn" id="AB" type="submit">Entrar</button><div class="hl">¿No tienes clave? Pídela a tu administrador.</div></form></div>`;
+  const $ = id => R.getElementById(id);
+  const EST = AVAIL.filter(x => x.ent), byC = {}, byE = {}; EST.forEach(x => { byC[x.cab] = x; byE[x.ent] = x; });
+  let MX = { w: 1000, h: 624, st: [] }; try { MX = await (await fetch('data/inicio/mx32.json')).json(); } catch (e) {}
+  const PC = { MORENA: '#A9455E', PAN: '#3F72B5', PRI: '#2F8F64', MC: '#E9813F', PVEM: '#7FB24E', PT: '#CF4B42', PRD: '#E5B533' }, pc = p => PC[p] || '#9AA5A5', pn = p => ({ MORENA: 'Morena', PVEM: 'Verde' }[p] || p);
+  const fmt = n => n == null ? '—' : n >= 1e6 ? (n / 1e6).toFixed(2) + ' M' : Math.round(n).toLocaleString('es-MX');
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const nz = t => String(t).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+  let cur = pedido && byC[pedido] ? pedido : null; if (!cur) { try { cur = localStorage.getItem('lab_ultimo'); } catch (e) {} } if (!byC[cur]) cur = null;
+  let q = '';
+  const HOY = new Date(), tip = $('tip'), scrim = $('scrim');
+  const showTip = (h, e) => { tip.innerHTML = h; tip.classList.add('on'); const w = tip.offsetWidth; let x = e.clientX + 14; if (x + w > innerWidth - 8) x = e.clientX - w - 14; tip.style.left = Math.max(8, x) + 'px'; tip.style.top = (e.clientY + 14) + 'px'; };
+  function qg(lbl, o, extra) {
+    const e = Object.entries(o || {}).sort((a, b) => b[1] - a[1]), t = e.reduce((s, x) => s + x[1], 0);
+    if (!t) return `<div><small>${lbl}</small><em><i class="x">sin dato</i></em></div>`;
+    const top = e.slice(0, 2), rest = e.slice(2);
+    return `<div data-tip="${encodeURIComponent(`<b>${lbl}: ${t}</b>` + e.map(([p, v]) => `${pn(p)}: ${v}`).join('<br>') + (extra || '') + '<span class="tnote">Si ganó una coalición, se cuenta al partido que la encabeza.</span>')}"><small>${lbl} · ${t}</small><u>${e.map(([p, v]) => `<b style="flex:${v};background:${pc(p)}"></b>`).join('')}</u><em>${top.map(([p, v]) => `<i><span class="dot" style="background:${pc(p)}"></span>${pn(p)} ${v}</i>`).join('')}${rest.map(([p, v]) => `<i class="x">${pn(p)} ${v}</i>`).join('')}</em></div>`;
+  }
+  function cal() {
+    const S = +new Date('2026-09-10'), E = +new Date('2027-08-31'), x = d => Math.max(0, Math.min(100, (+new Date(d) - S) / (E - S) * 100)).toFixed(2) + '%', w = (a, b) => ((+new Date(b) - +new Date(a)) / (E - S) * 100).toFixed(2) + '%';
+    const J = new Date('2027-06-06T12:00'); if (HOY > new Date('2027-06-07T00:00')) return `<p class="src">Fuente: INE. Lista nominal al 8 de octubre de 2026; resultados electorales por sección 2015–2024. <a class="pan" href="inicio.html">Panorama nacional</a></p>`;
+    const hoyP = x(HOY), fal = Math.ceil((J - HOY) / 864e5), hs = HOY.toLocaleDateString('es-MX', { day: 'numeric', month: 'short' });
+    const M = ['sep', 'oct', 'nov', 'dic', 'ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago'];
+    const F = [['2027-01-04', 'Precampañas, desde enero'], ['2027-02-12', 'Precampañas, hasta el 12 de febrero'], ['2027-04-03', 'Campañas, desde el 3 de abril'], ['2027-06-02', 'Campañas, hasta el 2 de junio'], ['2027-06-06', 'Jornada electoral, 6 de junio']], nx = F.find(f => new Date(f[0]) > HOY);
+    return `<div class="foot"><div class="fh"><h3>Rumbo a la elección del 6 de junio de 2027</h3><span class="cd">Faltan <b>${fal}</b> días</span></div><div class="nx" style="display:none">${nx ? 'Siguiente etapa: ' + nx[1] : ''}</div>
+ <div class="tlw"><div class="tr" style="--w:${hoyP}"><div class="base"></div><div class="done"></div>
+  <div class="ph" style="left:${x('2027-01-04')};width:${w('2027-01-04', '2027-02-12')}"></div><div class="ph c" style="left:${x('2027-04-03')};width:${w('2027-04-03', '2027-06-02')}"></div>
+  <div class="pl" style="left:0;transform:none"><b>Inicio</b> 10 sep</div><div class="pl" style="left:${x('2027-01-23')}"><b>Precampañas</b> ene – 12 feb</div><div class="pl" style="left:${x('2027-05-03')}"><b>Campañas</b> 3 abr – 2 jun</div><div class="pl" style="left:${x('2027-08-15')};transform:translateX(-80%)"><b>Plurinominales</b> ago</div>
+  ${M.map((m, i) => { const p = (i + .5) / 12 * 100; return Math.abs(p - parseFloat(hoyP)) < 5 ? '' : `<div class="tk" style="left:${p.toFixed(1)}%">${m}</div>`; }).join('')}
+  <div class="jd" style="left:${x('2027-06-06')}"></div><div class="jl" style="left:${x('2027-06-06')}">Jornada · 6 jun</div>
+  <div class="hoy"><i></i><span>Hoy · ${hs}</span></div></div></div>
+<p class="src">Fuente: INE. Lista nominal al 8 de octubre de 2026; resultados electorales por sección 2015–2024. <a class="pan" href="inicio.html">Panorama nacional</a></p></div>`;
+  }
+  function lista() {
+    const qq = nz(q); let h = '';
+    const est = EST.filter(x => !qq || nz(x.estado).includes(qq)).sort((a, b) => a.estado.localeCompare(b.estado, 'es'));
+    h += est.map(x => `<div class="r${x.cab === cur ? ' on' : ''}" data-cab="${x.cab}" role="option" tabindex="0"><span class="n">${esc(x.estado)}</span><span class="v">${fmt(x.ln)}</span><span class="g">${x.gob ? `<i style="background:${pc(x.gob.l)}"></i>Gobierna ${pn(x.gob.l)}` : ''}${x.c27 && x.c27.g ? ' · gubernatura 2027' : ''}</span></div>`).join('');
+    if (qq.length >= 3) {
+      const mu = []; EST.forEach(x => (x.muns || []).forEach(m => { if (nz(m).includes(qq)) mu.push([m, x]); }));
+      if (mu.length) h += `<div class="lh">Municipios</div>` + mu.slice(0, 12).map(([m, x]) => `<div class="r mu" data-cab="${x.cab}" role="option" tabindex="0"><span class="n">${esc(m)}</span><span class="v"></span><span class="g">${esc(x.estado)}</span></div>`).join('');
+    }
+    $('L').innerHTML = h || `<p class="nores">Ningún estado ni municipio coincide con “${esc(q)}”.</p>`;
+    $('SD').classList.toggle('qon', !!q);
+  }
+  function sesion() {
+    const s = LAB_SES(), b = $('SES');
+    if (!s) { b.hidden = true; return; }
+    const n = Object.keys(s.k).length; b.hidden = false;
+    b.innerHTML = `<span>Sesión: <b>${esc(s.u)}</b>${s.n === 1 ? ' · todos los estados' : n === 1 ? ' · ' + esc((byC[Object.keys(s.k)[0]] || {}).estado || '') : ''}</span><button id="SX">Salir</button>`;
+    $('SX').onclick = () => { LAB_SALIR(); sesion(); };
+  }
+  function vacia() {
+    $('M').innerHTML = `<div class="hd"><div><div class="eyebrow">Ficha del estado</div><h2>Elige un estado</h2><span class="hint">Toca un estado en el mapa o en la lista para ver su ficha y entrar al análisis.</span></div></div>
+ <div class="bigmap"><svg viewBox="0 0 ${MX.w} ${MX.h}" role="img" aria-label="Mapa de México">${MX.st.map(p => byE[p.ent] ? `<path data-cab="${byE[p.ent].cab}" d="${p.d}"/>` : '').join('')}</svg></div>${cal()}`;
+  }
+  function ficha() {
+    lista(); sesion();
+    if (!cur) { vacia(); return; }
+    const s = byC[cur], al = s.cab === 'cdmx', c27 = s.c27 || {}, Q = s.q || {}, D = s.dem || { h: 1, m: 0, g: [0, 0, 0, 0, 0, 0, 0] }, mj = 100 * D.m / (D.h + D.m), [n70, nt] = s.v70 || [0, 0];
+    const q2 = MX.st.find(p => p.ent === s.ent) || { x: 0, y: 0 }, T = D.h + D.m, L = ['18–24', '25–29', '30–39', '40–49', '50–59', '60–64', '65+'];
+    const ay = Q.ayu ? qg(al ? 'Alcaldías' : 'Municipios', Q.ayu[1], Q.ayu[2] ? `<br><span class="tnote">${Q.ayu[2]} sin votación por partidos en ${Q.ayu[0]} (usos y costumbres o elección anulada).</span>` : '') : qg(al ? 'Alcaldías' : 'Municipios', null);
+    const go = `<button class="go" aria-label="Acceder al análisis de ${esc(s.estado)}" data-lbl="Acceder al análisis"><svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10h11"/><path d="M11 5.5 15.5 10 11 14.5"/></svg></button>`;
+    $('M').innerHTML = `
+ <div class="hd"><div><div class="eyebrow">Ficha del estado</div><h2>${esc(s.estado)}${go}</h2>
+  <span class="gobl">${s.gob ? `<i style="background:${pc(s.gob.l)}"></i>Gobierna ${pn(s.gob.l)} desde ${s.gob.y}${s.gob.p ? `, ganó con ${s.gob.p}%` : ''}` : ''}</span>
+  <div class="qgh">Quién gobierna hoy</div><div class="qg">${ay}${qg('Dip. locales', Q.dl && Q.dl[1])}${qg('Dip. federales', Q.df && Q.df[1])}${qg('Senado', Q.sen && Q.sen[1])}</div></div>
+  <div class="loc"><svg viewBox="0 0 ${MX.w} ${MX.h}" role="img" aria-label="Ubicación de ${esc(s.estado)}">${MX.st.map(p => byE[p.ent] ? `<path data-cab="${byE[p.ent].cab}" class="${p.ent === s.ent ? 'on' : ''}" d="${p.d}"/>` : '').join('')}<g class="pulse"><circle class="c1" cx="${q2.x}" cy="${q2.y}" r="44"/><circle class="c2" cx="${q2.x}" cy="${q2.y}" r="44"/><circle class="c0" cx="${q2.x}" cy="${q2.y}" r="6"/></g></svg></div></div>
+ <div class="body"><div class="kp">
+  <div><b>${fmt(s.ln)}</b><span>Lista nominal</span></div>
+  <div><b>${(s.sec || 0).toLocaleString('es-MX')}</b><span>Secciones</span></div>
+  <div><b>${s.mun}</b><span>${al ? 'Alcaldías' : 'Municipios'}</span></div>
+  <div><b>${s.ndl}</b><span>Distritos locales</span></div>
+  <div><b>${s.ndf}</b><span>Distritos federales</span></div>
+  <div class="tn" data-tip="${encodeURIComponent(`<b>Participación promedio</b>Promedio de las ${s.nel} elecciones del estado entre 2015 y 2024 (presidencia, senado, diputaciones, gubernatura y ayuntamientos).`)}"><b>${s.pavg != null ? s.pavg.toFixed(1) + '%' : '—'}</b><span>Participación</span><em>promedio 2015–2024</em></div>
+  <div class="tn" data-tip="${encodeURIComponent(`<b>Dónde está el voto</b>${n70} de ${nt} ${al ? 'alcaldías' : 'municipios'} reúnen el 70% de la lista nominal. Concentrar el trabajo ahí cubre a 7 de cada 10 electores.`)}"><b>${n70} <small>de ${nt}</small></b><span>Dónde está el voto</span><em>${al ? 'alcaldías' : 'municipios'} reúnen el 70%</em></div>
+  <div class="tn" data-tip="${encodeURIComponent(`<b>Lista nominal por sexo</b>Mujeres: ${fmt(D.m)}<br>Hombres: ${fmt(D.h)}`)}"><b>${mj.toFixed(1)}%</b><span>Mujeres</span><em>hombres ${(100 - mj).toFixed(1)}%</em></div>
+  <div class="tn" data-tip="${encodeURIComponent('<b>Lista nominal por edad</b>' + D.g.map((v, i) => `${L[i]}: ${fmt(v)} (${(100 * v / T).toFixed(1)}%)`).join('<br>'))}"><b>${(100 * (D.g[0] + D.g[1]) / T).toFixed(1)}%</b><span>Jóvenes de 18 a 29</span><em>65 y más ${(100 * D.g[6] / T).toFixed(1)}%</em></div>
+  <div class="tn" data-tip="${encodeURIComponent('<b>Nuevos electores desde 2024</b>Personas de 18 y 19 años en la lista nominal: tenían 16 o 17 años en la elección de 2024.')}"><b>${fmt(s.nv)}</b><span>Nuevos electores</span><em>18 y 19 años, ya en jóvenes</em></div>
+ </div></div>
+ <div class="bot">${(() => { const it = [[1, s.ndf, 'Diputaciones federales'], [c27.c, s.ndl, 'Diputaciones locales de mayoría'], [c27.a, c27.na || s.mun, al ? 'Alcaldías' : 'Ayuntamientos'], [c27.g, 1, 'Gubernatura']];
+      return `<div class="e27"><h3>Qué se elige en 2027</h3><ul>${it.map(([on, n, t]) => `<li class="${on ? '' : 'no'}"><b>${n}</b><span>${on ? t.toLowerCase() : 'sin ' + t.toLowerCase()}</span></li>`).join('')}</ul></div>`; })()}
+ ${cal()}</div><button class="btn btnm go2" style="display:none"><svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="7" width="10" height="7" rx="2"/><path d="M5.5 7V5a2.5 2.5 0 015 0v2"/></svg>Acceder al análisis</button>`;
+  }
+  /* acceso */
+  let destino = null;
+  const ir = cab => { if (location.hash === '#' + cab) location.reload(); else location.hash = cab; };
+  function abrirAcceso(cab) {
+    destino = cab; const x = byC[cab];
+    $('MS').textContent = x ? x.estado : ''; $('AE').textContent = ''; $('MO').classList.add('on');
+    setTimeout(() => ($('AU').value ? $('AP') : $('AU')).focus(), 30);
+  }
+  function cerrarAcceso() { $('MO').classList.remove('on'); }
+  function acceder(cab) {
+    if (LAB_PUEDE(cab)) { ir(cab); return; }
+    abrirAcceso(cab);
+    if (LAB_SES()) $('AE').textContent = 'Tu usuario no tiene acceso a ' + byC[cab].estado + '. Entra con otro usuario.';
+  }
+  $('MC').onclick = cerrarAcceso; $('MO').addEventListener('click', e => { if (e.target === $('MO')) cerrarAcceso(); });
+  $('AF').addEventListener('submit', async e => {
+    e.preventDefault(); const b = $('AB'); b.disabled = true; b.textContent = 'Verificando…'; $('AE').textContent = '';
+    try {
+      const r = await LAB_ENTRAR($('AU').value, $('AP').value, $('AR').checked);
+      if (r.error) { $('AE').textContent = r.error; $('AP').value = ''; $('AP').focus(); }
+      else if (destino && !r.ok.k[destino]) {
+        const mio = Object.keys(r.ok.k); sesion();
+        if (mio.length === 1) { $('AE').textContent = 'Tu acceso es a ' + byC[mio[0]].estado + '. Te llevamos ahí.'; setTimeout(() => ir(mio[0]), 900); }
+        else $('AE').textContent = 'Tu usuario no tiene acceso a ' + byC[destino].estado + '.';
+      } else ir(destino || Object.keys(r.ok.k)[0]);
+    } catch (err) { console.error(err); $('AE').textContent = 'No se pudo verificar. Revisa tu conexión e intenta de nuevo.'; }
+    b.disabled = false; b.textContent = 'Entrar';
+  });
+  /* tocar y pasar el cursor */
+  let pinned = false;
+  const closeTip = () => { pinned = false; tip.classList.remove('on', 'pin'); scrim.classList.remove('on'); };
+  scrim.addEventListener('click', closeTip);
+  addEventListener('keydown', e => {
+    if (e.key === 'Escape') { closeTip(); cerrarAcceso(); }
+    if (e.key === '/' && !$('MO').classList.contains('on') && R.activeElement !== $('QI')) { e.preventDefault(); $('QI').focus(); }
+  });
+  const elegir = cab => { cur = cab; try { localStorage.setItem('lab_ultimo', cur); } catch (e) {} closeTip(); q = ''; $('QI').value = ''; ficha(); };
+  R.addEventListener('click', e => {
+    if (e.target.closest('#tip .x')) { closeTip(); return; }
+    if (e.target.closest('.go,.go2')) { acceder(cur); return; }
+    const d = e.target.closest('[data-tip]');
+    if (d) { showTip(decodeURIComponent(d.dataset.tip) + '<button class="x" aria-label="Cerrar">×</button>', e); tip.classList.add('pin'); pinned = true; if (innerWidth <= 700) scrim.classList.add('on'); return; }
+    if (pinned && !e.target.closest('#tip')) closeTip();
+    const t = e.target.closest('[data-cab]'); if (t) elegir(t.dataset.cab);
+  });
+  R.addEventListener('keydown', e => { if (e.key === 'Enter') { const t = e.target.closest && e.target.closest('.r[data-cab]'); if (t) elegir(t.dataset.cab); } });
+  R.addEventListener('mousemove', e => {
+    if (pinned) return; const t = e.target.closest('[data-tip],.loc path,.bigmap path'); if (!t) { tip.classList.remove('on'); return; }
+    if (t.dataset.tip) showTip(decodeURIComponent(t.dataset.tip), e); else showTip(`<b>${esc(byC[t.dataset.cab].estado)}</b>Clic para ver su ficha`, e);
+  });
+  $('QI').addEventListener('input', e => { q = e.target.value.trim(); lista(); });
+  $('QI').addEventListener('keydown', e => { if (e.key === 'Enter') { const f = $('L').querySelector('.r[data-cab]'); if (f) elegir(f.dataset.cab); } });
+  ficha();
+  if (pedido && byC[pedido]) acceder(pedido);
 }
 
 (async()=>{const msg=t=>{const b=document.getElementById('bootm'); if(b) b.textContent=t;};
   try{const r0=await fetch('data/estados.json',{cache:'no-cache'}); AVAIL=await r0.json(); try{const r1=await fetch('data/capas.json',{cache:'no-cache'}); if(r1.ok) CAPAS=await r1.json();}catch(e){} try{const r2=await fetch('data/modelo.json',{cache:'no-cache'}); if(r2.ok) MODELO=await r2.json();}catch(e){}}catch(e){msg('No se pudo cargar la lista de estados.'); console.error(e); return;}
   addEventListener('hashchange',()=>location.reload());
   const cab=(location.hash||'').slice(1),a=AVAIL.find(x=>x.cab===cab);
-  if(!a){document.getElementById('boot').remove(); NACION(); return;}
-  try{const r=await fetch('data/'+a.cab+'.json'); if(!r.ok) throw new Error(r.status); let DATA; const tot=+r.headers.get('content-length')||0; if(r.body&&r.body.getReader){const rd=r.body.getReader(),ch=[]; let got=0; for(;;){const x=await rd.read(); if(x.done) break; ch.push(x.value); got+=x.value.length; msg('Cargando '+a.estado+'… '+(got/1e6).toFixed(1)+' MB'+(tot&&tot>=got?' de '+(tot/1e6).toFixed(1)+' MB':''));} const u=new Uint8Array(got); let o=0; ch.forEach(c=>{u.set(c,o); o+=c.length;}); DATA=JSON.parse(new TextDecoder().decode(u));} else DATA=await r.json(); APP(DATA); document.getElementById('boot').remove();}
-  catch(e){msg('No se pudieron cargar los datos de '+a.estado+'. Recarga la página.'); console.error(e);}})();
+  const boot=()=>{const b=document.getElementById('boot'); if(b) b.remove();};
+  if(!a){boot(); ENTRADA(); return;}
+  if(!LAB_PUEDE(a.cab)){boot(); ENTRADA(a.cab); return;}
+  try{msg('Cargando '+a.estado+'…'); let DATA=await LAB_DATOS(a.cab,(got,tot)=>msg('Cargando '+a.estado+'… '+(got/1e6).toFixed(1)+' MB'+(tot&&tot>=got?' de '+(tot/1e6).toFixed(1)+' MB':'')));
+    const ses=LAB_SES(); DATA=LAB_RECORTE(DATA,ses); APP(DATA); boot();
+    const av=document.querySelector('.rail .av'); if(av){av.textContent=(ses.u||'?').slice(0,1).toUpperCase(); av.title='Sesión: '+ses.u; av.setAttribute('role','button'); av.tabIndex=0; av.style.cursor='pointer';
+      av.onclick=()=>{let p=document.getElementById('sesp'); if(p){p.remove(); return;} p=document.createElement('div'); p.id='sesp'; p.className='epop sesp'; p.innerHTML='<div class="sesu">Sesión: <b></b></div><button id="sesx">Salir</button>'; p.querySelector('b').textContent=ses.u; document.body.appendChild(p); const r=av.getBoundingClientRect(); p.style.left=(r.right+10)+'px'; p.style.top=Math.max(8,r.bottom-p.offsetHeight)+'px'; document.getElementById('sesx').onclick=()=>{LAB_SALIR(); location.hash='';};};}}
+  catch(e){console.error(e); if(e&&e.name==='OperationError'){LAB_SALIR(); boot(); ENTRADA(a.cab); return;} msg('No se pudieron cargar los datos de '+a.estado+'. Revisa tu conexión y recarga la página.');}})();

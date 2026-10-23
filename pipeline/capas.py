@@ -13,7 +13,7 @@ import json
 import re
 import unicodedata
 
-from comun import BASE, PIPE, REPO
+from comun import BASE, PIPE, REPO, PLANO
 
 NRM = lambda x: re.sub(r'[^A-Z0-9 ]', '', unicodedata.normalize('NFKD', str(x)).encode('ascii', 'ignore').decode().upper()).strip()
 
@@ -44,7 +44,7 @@ def evaluar(expr, fila):
 
 def capas(e):
     reg = json.loads((PIPE / 'capas.json').read_text(encoding='utf-8'))['bases']
-    d = json.loads((REPO / 'data' / f'{e["clave"]}.json').read_text(encoding='utf-8'))
+    d = json.loads((PLANO / f'{e["clave"]}.json').read_text(encoding='utf-8'))
     S, mun = d['S'], d['meta']['municipios']
     idx = {r[0]: i for i, r in enumerate(S)}
     mnorm = {NRM(v): int(k) for k, v in mun.items()}

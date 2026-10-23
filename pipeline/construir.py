@@ -100,44 +100,62 @@ def toks(c):
     if c.startswith('PLANILLA'): return ['OTROS']
     c=re.sub(r'^C_(COMUN_)?','',c.replace('NVA_ALIANZA','NA'))
     return [ALIAS.get(p,p) for p in c.split('_') if p and not p.isdigit()]
+import io,unicodedata
+def _hk(k):
+    if not k: return k
+    k=unicodedata.normalize('NFD',k.strip()).encode('ascii','ignore').decode().upper()
+    return 'SECCION' if k in ('SECCIONES','SECCIN') else k
 RAW={}
+def _lee(f,t,y,kind):
+    _t=open(f,encoding='utf-8-sig',errors='ignore').read(); _d='\t' if _t.split('\n',1)[0].count('\t')>_t.split('\n',1)[0].count(',') else ','
+    rows=[{_hk(k):v for k,v in r.items()} for r in csv.DictReader(io.StringIO(_t),delimiter=_d)]
+    cols=[c for c in rows[0].keys() if c and not NONVOTE.match(c.strip())]
+    ind=[c for c in cols if c.startswith('CAND_IND')]
+    combos=[c for c in cols if '_' in c and c not in ind]
+    used=[toks(c) for c in combos if sum(num(r[c]) for r in rows)>0]
+    sec={}; own={}
+    for r in rows:
+        try: s=int(float(r['SECCION']))
+        except: continue
+        if s<=0 or s not in idx: continue
+        x=sec.setdefault(s,[{},0.0,0.0]); v=x[0]
+        for c in cols:
+            if c in ind: continue
+            n=num(r[c])
+            if not n: continue
+            ps=toks(c) if c in combos else [ALIAS.get(c,c)]
+            for p in ps: v[p]=v.get(p,0)+n/len(ps)
+        iv=sorted((num(r[c]) for c in ind),reverse=True)
+        if iv and iv[0]: v['IND']=v.get('IND',0)+iv[0]; v['OTROS']=v.get('OTROS',0)+sum(iv[1:])
+        x[1]+=num(r.get('TOTAL_VOTOS')); x[2]+=num(r.get('LISTA_NOMINAL'))
+        o=own.setdefault(s,[0.0]*7)
+        for j,p in enumerate(MAIN): o[j]+=num(r.get(p))
+        if t=='DIPL' and y==LDY:
+            dl=int(num(r.get('ID_DISTRITO_LOCAL') or r.get('ID_DISTRITO') or 0)); cb=r.get('CABECERA_DISTRITAL_LOCAL') or r.get('CABECERA_DISTRITAL')
+            if dl and cb: CABDL.setdefault(dl,{}); CABDL[dl][cb]=CABDL[dl].get(cb,0)+1
+        if t=='DIPF' and y==2024:
+            df=int(num(r.get('ID_DISTRITO_FEDERAL') or 0)); cb=r.get('CABECERA_DISTRITAL_FEDERAL')
+            if df and cb: CABDF.setdefault(df,{}); CABDF[df][cb]=CABDF[df].get(cb,0)+1
+        if r.get('MUNICIPIO') and r.get('ID_MUNICIPIO'):
+            MUNSEE.setdefault(int(num(r['ID_MUNICIPIO'])),r['MUNICIPIO'])
+    return sec,own,used
 for f in files:
     b=os.path.basename(f)
     for pre,t,kind in FMAP:
         if b.startswith(pre):
             y=int(re.search(r'(\d{4})',b).group(1)); ek=f'{t}_{y}'
-            rows=[{(k.strip() if k else k):v for k,v in r.items()} for r in csv.DictReader(open(f,encoding='utf-8-sig',errors='ignore'))]
-            cols=[c for c in rows[0].keys() if c and not NONVOTE.match(c.strip())]
-            ind=[c for c in cols if c.startswith('CAND_IND')]
-            combos=[c for c in cols if '_' in c and c not in ind]
-            used=[toks(c) for c in combos if sum(num(r[c]) for r in rows)>0]
-            sec={}; own={}
-            for r in rows:
-                try: s=int(float(r['SECCION']))
-                except: continue
-                if s<=0 or s not in idx: continue
-                x=sec.setdefault(s,[{},0.0,0.0]); v=x[0]
-                for c in cols:
-                    if c in ind: continue
-                    n=num(r[c])
-                    if not n: continue
-                    ps=toks(c) if c in combos else [ALIAS.get(c,c)]
-                    for p in ps: v[p]=v.get(p,0)+n/len(ps)
-                iv=sorted((num(r[c]) for c in ind),reverse=True)
-                if iv and iv[0]: v['IND']=v.get('IND',0)+iv[0]; v['OTROS']=v.get('OTROS',0)+sum(iv[1:])
-                x[1]+=num(r.get('TOTAL_VOTOS')); x[2]+=num(r.get('LISTA_NOMINAL'))
-                o=own.setdefault(s,[0.0]*7)
-                for j,p in enumerate(MAIN): o[j]+=num(r.get(p))
-                if t=='DIPL' and y==LDY:
-                    dl=int(num(r.get('ID_DISTRITO_LOCAL') or r.get('ID_DISTRITO') or 0)); cb=r.get('CABECERA_DISTRITAL_LOCAL') or r.get('CABECERA_DISTRITAL')
-                    if dl and cb: CABDL.setdefault(dl,{}); CABDL[dl][cb]=CABDL[dl].get(cb,0)+1
-                if t=='DIPF' and y==2024:
-                    df=int(num(r.get('ID_DISTRITO_FEDERAL') or 0)); cb=r.get('CABECERA_DISTRITAL_FEDERAL')
-                    if df and cb: CABDF.setdefault(df,{}); CABDF[df][cb]=CABDF[df].get(cb,0)+1
-                if r.get('MUNICIPIO') and r.get('ID_MUNICIPIO'):
-                    MUNSEE.setdefault(int(num(r['ID_MUNICIPIO'])),r['MUNICIPIO'])
+            sec,own,used=_lee(f,t,y,kind)
             RAW[ek]=(t,y,kind,sec,used)
             if kind=='local': OWN[ek]=own
+# extraordinarias: reemplazan las secciones de los municipios donde se anuló la elección ordinaria del mismo año
+for f in files:
+    b=os.path.basename(f)
+    if b.startswith('XLOC_AYUNTAMIENTOS_'):
+        y=int(re.search(r'(\d{4})',b).group(1)); ek=f'AYU_{y}'
+        if ek not in RAW: continue
+        sec,own,used=_lee(f,'AYU',y,'local')
+        RAW[ek][3].update(sec); RAW[ek][4].extend(used); OWN[ek].update(own)
+        print('  extraordinaria',ek,len(sec),'secciones')
 # partidos no nacionales relevantes: >=2.5% estatal en alguna elección o 1er lugar individual en >=5 secciones
 SCR={}
 for ek,(t,y,kind,sec,used) in RAW.items():
@@ -205,7 +223,7 @@ for ek,(t,y,kind,sec,used) in RAW.items():
 YEARS=sorted({e['year'] for e in E.values()})
 
 # ---------- secciones y padrón ----------
-pad={}; pmd={}; DUP={}
+pad={}; pmd={}; DUP={}; NV={}
 for r in csv.DictReader(open(U+'PADRON.csv',encoding='utf-8')):
     try: s=int(float(r['SECCION']))
     except: continue
@@ -214,6 +232,7 @@ for r in csv.DictReader(open(U+'PADRON.csv',encoding='utf-8')):
     grp=[['18','19','20_24'],['25_29'],['30_34','35_39'],['40_44','45_49'],['50_54','55_59'],['60_64'],['65_Y_MAS']]
     hm=[sum(g(f'LISTA_{a}_HOMBRES') for a in G) for G in grp]; mm=[sum(g(f'LISTA_{a}_MUJERES') for a in G) for G in grp]
     v=[g('PADRON ELECTORAL'),g('LISTA NOMINAL'),g('LISTA HOMBRES'),g('LISTA MUJERES')]+hm+mm
+    NV[s]=NV.get(s,0)+sum(g(f'LISTA_{a}_{x}') for a in ('18','19') for x in ('HOMBRES','MUJERES'))  # nuevos electores: 18 y 19 años
     if s in pad: DUP[s]=DUP.get(s,1)+1; v=[x+y for x,y in zip(pad[s],v)]  # misma sección repetida en el padrón: se suma
     pad[s]=v
     if s not in pmd: pmd[s]=(int(float(r['CLAVE MUNICIPIO'])),int(float(r['CLAVE DISTRITO'])))
@@ -325,10 +344,11 @@ uyc=sorted({x[1] for x in SEC}-set(hasA)) if AYUS else []
 ACC={'Cancun':'Cancún','Kantunilkin':'Kantunilkín','Heroica Cardenas':'Heroica Cárdenas','Merida':'Mérida','Tizimin':'Tizimín','Ticul':'Ticul','Chetumal':'Chetumal','Jose Maria Morelos':'José María Morelos','Felipe Carrillo Puerto':'Felipe Carrillo Puerto','Cozumel':'Cozumel','Tuxtla Gutierrez':'Tuxtla Gutiérrez','Tapachula':'Tapachula','Comitan de Dominguez':'Comitán de Domínguez','Oaxaca de Juarez':'Oaxaca de Juárez'}
 fixa=lambda d:{k:ACC.get(v,v) for k,v in d.items()}
 EAC={'Yucatan':'Yucatán','Michoacan':'Michoacán','Nuevo Leon':'Nuevo León','Queretaro':'Querétaro','San Luis Potosi':'San Luis Potosí','Mexico':'México'}
-meta={'uyc':uyc,'estado':EST['nombre'],'ent':ENT,'cab':CAB,'municipios':munn,'cabDL':fixa(mode(CABDL)),'cabDF':fixa(mode(CABDF)),'cfg':cfg,'base':base,'marg':MARG,'years':YEARS,
+meta={'nv':sum(NV.get(x[0],0) for x in SEC),'uyc':uyc,'estado':EST['nombre'],'ent':ENT,'cab':CAB,'municipios':munn,'cabDL':fixa(mode(CABDL)),'cabDF':fixa(mode(CABDF)),'cfg':cfg,'base':base,'marg':MARG,'years':YEARS,
       'fuentes':{'res':'INE, Sistema de Consulta de la Estadística Electoral (SEE)','pad':'INE, DERFE, Padrón y Lista Nominal, corte '+CFG['cortes']['padron'],'carto':'INE, DERFE, Base Geográfica Digital, corte '+CFG['cortes']['cartografia'],'cc':'INE, DECEyEC, Conteos Censales de Participación 2018, 2021 y 2024','cfg':'Compendio legal 2027 (catálogo por estado)','marg':'CONAPO, Índice de marginación por municipio 2020'}}
 out={'meta':meta,'vb':[0,0,Wd,round(Hd)],'P8':P8,'S':SEC,'paths':PATHS,'geo':geo,'E':E,'DM':DM,'V':V}
-os.makedirs(REPO/'data',exist_ok=True)
-fn=str(REPO/'data'/f'{CAB}.json'); json.dump(out,open(fn,'w',encoding='utf-8'),separators=(',',':'),ensure_ascii=False)
+from comun import PLANO
+os.makedirs(PLANO,exist_ok=True)
+fn=str(PLANO/f'{CAB}.json'); json.dump(out,open(fn,'w',encoding='utf-8'),separators=(',',':'),ensure_ascii=False)
 print('MB',round(os.path.getsize(fn)/1e6,2),'secciones',N,'nuevas',sum(x[6] for x in SEC),'base',base,'cfg',cfg,'calib',cal)
 print('uyc',len(uyc));print('cabDL',list(meta['cabDL'].items())[:5],'cabDF',list(meta['cabDF'].items())[:5])

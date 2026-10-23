@@ -25,6 +25,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / 'data'
+PLANO = ROOT / 'privado'  # datos completos sin cifrar (solo local)
 NIV = {'GOB': 'est', 'SEN': 'est', 'PRE': 'est', 'DIPL': 'dl', 'DIPF': 'df', 'AYU': 'mun'}
 DESDE = 2021  # el sistema de partidos cambió en 2018 (llegada de Morena); se prueba con 2021 y 2024
 GRID = [(a, sw) for sw in (0, 1) for a in (0, .25, .5, .75, 1)]
@@ -40,7 +41,7 @@ def q(v, p):
 
 
 def carga(c):
-    d = json.load(open(DATA / f'{c}.json', encoding='utf-8'))
+    d = json.load(open(PLANO / f'{c}.json', encoding='utf-8'))
     P = d['P8']; NP = len(P); S = d['S']; E = {}
     for ek, e in d['E'].items():
         sh, tp, val = {}, {}, {}
@@ -242,7 +243,7 @@ def regla_mov(c):
     """Secciones que un partido perdió por menos de 10 puntos y ganó en la siguiente elección del mismo cargo
     (2018 en adelante): ¿ganó sacando más votantes (movilización) o quitándole votos al rival (convencimiento)?
     Se prueba la regla: movilizar si la participación quedó al menos `th` por debajo del máximo histórico de la sección."""
-    d = json.load(open(DATA / f'{c}.json', encoding='utf-8')); P = d['P8']; NP = len(P); E = d['E']; out = []
+    d = json.load(open(PLANO / f'{c}.json', encoding='utf-8')); P = d['P8']; NP = len(P); E = d['E']; out = []
     for t in ('DIPL', 'DIPF', 'AYU'):
         ys = sorted(int(e['year']) for e in E.values() if e['type'] == t and int(e['year']) >= 2018)
         for y0, y1 in zip(ys, ys[1:]):
@@ -292,7 +293,7 @@ def registro(c, d):
 
 
 def main():
-    cabs = sorted(p.stem for p in DATA.glob('*.json') if p.stem not in ('estados', 'capas', 'nacional'))
+    cabs = sorted(p.stem for p in PLANO.glob('*.json'))
     todos, tr = {}, []
     for c in cabs:
         d, P, S, E = carga(c)
@@ -312,7 +313,7 @@ def main():
         pr.update({'r': rmed, 'r_q': rq, 'r_n': len(rs), 'mov': mov, 'reg': registro(c, d)})
         print(c, 'registro', pr['reg']['sin'], 'conservan', pr['reg']['conf'], 'por confirmar', pr['reg']['por_confirmar'])
         d['meta']['proy'] = pr
-        json.dump(d, open(DATA / f'{c}.json', 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
+        json.dump(d, open(PLANO / f'{c}.json', 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
         print(c, pr['a'], pr['sw'], 'estado', pr['est'], {t: (v['hist'] or {}).get('mae') for t, v in pr['tipos'].items()}, 'con encuesta', {t: ((v['enc'] or {}).get('mae'), (v['enc'] or {}).get('hit')) for t, v in pr['tipos'].items()}, pr['tp'], pr['tp_err'])
     print('Regla movilizar/convencer:', mov)
     print(f'Rendimiento de alianzas: mediana {rmed} (25-75%: {rq}) en {len(rs)} casos')

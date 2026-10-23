@@ -52,7 +52,7 @@ def _filtrar(src, dst, ent, key='ID_ESTADO'):
 
 def resultados(e, out):
     ent, amin = e['ent'], CFG.get('anio_minimo', 2015)
-    for f in glob.glob(str(out / 'FED_*.csv')) + glob.glob(str(out / 'LOC_*.csv')):
+    for f in glob.glob(str(out / 'FED_*.csv')) + glob.glob(str(out / 'LOC_*.csv')) + glob.glob(str(out / 'XLOC_*.csv')):
         try:
             os.remove(f)          # limpia corridas anteriores
         except OSError:
@@ -73,6 +73,14 @@ def resultados(e, out):
                 if int(y) < amin:
                     continue
                 shutil.copyfile(fs[0], out / f'{tag}_{y}.csv'); print(f'  {tag} {y}: copiado')
+        # elecciones extraordinarias (municipios donde se anuló la ordinaria): se guardan aparte y construir.py
+        # las usa para reemplazar esas secciones en la elección ordinaria del mismo año
+        yd = os.path.basename(d)
+        for cargo in ('AYUNTAMIENTOS',):
+            for c in (cc + '_EXT' for cc in LOC_ALIAS[cargo]):
+                fx = [f for f in glob.glob(f'{d}/{c}/*') if f.upper().endswith('_SEC_EXT.CSV')]
+                if fx and yd.isdigit() and int(yd) >= amin:
+                    shutil.copyfile(sorted(fx)[0], out / f'XLOC_AYUNTAMIENTOS_{yd}.csv'); print(f'  extraordinaria ayuntamientos {yd}: copiada')
 
 
 def padron(e, out):

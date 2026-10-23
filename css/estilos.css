@@ -1,3 +1,11 @@
+@font-face{font-family:'Inter';font-style:normal;font-weight:400;font-display:swap;src:url(../fonts/inter-latin-400-normal.woff2) format('woff2')}
+@font-face{font-family:'Inter';font-style:normal;font-weight:500;font-display:swap;src:url(../fonts/inter-latin-500-normal.woff2) format('woff2')}
+@font-face{font-family:'Inter';font-style:normal;font-weight:600;font-display:swap;src:url(../fonts/inter-latin-600-normal.woff2) format('woff2')}
+@font-face{font-family:'Inter';font-style:normal;font-weight:700;font-display:swap;src:url(../fonts/inter-latin-700-normal.woff2) format('woff2')}
+@font-face{font-family:'Manrope';font-style:normal;font-weight:500;font-display:swap;src:url(../fonts/manrope-latin-500-normal.woff2) format('woff2')}
+@font-face{font-family:'Manrope';font-style:normal;font-weight:600;font-display:swap;src:url(../fonts/manrope-latin-600-normal.woff2) format('woff2')}
+@font-face{font-family:'Manrope';font-style:normal;font-weight:700;font-display:swap;src:url(../fonts/manrope-latin-700-normal.woff2) format('woff2')}
+@font-face{font-family:'Manrope';font-style:normal;font-weight:800;font-display:swap;src:url(../fonts/manrope-latin-800-normal.woff2) format('woff2')}
 
 /* Layout: riel oscuro fino a la izquierda · barra superior blanca (ruta, buscador, elección, partido) · lienzo con mapa monocromo turquesa a todo lo ancho · panel de filtros que entra desde la izquierda sobre el mapa · columna de tarjetas flotantes a la derecha · ficha flotante al pasar el cursor */
 :root{
@@ -1161,3 +1169,9 @@ body.lite #map .secs path{transition:opacity .45s ease}
 .sl-cbig>div{padding:22px 18px 18px}.sl-cbig b{font-size:42px}.sl-cbig .t{font-size:17px}
 .sl-ut i{height:36px;font-size:11px}.sl-pjs .sl-vt td{padding:13px 10px}
 .sl-pl div{display:grid;grid-template-columns:200px 1fr 56px;gap:12px;align-items:center;padding:7px 0;border-bottom:1px solid #F0F3F3;font-size:14px}.sl-pl b{color:#1C2121;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.sl-pl i{display:block;height:10px;border-radius:5px;background:linear-gradient(90deg,var(--c) var(--p),#E3EAEA var(--p))}.sl-pl span{text-align:right;font:800 15px Manrope,Arial;color:#1C2121}
+
+/* entrada y sesión */
+body.entmode .app,body.entmode .boot{display:none}
+.sesp{position:fixed;z-index:80;background:#fff;border-radius:12px;box-shadow:0 12px 30px rgba(28,33,33,.18);padding:12px 14px;display:flex;flex-direction:column;gap:8px;min-width:180px;font-size:12.5px}
+.sesp .sesu b{color:var(--strong)}
+.sesp button{border:0;background:var(--hair);border-radius:8px;padding:7px 10px;font:600 12.5px var(--f);color:var(--teal3);cursor:pointer;text-align:left}

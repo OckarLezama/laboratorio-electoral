@@ -9,6 +9,9 @@ from pathlib import Path
 
 PIPE = Path(__file__).resolve().parent          # .../pipeline
 REPO = PIPE.parent                              # raíz del repositorio
+# Datos completos por estado SIN cifrar: solo en la computadora, nunca se suben a GitHub.
+# Lo que se publica sale cifrado en data/seguro/ (paso: python pipeline/lab.py acceso).
+PLANO = REPO / 'privado'
 CFG = json.loads((PIPE / 'config.json').read_text(encoding='utf-8'))
 ESTADOS = json.loads((PIPE / 'estados.json').read_text(encoding='utf-8'))['estados']
 

@@ -206,3 +206,21 @@ Botón "Estrategia" junto a Tabla y Mapa. Solo muestra los cargos que se eligen 
 - Método: base histórica ponderada por sección (cargo, tipo de año y antigüedad) + tendencia amortiguada; probabilidad por simulación de bloques con un cambio común estatal y uno local, calibrada con los resultados reales.
 - La plataforma calcula la proyección en el navegador (`src/84_proy.js`) para el cargo consultado: tarjeta "Proyección 2027" en el panel y en Estrategia, punto 2027 con banda en Evolución del voto y dos diapositivas (Proyección 2027 y ¿Qué tan bien predice?) en la presentación y el PDF.
 - Cuando se carguen encuestas, entran como ajuste del nivel estatal de cada bloque; el reparto territorial sigue saliendo del histórico.
+
+## Entrada y acceso por usuario (oct 2026)
+
+**Qué ve cada quien.** Al abrir el sitio aparece la lista de estados y la ficha pública de cada uno (totales del estado: lista nominal, participación, quién gobierna, qué se elige en 2027). Para entrar al análisis se pide usuario y clave. Los datos por sección de cada estado están cifrados en `data/seguro/` y solo se abren con una clave válida.
+
+**Niveles.** 1 administrador (todos los estados) · 2 estado completo · 3 distritos federales · 4 distritos locales · 5 municipios. En los niveles 3, 4 y 5 los datos se recortan a su ámbito antes de abrir el análisis: no ven el resto del estado.
+
+**Dar de alta o baja usuarios.**
+1. Abre `USUARIOS/usuarios.xlsx` dentro de tu carpeta de bases (créalo la primera vez con `python pipeline/lab.py acceso --plantilla`). La hoja *Catálogo* trae claves de municipio y distritos de cada estado.
+2. Edita la hoja *Usuarios* (alias sin nombres reales, nivel, estado, ámbito, clave, vigencia, activo).
+3. Corre `python pipeline/lab.py acceso`.
+4. Sube a GitHub `data/acceso.json` y, si cambiaron los datos, la carpeta `data/seguro/`.
+
+**Nunca subas a GitHub:** el Excel de usuarios, la carpeta `privado/` (datos completos sin cifrar y `claves.json`). Si se pierde `privado/claves.json` hay que volver a cifrar todo y todos deben entrar de nuevo.
+
+**Dónde quedan los datos ahora.** `construir` escribe `privado/<estado>.json` (antes `data/<estado>.json`). `sitio` arma la ficha pública y, si existe el Excel, cifra los datos y genera los usuarios en el mismo paso.
+
+**Elecciones extraordinarias.** Si en la carpeta de un año existe `AYUNTAMIENTOS_EXT/*_SEC_EXT.csv`, sus resultados reemplazan las secciones del municipio donde se anuló la elección ordinaria (ej. Tamiahua, Veracruz 2025).

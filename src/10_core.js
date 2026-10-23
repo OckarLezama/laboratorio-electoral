@@ -80,7 +80,7 @@ function gapOf(ek,idx,p){const T=totals(ek,idx); if(!T.val||!p) return null; con
   return {lead,gap:Math.round(gap),rec:Math.round(rec),bloc:mine,ref,ptsGap:lead?mine.pct-(second?second.pct:0):first.pct-mine.pct};}
 
 /* estado de la interfaz */
-const st={elec:BASE,party:'',terr:null,metric:'mar',view:'map',fp:true,ft:'t',open:{yr:true},f:{tipo:[],mun:[],dl:[],df:[],sec:[],size:[],part:[],mg:[],cmp:[],age:[],win:[]},sel:null,sort:{k:'ln',d:-1},mq:'',cards:['gen','res','proy','tend','sum','trt'],wl:'sec',cat:false};
+const st={elec:null,party:'',terr:null,metric:'mar',view:'map',fp:true,ft:'t',open:{yr:true},f:{tipo:[],mun:[],dl:[],df:[],sec:[],size:[],part:[],mg:[],cmp:[],age:[],win:[]},sel:null,sort:{k:'ln',d:-1},mq:'',cards:['gen','res','proy','tend','sum','trt'],wl:'sec',cat:false};
 const FL={tipo:{2:'Urbana',3:'Mixta',4:'Rural'},size:{s:'Menos de 600 electores',m:'600 a 1,500',l:'Más de 1,500'},part:{b:'Participación baja',m:'Participación media',a:'Participación alta'},mg:{c:'Alta competencia (margen menor a 5 pts)',p:'Competencia media (5 a 15 pts)',h:'Baja competencia (más de 15 pts)'},cmp:{sw:'Alternancia recurrente',chg:'Cambió vs. elección anterior',vol:'Voto volátil alto',abs:'Abstención alta'},age:{jv:'Más jóvenes',ma:'Más adultos mayores',mj:'Mayoría de mujeres'}};
 const munScope=i=>!st.terr||S[i].m===+st.terr;
 const T3=(()=>{const a=ALL.map(i=>V2.age[AGEY][i]).map(x=>{if(!x) return null; let l=0,s=0; for(let j=0;j<7;j++){l+=x[j]; s+=x[7+j];} return l?100*s/l:null;}),v=a.filter(x=>x!=null).sort((x,y)=>x-y); return {a,lo:v[Math.floor(v.length/3)],hi:v[Math.floor(2*v.length/3)]};})();

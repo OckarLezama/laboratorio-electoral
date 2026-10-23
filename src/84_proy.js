@@ -8,7 +8,7 @@ const pjCycle=y=>[2015,2021,2027].includes(+y)?'mid':[2018,2024].includes(+y)?'p
 const PJC={};
 if(!st.pj) st.pj={s:0};
 const pjOK=()=>typeof MODELO!=='undefined'&&MODELO&&MODELO.pesos;
-function pjType(){const t=(st.elec||BASE).split('_')[0]; return pjOK()&&PJT[t]&&lastOf(t)&&MODELO.a[t]?t:null;}
+function pjType(){if(!st.elec) return null; const t=st.elec.split('_')[0]; return pjOK()&&PJT[t]&&lastOf(t)&&MODELO.a[t]?t:null;}
 /* proporción esperada por sección y partido para el cargo T en 2027 */
 function pjBase(T){if(PJC[T]) return PJC[T]; const W=MODELO.pesos,Y=2027,P=D.P8,eks=Object.keys(D.E).filter(k=>+D.E[k].year<Y);
   let last=null; eks.forEach(k=>{const y=+D.E[k].year; if(!last||y>+D.E[last].year||(y===+D.E[last].year&&k.split('_')[0]===T)) last=k;});

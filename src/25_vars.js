@@ -5,7 +5,7 @@
 const XB=(typeof CAPAS!=='undefined'?CAPAS:[]).filter(b=>b.estados.includes(M0.cab));
 const XV={}; XB.forEach(b=>b.variables.forEach(v=>{XV[v.id]={...v,base:b,key:'x_'+v.id};}));
 const XD={},XL={},XFAIL={};   // valores por variable; promesas de carga por base
-function xLoad(bid){if(XL[bid]) return XL[bid]; return XL[bid]=fetch('data/'+M0.cab+'/capas/'+bid+'.json').then(r=>{if(!r.ok) throw new Error(r.status); return r.json();}).then(j=>{for(const k in j.variables) if(XV[k]) xPrep(k,j.variables[k]);}).catch(e=>{XFAIL[bid]=1; console.error(e); toast&&toast('No se pudo cargar la base '+bid+'.');});}
+function xLoad(bid){if(XL[bid]) return XL[bid]; return XL[bid]=fetch('data/'+M0.cab+'/capas/'+bid+'.json').then(r=>{if(!r.ok) throw new Error(r.status); return r.json();}).then(j=>{for(const k in j.variables) if(XV[k]) xPrep(k,window.SUBIDX?window.SUBIDX.map(i=>j.variables[k][i]):j.variables[k]);}).catch(e=>{XFAIL[bid]=1; console.error(e); toast&&toast('No se pudo cargar la base '+bid+'.');});}
 const xLoadAll=()=>Promise.all(XB.map(b=>xLoad(b.id)));
 function xPrep(id,a){const v=XV[id],s=a.filter(x=>x!=null).sort((x,y)=>x-y),q=f=>s.length?s[Math.min(s.length-1,Math.floor(f*s.length))]:null;
   XD[id]=a; v.lo=q(.05); v.hi=q(.95); v.t1=q(1/3); v.t2=q(2/3); if(v.hi===v.lo) v.hi=v.lo+1;}

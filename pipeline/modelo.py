@@ -22,13 +22,14 @@ from pathlib import Path
 import numpy as np
 
 REPO = Path(__file__).resolve().parent.parent
+PLANO = REPO / 'privado'  # datos completos sin cifrar (solo local)
 TARGETS = {'AYU': 'm', 'DIPL': 'dl', 'DIPF': 'df', 'GOB': None}
 CYCLE = lambda y: 'mid' if y in (2015, 2021, 2027) else 'pres' if y in (2018, 2024) else 'off'
 GRID = {'wt': [0.25, 0.5, 1.0], 'wc': [1.0, 2.0, 4.0], 'decay': [0.6, 0.8, 1.0], 'lam': [0.0, 0.3, 0.6]}
 
 
 def cargar(cab):
-    d = json.loads((REPO / 'data' / f'{cab}.json').read_text(encoding='utf-8'))
+    d = json.loads((PLANO / f'{cab}.json').read_text(encoding='utf-8'))
     P = d['P8']; NP = len(P); N = len(d['S'])
     E = {}
     for ek, e in d['E'].items():
