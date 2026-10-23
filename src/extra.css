@@ -448,3 +448,17 @@ body.entmode .app,body.entmode .boot{display:none}
 .sesp{position:fixed;z-index:80;background:#fff;border-radius:12px;box-shadow:0 12px 30px rgba(28,33,33,.18);padding:12px 14px;display:flex;flex-direction:column;gap:8px;min-width:180px;font-size:12.5px}
 .sesp .sesu b{color:var(--strong)}
 .sesp button{border:0;background:var(--hair);border-radius:8px;padding:7px 10px;font:600 12.5px var(--f);color:var(--teal3);cursor:pointer;text-align:left}
+
+/* selector de capa plegable (oct 2026) */
+.mcard{padding:8px 10px}
+.mtg{display:flex;align-items:center;gap:6px;border:0;background:none;padding:2px 4px;cursor:pointer;font:inherit;color:var(--ink);max-width:100%}
+.mtg span{font-size:11px;color:var(--muted)}.mtg b{font:700 12.5px var(--f);color:var(--strong);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mtg svg{width:10px;height:10px;stroke:var(--strong);fill:none;stroke-width:1.6;flex:none;transition:transform .15s}.mtg[aria-expanded="true"] svg{transform:rotate(180deg)}
+.mcard .mbd{display:none}.mcard.open .mbd{display:block;margin-top:6px}
+.mbh{display:flex;justify-content:space-between;align-items:center}.mcl{border:0;background:none;font-size:18px;line-height:1;color:var(--muted);cursor:pointer;display:none}
+.mcard .ramp{margin-top:4px}
+@media (max-width:700px){
+ .mcard.open .mbd{position:fixed;left:0;right:0;bottom:0;z-index:70;background:#fff;border-radius:18px 18px 0 0;padding:16px 16px 24px;max-height:72vh;overflow:auto;box-shadow:0 -12px 40px rgba(28,33,33,.25)}
+ .mcard.open::before{content:'';position:fixed;inset:0;background:rgba(28,33,33,.35);z-index:69}
+ .mcl{display:block}.mcard .ms button{height:34px;font-size:13px;padding:0 14px}
+}

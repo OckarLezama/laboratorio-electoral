@@ -163,3 +163,22 @@ button{font:inherit;cursor:pointer}
 .acc .cl{position:absolute;top:12px;right:14px;border:0;background:none;font-size:22px;color:var(--muted);cursor:pointer;line-height:1}
 .go:focus-visible,.btn:focus-visible,.r:focus-visible{outline:2px solid var(--teal2);outline-offset:2px}
 .ses[hidden]{display:none!important}
+
+/* ficha del municipio buscado */
+.mf{display:grid;grid-template-rows:1fr;margin-top:18px;animation:mfin .38s cubic-bezier(.2,.7,.2,1)}
+.mfin{overflow:hidden;background:var(--bg);border-left:3px solid var(--teal3);padding:14px 18px;animation:mfo .38s ease}
+.mf.out{grid-template-rows:0fr;margin-top:0;opacity:0;transition:grid-template-rows .3s ease,margin-top .3s ease,opacity .2s ease}
+.mf.out .mfin{padding-top:0;padding-bottom:0;transition:padding .3s ease}
+@keyframes mfin{from{grid-template-rows:0fr;margin-top:0}to{grid-template-rows:1fr;margin-top:18px}}
+@keyframes mfo{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.mfk [data-tip]{cursor:help}
+@media (prefers-reduced-motion:reduce){.mf,.mfin{animation:none}.mf.out,.mf.out .mfin{transition:none}}
+.mfh{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.mfh small{display:block;font-size:11px;color:var(--teal3);text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+.mfh b{font:800 24px/1.15 var(--d);color:var(--strong)}
+.mx{border:0;background:#fff;border-radius:999px;padding:6px 12px;font:600 12px var(--f);color:var(--teal3);cursor:pointer;white-space:nowrap}
+.mfk{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-top:10px}
+.mfk b{display:flex;align-items:center;gap:6px;font:800 19px/1.2 var(--d);color:var(--strong);white-space:nowrap}
+.mfk span{display:block;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-top:2px}
+.mfk em{display:block;font-style:normal;font-size:11px;color:var(--ink)}
+@media (max-width:700px){.mfk{grid-template-columns:1fr 1fr}.mfh b{font-size:20px}}

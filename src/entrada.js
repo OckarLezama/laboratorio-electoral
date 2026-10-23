@@ -91,7 +91,8 @@ async function ENTRADA(pedido) {
   const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const nz = t => String(t).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
   let cur = pedido && byC[pedido] ? pedido : null; if (!cur) { try { cur = localStorage.getItem('lab_ultimo'); } catch (e) {} } if (!byC[cur]) cur = null;
-  let q = '';
+  let q = '', curMun = null, MUNS = null, munsCargando = false;
+  const cargaMuns = () => { if (MUNS || munsCargando) return; munsCargando = true; fetch('data/municipios.json').then(r => r.json()).then(j => { MUNS = j; if (q) lista(); }).catch(() => {}); };
   const HOY = new Date(), tip = $('tip'), scrim = $('scrim');
   const showTip = (h, e) => { tip.innerHTML = h; tip.classList.add('on'); const w = tip.offsetWidth; let x = e.clientX + 14; if (x + w > innerWidth - 8) x = e.clientX - w - 14; tip.style.left = Math.max(8, x) + 'px'; tip.style.top = (e.clientY + 14) + 'px'; };
   function qg(lbl, o, extra) {
@@ -120,8 +121,12 @@ async function ENTRADA(pedido) {
     const est = EST.filter(x => !qq || nz(x.estado).includes(qq)).sort((a, b) => a.estado.localeCompare(b.estado, 'es'));
     h += est.map(x => `<div class="r${x.cab === cur ? ' on' : ''}" data-cab="${x.cab}" role="option" tabindex="0"><span class="n">${esc(x.estado)}</span><span class="v">${fmt(x.ln)}</span><span class="g">${x.gob ? `<i style="background:${pc(x.gob.l)}"></i>Gobierna ${pn(x.gob.l)}` : ''}${x.c27 && x.c27.g ? ' · gubernatura 2027' : ''}</span></div>`).join('');
     if (qq.length >= 3) {
-      const mu = []; EST.forEach(x => (x.muns || []).forEach(m => { if (nz(m).includes(qq)) mu.push([m, x]); }));
-      if (mu.length) h += `<div class="lh">Municipios</div>` + mu.slice(0, 12).map(([m, x]) => `<div class="r mu" data-cab="${x.cab}" role="option" tabindex="0"><span class="n">${esc(m)}</span><span class="v"></span><span class="g">${esc(x.estado)}</span></div>`).join('');
+      cargaMuns();
+      const mu = [];
+      if (MUNS) EST.forEach(x => Object.entries(MUNS[x.cab] || {}).forEach(([id, m]) => { if (nz(m.n).includes(qq)) mu.push([id, m, x]); }));
+      mu.sort((a, b) => b[1].ln - a[1].ln);
+      if (mu.length) h += `<div class="lh">Municipios</div>` + mu.slice(0, 12).map(([id, m, x]) => `<div class="r mu" data-cab="${x.cab}" data-mid="${id}" role="option" tabindex="0"><span class="n">${esc(m.n)}</span><span class="v">${fmt(m.ln)}</span><span class="g">${esc(x.estado)}</span></div>`).join('');
+      else if (!MUNS) h += `<p class="nores">Buscando municipios…</p>`;
     }
     $('L').innerHTML = h || `<p class="nores">Ningún estado ni municipio coincide con “${esc(q)}”.</p>`;
     $('SD').classList.toggle('qon', !!q);
@@ -132,6 +137,16 @@ async function ENTRADA(pedido) {
     const n = Object.keys(s.k).length; b.hidden = false;
     b.innerHTML = `<span>Sesión: <b>${esc(s.u)}</b>${s.n === 1 ? ' · todos los estados' : n === 1 ? ' · ' + esc((byC[Object.keys(s.k)[0]] || {}).estado || '') : ''}</span><button id="SX">Salir</button>`;
     $('SX').onclick = () => { LAB_SALIR(); sesion(); };
+  }
+  function munFicha(s, al) {
+    if (!curMun || curMun.cab !== s.cab || !MUNS || !MUNS[s.cab] || !MUNS[s.cab][curMun.m]) return '';
+    const m = MUNS[s.cab][curMun.m], w = m.w;
+    return `<div class="mf"><div class="mfin"><div class="mfh"><div><small>${al ? 'Alcaldía' : 'Municipio'} de ${esc(s.estado)}</small><b>${esc(m.n)}</b></div><button class="mx" aria-label="Quitar ${esc(m.n)}">Ver todo el estado ×</button></div>
+  <div class="mfk"><div><b>${w ? `<i class="dot" style="background:${pc(w[0])}"></i>${pn(w[0])}` : '—'}</b><span>Gobierna</span><em>${w ? `ganó en ${w[1]}${w[2] != null ? ' por ' + w[2] + ' pts' : ''}` : 'sin votación por partidos'}</em></div>
+  <div><b>${fmt(m.ln)}</b><span>Lista nominal</span><em>${(100 * m.ln / s.ln).toFixed(1)}% del estado</em></div>
+  <div><b>${m.p != null ? m.p.toFixed(1) + '%' : '—'}</b><span>Participación</span><em>promedio 2015–2024</em></div>
+  <div data-tip="${encodeURIComponent(`<b>Dónde está el voto</b>${m.s70} de ${m.sec} secciones reúnen el 70% de la lista nominal de ${esc(m.n)}.`)}"><b>${m.sec.toLocaleString('es-MX')}</b><span>Secciones</span><em>${m.s70} (${Math.round(100 * m.s70 / m.sec)}%) concentran el 70%</em></div>
+  <div><b>${m.dl.join(', ')}</b><span>Distritos locales</span><em>federales ${m.df.join(', ')}</em></div></div></div></div>`;
   }
   function vacia() {
     $('M').innerHTML = `<div class="hd"><div><div class="eyebrow">Ficha del estado</div><h2>Elige un estado</h2><span class="hint">Toca un estado en el mapa o en la lista para ver su ficha y entrar al análisis.</span></div></div>
@@ -149,6 +164,7 @@ async function ENTRADA(pedido) {
   <span class="gobl">${s.gob ? `<i style="background:${pc(s.gob.l)}"></i>Gobierna ${pn(s.gob.l)} desde ${s.gob.y}${s.gob.p ? `, ganó con ${s.gob.p}%` : ''}` : ''}</span>
   <div class="qgh">Quién gobierna hoy</div><div class="qg">${ay}${qg('Dip. locales', Q.dl && Q.dl[1])}${qg('Dip. federales', Q.df && Q.df[1])}${qg('Senado', Q.sen && Q.sen[1])}</div></div>
   <div class="loc"><svg viewBox="0 0 ${MX.w} ${MX.h}" role="img" aria-label="Ubicación de ${esc(s.estado)}">${MX.st.map(p => byE[p.ent] ? `<path data-cab="${byE[p.ent].cab}" class="${p.ent === s.ent ? 'on' : ''}" d="${p.d}"/>` : '').join('')}<g class="pulse"><circle class="c1" cx="${q2.x}" cy="${q2.y}" r="44"/><circle class="c2" cx="${q2.x}" cy="${q2.y}" r="44"/><circle class="c0" cx="${q2.x}" cy="${q2.y}" r="6"/></g></svg></div></div>
+ ${munFicha(s, al)}
  <div class="body"><div class="kp">
   <div><b>${fmt(s.ln)}</b><span>Lista nominal</span></div>
   <div><b>${(s.sec || 0).toLocaleString('es-MX')}</b><span>Secciones</span></div>
@@ -177,6 +193,7 @@ async function ENTRADA(pedido) {
   /* estado al que entra el usuario: el elegido si lo tiene; si no, el último que consultó de los suyos o el primero */
   const destinoDe = (ses, cab) => { if (ses.k[cab]) return cab; const mio = Object.keys(ses.k).sort(); let u = null; try { u = localStorage.getItem('lab_ultimo_ok'); } catch (e) {} return mio.includes(u) ? u : mio[0]; };
   function acceder(cab) {
+    try { if (curMun && curMun.cab === cab) sessionStorage.setItem('lab_mun', JSON.stringify(curMun)); else sessionStorage.removeItem('lab_mun'); } catch (e) {}
     const s = LAB_SES();
     if (s) { ir(destinoDe(s, cab)); return; }
     abrirAcceso(cab);
@@ -199,14 +216,15 @@ async function ENTRADA(pedido) {
     if (e.key === 'Escape') { closeTip(); cerrarAcceso(); }
     if (e.key === '/' && !$('MO').classList.contains('on') && R.activeElement !== $('QI')) { e.preventDefault(); $('QI').focus(); }
   });
-  const elegir = cab => { cur = cab; try { localStorage.setItem('lab_ultimo', cur); } catch (e) {} closeTip(); q = ''; $('QI').value = ''; ficha(); };
+  const elegir = (cab, mid) => { if (!mid && cab === cur && !curMun) { cur = null; try { localStorage.removeItem('lab_ultimo'); } catch (e) {} closeTip(); ficha(); return; } curMun = mid ? { cab, m: mid } : null; cur = cab; try { localStorage.setItem('lab_ultimo', cur); } catch (e) {} closeTip(); q = ''; $('QI').value = ''; ficha(); };
   R.addEventListener('click', e => {
     if (e.target.closest('#tip .x')) { closeTip(); return; }
     if (e.target.closest('.go,.go2')) { acceder(cur); return; }
     const d = e.target.closest('[data-tip]');
     if (d) { showTip(decodeURIComponent(d.dataset.tip) + '<button class="x" aria-label="Cerrar">×</button>', e); tip.classList.add('pin'); pinned = true; if (innerWidth <= 700) scrim.classList.add('on'); return; }
     if (pinned && !e.target.closest('#tip')) closeTip();
-    const t = e.target.closest('[data-cab]'); if (t) elegir(t.dataset.cab);
+    if (e.target.closest('.mx')) { curMun = null; const f = R.querySelector('.mf'); if (f) { f.classList.add('out'); setTimeout(() => f.remove(), 320); } return; }
+    const t = e.target.closest('[data-cab]'); if (t) elegir(t.dataset.cab, t.dataset.mid);
   });
   R.addEventListener('keydown', e => { if (e.key === 'Enter') { const t = e.target.closest && e.target.closest('.r[data-cab]'); if (t) elegir(t.dataset.cab); } });
   R.addEventListener('mousemove', e => {
