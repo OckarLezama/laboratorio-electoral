@@ -1532,17 +1532,19 @@ async function ENTRADA(pedido) {
   }
   /* acceso */
   let destino = null;
-  const ir = cab => { if (location.hash === '#' + cab) location.reload(); else location.hash = cab; };
+  const ir = cab => { try { localStorage.setItem('lab_ultimo_ok', cab); } catch (e) {} if (location.hash === '#' + cab) location.reload(); else location.hash = cab; };
   function abrirAcceso(cab) {
     destino = cab; const x = byC[cab];
-    $('MS').textContent = x ? x.estado : ''; $('AE').textContent = ''; $('MO').classList.add('on');
+    $('MS').textContent = 'Entra con tu usuario y clave.'; $('AE').textContent = ''; $('MO').classList.add('on');
     setTimeout(() => ($('AU').value ? $('AP') : $('AU')).focus(), 30);
   }
   function cerrarAcceso() { $('MO').classList.remove('on'); }
+  /* estado al que entra el usuario: el elegido si lo tiene; si no, el último que consultó de los suyos o el primero */
+  const destinoDe = (ses, cab) => { if (ses.k[cab]) return cab; const mio = Object.keys(ses.k).sort(); let u = null; try { u = localStorage.getItem('lab_ultimo_ok'); } catch (e) {} return mio.includes(u) ? u : mio[0]; };
   function acceder(cab) {
-    if (LAB_PUEDE(cab)) { ir(cab); return; }
+    const s = LAB_SES();
+    if (s) { ir(destinoDe(s, cab)); return; }
     abrirAcceso(cab);
-    if (LAB_SES()) $('AE').textContent = 'Tu usuario no tiene acceso a ' + byC[cab].estado + '. Entra con otro usuario.';
   }
   $('MC').onclick = cerrarAcceso; $('MO').addEventListener('click', e => { if (e.target === $('MO')) cerrarAcceso(); });
   $('AF').addEventListener('submit', async e => {
@@ -1550,11 +1552,7 @@ async function ENTRADA(pedido) {
     try {
       const r = await LAB_ENTRAR($('AU').value, $('AP').value, $('AR').checked);
       if (r.error) { $('AE').textContent = r.error; $('AP').value = ''; $('AP').focus(); }
-      else if (destino && !r.ok.k[destino]) {
-        const mio = Object.keys(r.ok.k); sesion();
-        if (mio.length === 1) { $('AE').textContent = 'Tu acceso es a ' + byC[mio[0]].estado + '. Te llevamos ahí.'; setTimeout(() => ir(mio[0]), 900); }
-        else $('AE').textContent = 'Tu usuario no tiene acceso a ' + byC[destino].estado + '.';
-      } else ir(destino || Object.keys(r.ok.k)[0]);
+      else ir(destinoDe(r.ok, destino));
     } catch (err) { console.error(err); $('AE').textContent = 'No se pudo verificar. Revisa tu conexión e intenta de nuevo.'; }
     b.disabled = false; b.textContent = 'Entrar';
   });
@@ -1594,7 +1592,7 @@ async function ENTRADA(pedido) {
   if(!a){boot(); ENTRADA(); return;}
   if(!LAB_PUEDE(a.cab)){boot(); ENTRADA(a.cab); return;}
   try{msg('Cargando '+a.estado+'…'); let DATA=await LAB_DATOS(a.cab,(got,tot)=>msg('Cargando '+a.estado+'… '+(got/1e6).toFixed(1)+' MB'+(tot&&tot>=got?' de '+(tot/1e6).toFixed(1)+' MB':'')));
-    const ses=LAB_SES(); DATA=LAB_RECORTE(DATA,ses); APP(DATA); boot();
+    const ses=LAB_SES(); DATA=LAB_RECORTE(DATA,ses); APP(DATA); boot(); try{localStorage.setItem('lab_ultimo_ok',a.cab);}catch(e){}
     const av=document.querySelector('.rail .av'); if(av){av.textContent=(ses.u||'?').slice(0,1).toUpperCase(); av.title='Sesión: '+ses.u; av.setAttribute('role','button'); av.tabIndex=0; av.style.cursor='pointer';
       av.onclick=()=>{let p=document.getElementById('sesp'); if(p){p.remove(); return;} p=document.createElement('div'); p.id='sesp'; p.className='epop sesp'; p.innerHTML='<div class="sesu">Sesión: <b></b></div><button id="sesx">Salir</button>'; p.querySelector('b').textContent=ses.u; document.body.appendChild(p); const r=av.getBoundingClientRect(); p.style.left=(r.right+10)+'px'; p.style.top=Math.max(8,r.bottom-p.offsetHeight)+'px'; document.getElementById('sesx').onclick=()=>{LAB_SALIR(); location.hash='';};};}
     const out=document.getElementById('rOut'); if(out){out.querySelector('b').textContent='Cerrar sesión ('+ses.u+')'; out.onclick=()=>{LAB_SALIR(); location.hash='';};}}

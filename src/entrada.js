@@ -167,17 +167,19 @@ async function ENTRADA(pedido) {
   }
   /* acceso */
   let destino = null;
-  const ir = cab => { if (location.hash === '#' + cab) location.reload(); else location.hash = cab; };
+  const ir = cab => { try { localStorage.setItem('lab_ultimo_ok', cab); } catch (e) {} if (location.hash === '#' + cab) location.reload(); else location.hash = cab; };
   function abrirAcceso(cab) {
     destino = cab; const x = byC[cab];
-    $('MS').textContent = x ? x.estado : ''; $('AE').textContent = ''; $('MO').classList.add('on');
+    $('MS').textContent = 'Entra con tu usuario y clave.'; $('AE').textContent = ''; $('MO').classList.add('on');
     setTimeout(() => ($('AU').value ? $('AP') : $('AU')).focus(), 30);
   }
   function cerrarAcceso() { $('MO').classList.remove('on'); }
+  /* estado al que entra el usuario: el elegido si lo tiene; si no, el último que consultó de los suyos o el primero */
+  const destinoDe = (ses, cab) => { if (ses.k[cab]) return cab; const mio = Object.keys(ses.k).sort(); let u = null; try { u = localStorage.getItem('lab_ultimo_ok'); } catch (e) {} return mio.includes(u) ? u : mio[0]; };
   function acceder(cab) {
-    if (LAB_PUEDE(cab)) { ir(cab); return; }
+    const s = LAB_SES();
+    if (s) { ir(destinoDe(s, cab)); return; }
     abrirAcceso(cab);
-    if (LAB_SES()) $('AE').textContent = 'Tu usuario no tiene acceso a ' + byC[cab].estado + '. Entra con otro usuario.';
   }
   $('MC').onclick = cerrarAcceso; $('MO').addEventListener('click', e => { if (e.target === $('MO')) cerrarAcceso(); });
   $('AF').addEventListener('submit', async e => {
@@ -185,11 +187,7 @@ async function ENTRADA(pedido) {
     try {
       const r = await LAB_ENTRAR($('AU').value, $('AP').value, $('AR').checked);
       if (r.error) { $('AE').textContent = r.error; $('AP').value = ''; $('AP').focus(); }
-      else if (destino && !r.ok.k[destino]) {
-        const mio = Object.keys(r.ok.k); sesion();
-        if (mio.length === 1) { $('AE').textContent = 'Tu acceso es a ' + byC[mio[0]].estado + '. Te llevamos ahí.'; setTimeout(() => ir(mio[0]), 900); }
-        else $('AE').textContent = 'Tu usuario no tiene acceso a ' + byC[destino].estado + '.';
-      } else ir(destino || Object.keys(r.ok.k)[0]);
+      else ir(destinoDe(r.ok, destino));
     } catch (err) { console.error(err); $('AE').textContent = 'No se pudo verificar. Revisa tu conexión e intenta de nuevo.'; }
     b.disabled = false; b.textContent = 'Entrar';
   });
