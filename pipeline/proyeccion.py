@@ -3,7 +3,7 @@
 Método
 1. Votación por sección: mezcla de la última elección del mismo cargo y del promedio de las elecciones
    del año más reciente, con o sin oscilación proporcional estatal (la última elección del mismo cargo
-   se ajusta al cambio que cada partido tuvo en todo el estado). Se prueban 10 combinaciones.
+   se ajusta al cambio que cada partido tuvo en todo el estado). Se prueban 10 combinaciones y se elige UNA para todo el país (con los 32 estados juntos).
 2. Prueba contra el pasado: cada combinación "pronostica" las elecciones de 2021 y 2024 (después del cambio
    de 2018 en el sistema de partidos) usando solo
    datos anteriores, y se compara contra el resultado real (error en la diferencia entre 1.º y 2.º lugar
@@ -171,7 +171,8 @@ def resumen(e, h=None):
     return o
 
 
-def prueba(d, P, S, E):
+def errores_grid(d, P, S, E):
+    """Errores de cada combinación (a, sw) en este estado, para elegir una sola combinación nacional."""
     objs = objetivos(E); res = {}
     for a, sw in GRID:
         est, uni = [], []
@@ -180,8 +181,13 @@ def prueba(d, P, S, E):
             est += errores(S, act, pr, 'est')[0]
             if NIV[act['t']] != 'est':
                 uni += errores(S, act, pr, NIV[act['t']])[0]
-        res[(a, sw)] = stt.mean(est) + (stt.mean(uni) if uni else 0)
-    best = min(res, key=res.get)
+        res[(a, sw)] = (est, uni)
+    return res
+
+
+def prueba(d, P, S, E, best):
+    """Errores y participación del estado con la combinación nacional `best`."""
+    objs = objetivos(E)
     est, tipos = [], {}
     for ek, L, Ry in objs:
         R, Rks = reciente(E, Ry); pr = predice(E, L, R, Rks, *best); act = E[ek]; t = act['t']; niv = NIV[t]
@@ -293,12 +299,21 @@ def registro(c, d):
 
 
 def main():
-    cabs = sorted(p.stem for p in PLANO.glob('*.json'))
+    cabs = sorted(p.stem for p in PLANO.glob('*.json') if p.stem != 'claves')
     todos, tr = {}, []
+    # Una sola combinación (a, sw) para todo el país: probada con los 32 estados juntos predice mejor que elegir una
+    # por estado (con pocos municipios o distritos, elegir por estado se ajusta al azar de esas pocas elecciones).
+    grid = {g: ([], []) for g in GRID}; cargados = {}
     for c in cabs:
-        d, P, S, E = carga(c)
-        todos[c] = (d, prueba(d, P, S, E))
+        d, P, S, E = carga(c); cargados[c] = (d, P, S, E)
+        for g, (es, un) in errores_grid(d, P, S, E).items():
+            grid[g][0].extend(es); grid[g][1].extend(un)
         tr += [(c,) + t for t in transferencias(P, E)]
+    best = min(GRID, key=lambda g: (stt.mean(grid[g][0]) if grid[g][0] else 0) + (stt.mean(grid[g][1]) if grid[g][1] else 0))
+    print('combinación nacional', best)
+    for c in cabs:
+        d, P, S, E = cargados[c]
+        todos[c] = (d, prueba(d, P, S, E, best))
     mv = []
     for c in cabs:
         mv += regla_mov(c)

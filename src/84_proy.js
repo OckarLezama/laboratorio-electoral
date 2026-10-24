@@ -1,29 +1,25 @@
 /* ===== Proyección 2027 con resultados históricos =====
-   Método validado en pipeline/modelo.py (parámetros en data/modelo.json):
-   base histórica ponderada por sección (cargo, tipo de año, antigüedad) + tendencia amortiguada, agregada por unidad
-   con la votación esperada; probabilidad de ganar calibrada con los errores reales al predecir 2021 y 2024, y rango
+   Votación por sección: la misma de la Estrategia (pipeline/proyeccion.py), agregada por unidad con la votación esperada;
+   incertidumbre validada en pipeline/modelo.py (data/modelo.json): probabilidad de ganar calibrada con los errores reales al predecir 2021 y 2024, y rango
    por simulación con un componente común a todo el estado y otro local. La proyección es del cargo consultado. */
 const PJT={AYU:'mun',DIPL:'dl',DIPF:'df',GOB:'est'},PJN={AYU:M0.cab==='cdmx'?['alcaldía','alcaldías']:['ayuntamiento','ayuntamientos'],DIPL:['distrito local','distritos locales'],DIPF:['distrito federal','distritos federales'],GOB:['gubernatura','gubernatura']};
 const pjCycle=y=>[2015,2021,2027].includes(+y)?'mid':[2018,2024].includes(+y)?'pres':'off';
 const PJC={};
 if(!st.pj) st.pj={s:0};
-const pjOK=()=>typeof MODELO!=='undefined'&&MODELO&&MODELO.pesos;
+const pjOK=()=>typeof MODELO!=='undefined'&&MODELO&&MODELO.sigma&&typeof eP==='function';
 function pjType(){if(!st.elec) return null; const t=st.elec.split('_')[0]; return pjOK()&&PJT[t]&&lastOf(t)&&MODELO.a[t]?t:null;}
-/* proporción esperada por sección y partido para el cargo T en 2027 */
-function pjBase(T){if(PJC[T]) return PJC[T]; const W=MODELO.pesos,Y=2027,P=D.P8,eks=Object.keys(D.E).filter(k=>+D.E[k].year<Y);
-  let last=null; eks.forEach(k=>{const y=+D.E[k].year; if(!last||y>+D.E[last].year||(y===+D.E[last].year&&k.split('_')[0]===T)) last=k;});
-  const wE=eks.map(k=>{const y=+D.E[k].year; return (k.split('_')[0]===T?1:W.wt)*(pjCycle(y)===pjCycle(Y)?W.wc:1)*Math.pow(W.decay,Y-y);});
-  const tpK=eks.filter(k=>pjCycle(D.E[k].year)===pjCycle(Y)),pr=new Array(N),tp=new Float64Array(N); let tS=0,tN=0;
-  for(let i=0;i<N;i++){const num=new Float64Array(P.length); let den=0;
-    eks.forEach((k,j)=>{const r=row(k,i); if(!r||!r.val) return; P.forEach((p,q)=>{num[q]+=wE[j]*(r.v[p]||0)/r.val;}); den+=wE[j];});
-    if(den){let b=Array.from(num,x=>x/den); if(W.lam&&last){const r=row(last,i); if(r&&r.val) b=b.map((x,q)=>x+W.lam*((r.v[P[q]]||0)/r.val-x));}
-      const s=b.reduce((a,x)=>a+Math.max(0,x),0)||1; pr[i]=b.map(x=>Math.max(0,x)/s);} else pr[i]=null;
-    let a=0,n=0; tpK.forEach(k=>{const r=row(k,i); if(r&&r.ln){a+=r.t/r.ln; n++;}}); tp[i]=n?a/n:NaN; if(n){tS+=tp[i]; tN++;}}
-  const tm=tN?tS/tN:.5,w=new Float64Array(N); for(let i=0;i<N;i++){if(isNaN(tp[i])) tp[i]=tm; w[i]=(S[i].ln||0)*tp[i];}
-  return PJC[T]={pr,w,tp};}
+/* proporción esperada por sección y partido para el cargo T en 2027: el MISMO cálculo de la Estrategia (eP, incluida la
+   encuesta si se capturó), para que la tarjeta y la Estrategia nunca den números distintos */
+function pjBase(T){const pk=T+'|'+JSON.stringify((st.es.poll||{})[T]||null); if(PJC[pk]) return PJC[pk]; const out=eP(T),P=D.P8,pr=new Array(N),w=new Float64Array(N),tp=new Float64Array(N);
+  for(let i=0;i<N;i++){const x=out[i]; if(!x||!x.V){pr[i]=null; continue;} pr[i]=P.map(p=>(x.pv[p]||0)/x.V); w[i]=x.V; tp[i]=x.tp/100;}
+  return PJC[pk]={pr,w,tp};}
+const pjEnc=T=>{const p=(st.es.poll||{})[T]; return !!(p&&p.v&&Object.values(p.v).some(v=>v!==''&&v!=null));};
 /* coaliciones de 2027: las de la elección más reciente del cargo, sin partidos que perdieron el registro */
-function pjBlocs(T){const e=D.E[lastOf(T)],nr=typeof NOREG!=='undefined'?NOREG:[]; return e.blocs.filter(b=>b.lead!=='OTROS').map(b=>b.members.filter(m=>m!=='OTROS'&&!nr.includes(m))).filter(ms=>ms.length);}
-const pjSh=(sh,ms)=>ms.reduce((a,m)=>a+(sh[D.P8.indexOf(m)]||0),0);
+/* alianzas: las mismas que la Estrategia (la que elegiste para el partido y los rivales por separado o en alianza);
+   los aliados aportan el rendimiento medido (r), igual que en la Estrategia */
+function pjBlocs(T){if(typeof eGenBl==='function'){const A=st.party&&typeof eAlly==='function'?eAlly():null; return A?[A].concat(eRivBl(A)):eGenBl();} return pjBlocs0(T);}
+function pjBlocs0(T){const e=D.E[lastOf(T)],nr=typeof NOREG!=='undefined'?NOREG:[]; return e.blocs.filter(b=>b.lead!=='OTROS').map(b=>b.members.filter(m=>m!=='OTROS'&&!nr.includes(m))).filter(ms=>ms.length);}
+const pjSh=(sh,ms)=>{if(typeof sv!=='function') return ms.reduce((a,m)=>a+(sh[D.P8.indexOf(m)]||0),0); const o={}; ms.forEach(m=>o[m]=sh[D.P8.indexOf(m)]||0); return sv(o,ms);};
 const pjSig=T=>{const a=MODELO.a[T],tot=1.702/a,sc=Math.min((MODELO.sigma[T]||{}).comun||tot*.5,tot*.95); return {a,tot,sc,sl:Math.sqrt(Math.max(1,tot*tot-sc*sc))};};
 function pjKey(T,i){const lv=PJT[T]; return lv==='est'?0:lv==='mun'?S[i].m:lv==='dl'?S[i].dl:S[i].df;}
 function pjName(T,k){return T==='GOB'?EST:T==='AYU'?(M0.cab==='cdmx'?'Alcaldía ':'')+MUN[k]:T==='DIPL'?'Distrito local '+k+(CABDL[k]?' · '+CABDL[k]:''):'Distrito federal '+k+(CABDF[k]?' · '+CABDF[k]:'');}
@@ -69,10 +65,10 @@ function pjCard(ctx,ii0,inner){const T=pjType(); if(!T) return ''; const ii=ii0|
   const comp=R.U.slice().sort((a,b)=>Math.abs(a.p-.5)-Math.abs(b.p-.5)).slice(0,multi?5:1);
   const sc=[-5,-3,0,3,5].map(s=>{if(s===R.sh) return {s,e:R.exp,pm:R.pMaj,lo:R.lo,hi:R.hi}; const x=pjRun(T,ii,p,s,600); return {s,e:x.exp,pm:x.pMaj,lo:x.lo,hi:x.hi};});
   const hd2=ctx?ctx.hd('proy',`Proyección ${TY[T]} 2027`,`${esc(pjBN(fb))}`):`<h4 class="pjh">Proyección ${TY[T]} 2027 <small>${esc(pjBN(fb))}</small></h4>`;
-  return `<div class="${inner?'pjc pjin':'cd pjc'}" style="--pc:${col}">${hd2}<span class="pjtag">solo resultados históricos · sin encuesta</span>
+  return `<div class="${inner?'pjc pjin':'cd pjc'}" style="--pc:${col}">${hd2}<span class="pjtag">${pjEnc(T)?'ajustada con encuesta':'solo resultados históricos · sin encuesta'}</span>
    ${multi?`<div class="pjbig"><b>${Math.round(R.exp)}</b><span>de ${R.n} ${NN[1]}</span></div>
    <div class="pjrg"><i class="tr"></i><i class="bd" style="left:${pos(R.lo)};width:calc(${pos(R.hi)} - ${pos(R.lo)})"></i><i class="mj" style="left:${pos(R.half-.5)}"><span>mayoría ${R.half}</span></i><i class="pt" style="left:${pos(R.exp)}"></i><span class="ax" style="left:0">0</span><span class="ax" style="left:${pos(R.lo)}">${R.lo}</span><span class="ax" style="left:${pos(R.hi)}">${R.hi}</span><span class="ax" style="left:100%">${R.n}</span></div>
-   <div class="pjs">Rango probable: <b>${R.lo} a ${R.hi}</b> (8 de cada 10 escenarios)</div>
+   <div class="pjs">Va adelante en <b>${R.U.filter(u=>u.m>=0).length}</b>. Contando el error, lo esperable es <b>${Math.round(R.exp)}</b>, con rango de <b>${R.lo} a ${R.hi}</b> (8 de cada 10 escenarios)</div>
    <div class="pjpm"><span>Probabilidad de ganar la mayoría de ${NN[1]}</span><b>${pct(R.pMaj)}</b></div>
    <div class="pjcat"><div style="--c:${col}"><b>${R.cat.seg}</b><span>Seguros</span></div><div style="--c:${mix(col,.5)}"><b>${R.cat.pro}</b><span>Probables</span></div><div style="--c:#F5A47C"><b>${R.cat.com}</b><span>Competidos</span></div><div style="--c:#B9C1C1"><b>${R.cat.con}</b><span>En contra</span></div></div>`
    :`<div class="pjbig"><b>${pct(R.U[0].p)}</b><span>probabilidad de ganar</span></div><div class="pjs">Votación esperada: <b>${R.share.toFixed(1)} %</b> (rango ${Math.max(0,R.share-R.band).toFixed(0)}–${(R.share+R.band).toFixed(0)} %) · margen ${R.U[0].m>=0?'+':'−'}${Math.abs(R.U[0].m).toFixed(1)} pts</div>`}

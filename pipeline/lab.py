@@ -4,6 +4,7 @@
   python pipeline/lab.py construir chis     paso 2: genera privado/chis.json (datos completos, solo en tu computadora)
   python pipeline/lab.py capas chis         paso 2b: genera las bases adicionales de pipeline/capas.json
   python pipeline/lab.py proyeccion         paso 2c: calibra la proyección 2027 con todos los estados
+  python pipeline/lab.py referencias        paso 2d: revocación 2022, consulta 2021 y afiliados por partido (meta.ref)
   python pipeline/lab.py sitio              paso 3: arma index.html, inicio.html, css/, js/, data/estados.json y data/inicio/
   python pipeline/lab.py nacional           paso 4: resumen de los 32 estados para la vista general (data/nacional.json y data/inicio/nac_zonas.json)
   python pipeline/lab.py panorama           paso 4d: datos del Panorama nacional (data/inicio/panorama.json); requiere el padrón
@@ -63,6 +64,9 @@ def main(a):
         r = subprocess.run([sys.executable, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'modelo.py')])
         if r.returncode:
             raise SystemExit('Falló el modelo de proyección.')
+    if cmd in ('referencias', 'sitio', 'todo'):
+        from referencias import generar as refs
+        refs()
     if cmd in ('sitio', 'todo'):
         from sitio import sitio
         sitio()
@@ -92,7 +96,7 @@ def main(a):
             raise SystemExit('Falló el resumen nacional.')
         from sitio import sitio
         sitio()
-    if cmd not in ('preparar', 'construir', 'capas', 'todo', 'sitio', 'proyeccion', 'nacional', 'zonas', 'panorama', 'acceso'):
+    if cmd not in ('preparar', 'construir', 'capas', 'todo', 'sitio', 'proyeccion', 'nacional', 'zonas', 'panorama', 'acceso', 'referencias'):
         raise SystemExit(f'Comando no reconocido: {cmd}. Usa: preparar, construir, capas, proyeccion, sitio, nacional, zonas, todo o estados.')
 
 

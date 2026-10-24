@@ -74,6 +74,33 @@ def base(st, Y, T, wt, wc, decay, lam):
         return b / s
 
 
+def base_proy(st, Y, T, a, sw):
+    """El mismo cálculo que usa la plataforma (Estrategia y tarjeta de proyección, ver pipeline/proyeccion.py):
+    a × última elección del mismo cargo (con oscilación estatal si sw) + (1−a) × promedio de las elecciones del año
+    más reciente. Los parámetros (a, sw) de cada estado se eligen con la otra elección de prueba (validación cruzada)."""
+    E = st['E']
+    prev = [k for k, e in E.items() if e['t'] == T and e['y'] < Y]
+    yrs = [e['y'] for e in E.values() if e['y'] < Y]
+    if not prev or not yrs:
+        return None
+    L = max(prev, key=lambda k: E[k]['y']); ry = max(yrs); rec = [k for k, e in E.items() if e['y'] == ry]
+    with np.errstate(invalid='ignore'):
+        R = np.nanmean(np.stack([E[k]['sh'] for k in rec]), 0)
+    B = E[L]['sh'].copy()
+    miss = np.isnan(B[:, 0]); B[miss] = R[miss]
+    missR = np.isnan(R[:, 0]); R[missR] = B[missR]
+    if sw:
+        def est(k):
+            v = np.nan_to_num(E[k]['val']); sh = np.nan_to_num(E[k]['sh'])
+            return (sh * v[:, None]).sum(0) / max(1, v.sum())
+        sL = est(L); sR = np.mean([est(k) for k in rec], 0)
+        f = np.where(sL > 1e-4, np.clip(sR / np.where(sL > 1e-4, sL, 1), .2, 5), 0)
+        B = B * f; B = B / np.where(B.sum(1, keepdims=True) > 0, B.sum(1, keepdims=True), 1)
+    p = a * B + (1 - a) * R
+    with np.errstate(invalid='ignore'):
+        return p / p.sum(1, keepdims=True)
+
+
 def turnout(st, Y):
     """Participación esperada por sección: promedio de las elecciones del mismo tipo de año (o todas si no hay)."""
     xs = [e['tp'] for e in st['E'].values() if e['y'] < Y and CYCLE(e['y']) == CYCLE(Y)] or [e['tp'] for e in st['E'].values() if e['y'] < Y]
@@ -123,7 +150,9 @@ def evaluar(st, ek, prm, encuesta=None, rng=None, inc=0.0):
     encuesta=None: solo resultados. encuesta=e (puntos): se simula una encuesta estatal con error e (0 = perfecta),
     que corrige el nivel estatal de cada bloque; el reparto territorial sigue saliendo del histórico."""
     e = st['E'][ek]; T, Y = e['t'], e['y']
-    pr = base(st, Y, T, **prm)
+    pr = base_proy(st, Y, T, *prm[st['cab']][Y]) if 'proy' in prm else base(st, Y, T, **prm)
+    if pr is None:
+        return []
     w_pred = st['ln'] * turnout(st, Y)
     w_true = np.nan_to_num(e['val'])
     P = bloques_unidad(st, pr, w_pred, T, e['bl'])
@@ -180,33 +209,34 @@ def resumen(casos):
 def main():
     cabs = [x['cab'] for x in json.loads((REPO / 'data' / 'estados.json').read_text(encoding='utf-8'))]
     ST = [cargar(c) for c in cabs]
-    combos = [dict(zip(GRID, v)) for v in itertools.product(*GRID.values())]
-    # 1) búsqueda de pesos: puntaje = error medio por unidad (cada estado pesa lo mismo)
-    def puntaje(Y, prm):
-        cs = [c for st in ST for ek in objetivos(st, Y) for c in evaluar(st, ek, prm)]
-        return statistics.mean(c['mae'] for c in cs) + 2 * (1 - statistics.mean(c['ok'] for c in cs))
-    best = {}
+    # 1) parámetros de cada estado (a, sw) con el método de pipeline/proyeccion.py, elegidos con la OTRA elección
+    #    de prueba: para medir 2024 se eligen con 2021 y al revés. Nada se mide contra lo mismo con que se ajustó.
+    import proyeccion as PY
+    PRM = {'proy': 1}; POOL = {}
+    for st in ST:
+        d, P_, S_, E_ = PY.carga(st['cab']); objs = PY.objetivos(E_); cache = {}
+        def err(g, o):
+            if (g, o[0]) not in cache:
+                R, Rks = PY.reciente(E_, o[2]); pr = PY.predice(E_, o[1], R, Rks, *g); act = E_[o[0]]; niv = PY.NIV[act['t']]
+                cache[(g, o[0])] = (PY.errores(S_, act, pr, 'est')[0], PY.errores(S_, act, pr, niv)[0] if niv != 'est' else [])
+            return cache[(g, o[0])]
+        for Y in (2021, 2024):  # errores juntando los 32 estados: se elige UNA combinación nacional (igual que proyeccion.py)
+            for o in objs:
+                if E_[o[0]]['y'] != Y:
+                    for g in PY.GRID:
+                        es, un = err(g, o); POOL.setdefault((Y, g), ([], [])); POOL[(Y, g)][0].extend(es); POOL[(Y, g)][1].extend(un)
     for Y in (2021, 2024):
-        sc = sorted(((puntaje(Y, p), i) for i, p in enumerate(combos)))
-        best[Y] = combos[sc[0][1]]
-        print(f'mejores pesos ajustando con {Y}: {best[Y]}  (puntaje {sc[0][0]:.2f})')
-    # pesos finales para 2027: los que mejor predicen 2021 y 2024 juntos
-    scf = sorted(((puntaje(2021, p) + puntaje(2024, p), i) for i, p in enumerate(combos)))
-    final = combos[scf[0][1]]; print('pesos finales', final)
-    # 1b) efecto de quien ya gobierna (solo ayuntamientos): se prueba +0, +3, +6 puntos
-    def p_inc(Y, prm, inc):
-        cs = [c for st in ST for ek in objetivos(st, Y) if st['E'][ek]['t'] == 'AYU' for c in evaluar(st, ek, prm, inc=inc)]
-        return statistics.mean(c['mae'] for c in cs) + 2 * (1 - statistics.mean(c['ok'] for c in cs)), resumen(cs)
-    INC = {}
-    for Y in (2021, 2024):
-        res = {i: p_inc(Y, best[Y], i) for i in (0, 3, 6)}
-        INC[Y] = min(res, key=lambda i: res[i][0]); print('incumbencia', Y, {i: v[1] for i, v in res.items()})
+        gY = min(PY.GRID, key=lambda g: (statistics.mean(POOL[(Y, g)][0]) if POOL.get((Y, g)) and POOL[(Y, g)][0] else 0) + (statistics.mean(POOL[(Y, g)][1]) if POOL.get((Y, g)) and POOL[(Y, g)][1] else 0))
+        print('combinación nacional para medir', Y, gY)
+        for st in ST:
+            PRM.setdefault(st['cab'], {})[Y] = gY
+    best = {2021: PRM, 2024: PRM}; INC = {2021: 0, 2024: 0}; final = {'proy': 'una combinación nacional, ver privado/<estado>.json meta.proy'}
     # 2) validación cruzada: pesos de un año aplicados al otro
-    rep = {'metodo': 'base histórica ponderada + tendencia amortiguada + incertidumbre común/local; validación cruzada 2021↔2024',
+    rep = {'metodo': 'mismo cálculo de la Estrategia (última elección del cargo + promedio del año más reciente, con oscilación estatal opcional; parámetros por estado) + incertidumbre común/local; validación cruzada 2021↔2024',
            'pesos': {}, 'por_tipo': {}, 'por_estado': {}, 'calibracion': {}}
     todos = []
     for Y, prmY in ((2024, best[2021]), (2021, best[2024])):
-        rep['pesos'][str(Y)] = prmY
+        rep['pesos'][str(Y)] = {c: v[Y] for c, v in prmY.items() if c != 'proy'}
         for st in ST:
             for ek in objetivos(st, Y):
                 for c in evaluar(st, ek, prmY, inc=INC[2021 if Y == 2024 else 2024]):
@@ -277,13 +307,16 @@ def main():
     rep['con_encuesta'] = enc
     print('con encuesta', json.dumps(enc, ensure_ascii=False))
     # 6) parámetros para la plataforma (data/modelo.json): la proyección se calcula en el navegador con estos valores
-    fin = {k: round(statistics.mean([best[2021][k], best[2024][k]]), 3) for k in GRID}
+    fin = {'proy': 1}
     pe = {}
     for st in ST:
         d = {}
         for t in TARGETS:
             m_ = [c for c in M if c['cab'] == st['cab'] and c['t'] == t]; n_ = [c for c in NV if c['cab'] == st['cab'] and c['t'] == t]
-            if m_: d[t] = {'n': len(m_), 'acierto': round(100 * statistics.mean(c['ok'] for c in m_)), 'repetir': round(100 * statistics.mean(c['ok'] for c in n_)) if n_ else None, 'mae': round(statistics.mean(c['mae'] for c in m_), 1)}
+            if m_:
+                em = sorted(abs(c['pm'] - c['rm']) for c in m_)  # error del margen (validación cruzada): el 80 % fue menor a q80
+                d[t] = {'n': len(m_), 'acierto': round(100 * statistics.mean(c['ok'] for c in m_)), 'repetir': round(100 * statistics.mean(c['ok'] for c in n_)) if n_ else None,
+                        'mae': round(statistics.mean(c['mae'] for c in m_), 1), 'q80': round(em[min(len(em) - 1, int(.8 * len(em)))], 1)}
         m_ = [c for c in M if c['cab'] == st['cab']]; n_ = [c for c in NV if c['cab'] == st['cab']]
         d['todo'] = {'n': len(m_), 'acierto': round(100 * statistics.mean(c['ok'] for c in m_)), 'repetir': round(100 * statistics.mean(c['ok'] for c in n_)) if n_ else None, 'mae': round(statistics.mean(c['mae'] for c in m_), 1)}
         pe[st['cab']] = d
@@ -293,7 +326,9 @@ def main():
     for st in ST:
         for Y, prmY in ((2024, best[2021]), (2021, best[2024])):
             for ek in objetivos(st, Y):
-                e = st['E'][ek]; T = e['t']; pr = base(st, Y, T, **prmY); w = st['ln'] * turnout(st, Y)
+                e = st['E'][ek]; T = e['t']; pr = base_proy(st, Y, T, *prmY[st['cab']][Y])
+                if pr is None: continue
+                w = st['ln'] * turnout(st, Y)
                 P = bloques_unidad(st, pr, w, T, e['bl']); R = bloques_unidad(st, e['sh'], np.nan_to_num(e['val']), T, e['bl'])
                 us = [u for u in P if u in R and not any(math.isnan(x) for x in P[u])]
                 if not us or T not in sig: continue
