@@ -1495,3 +1495,9 @@ h5 small{font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0
 .pj-tabs .sm{display:none}
 @media (max-width:760px){.pj-top{position:relative;padding-right:56px}.pj-top .ac-x{position:absolute;top:14px;right:14px}.pj-tabs .lg{display:none}.pj-tabs .sm{display:inline}.pj-tabs button{padding:6px 14px;font-size:12.5px}}
 .pj-top .pj-tabs span{color:inherit;margin:0;font-size:inherit}
+
+.pjtw .x{display:none}.pjtw.all .x{display:table-row}.pjtw.all .pjcl .x{display:grid}
+.pjmore{margin-top:8px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:5px 12px;font:600 11.5px var(--f);color:var(--teal3);cursor:pointer}.pjmore:hover{border-color:var(--teal3)}
+.pjcl button{grid-template-columns:minmax(0,1fr) auto!important;grid-template-areas:'n t' 'r r';row-gap:2px;align-items:center}
+.pjcl button b{grid-area:n;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pjcl button em{grid-area:t}.pjcl button span{grid-area:r;font-size:12px}
+.pjdet{font-weight:700}
