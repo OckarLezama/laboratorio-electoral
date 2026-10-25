@@ -47,14 +47,18 @@ $('ftabs').onclick=e=>{const b=e.target.closest('button'); if(b){st.ft=b.dataset
 $('clr').onclick=()=>{for(const g in st.f) st.f[g]=[]; render(true);};
 $('tog').onclick=()=>{st.fp=!st.fp; layout(); setTimeout(refit,120);};
 
+/* registro de personas que ganaron (meta.gan), para el buscador y la tarjeta de trayectoria */
+const GAN=M0.gan||null;
+const ganBy=GAN?(()=>{const o={}; GAN.r.forEach(r=>{(o[r[0]]=o[r[0]]||[]).push(r);}); return o;})():{};
 const AC=[].concat(Object.keys(MUN).map(m=>({t:'Municipios',ic:'M',n:MUN[m],s:ALL.filter(i=>S[i].m===+m).length+' secciones',go:()=>setTerr(m)})),DLS.map(d=>({t:'Distritos locales',ic:'DL',n:'Distrito local '+d,s:'Cabecera: '+(CABDL[d]||DLMUN[d]),go:()=>applyScope('dl',d)})),DFS.map(j=>({t:'Distritos federales',ic:'DF',n:'Distrito federal '+j,s:'Cabecera: '+(CABDF[j]||''),go:()=>applyScope('df',j)})));
 AC.forEach(o=>o.k=norm(o.n+' '+o.s));
+const GANK=GAN?GAN.p.map(x=>norm(x)):[];
 let ACL=[],ACI=0;
 const hl=(t,q)=>{if(!q) return esc(t); const n=norm(t),i=n.indexOf(q); return i<0?esc(t):esc(t.slice(0,i))+'<mark>'+esc(t.slice(i,i+q.length))+'</mark>'+esc(t.slice(i+q.length));};
 function acOpen(){const q=norm($('ac').value.trim()),grp={}; AC.forEach(o=>{if(!q||o.k.includes(q)) (grp[o.t]=grp[o.t]||[]).push(o);});
   const qs=q.replace(/^(secc?(ion)?|sec\.?|s)\s*/,''); if(/^\d+$/.test(qs)){const m=ALL.filter(i=>String(S[i].s).startsWith(qs)).slice(0,8); if(m.length) grp['Secciones']=m.map(i=>({t:'Secciones',ic:'S',n:'Sección '+S[i].s,s:MUN[S[i].m]+' · '+(TIPO[S[i].t]||''),go:()=>{st.terr=String(S[i].m); st.sel=i; render(true); setTimeout(()=>fit([i]),40);}}));}
   let h=''; ACL=[]; const order=['Secciones','Municipios','Distritos locales','Distritos federales']; order.forEach(g=>{const L=grp[g]; if(!L) return; const n=g==='Municipios'?(L.length<=20?L.length:q?12:8):q?6:3; h+=`<h5>${g}<span>${L.length}</span></h5>`; L.slice(0,n).forEach(o=>{h+=`<button data-i="${ACL.length}" role="option"><i>${o.ic}</i><span>${hl(o.n,q)}</span><small>${esc(o.s)}</small></button>`; ACL.push(o);});});
-  $('acl').innerHTML=h||`<div class="empty">Sin resultados para “${esc($('ac').value)}”. Prueba con un municipio, “distrito 5” o un número de sección.</div>`; $('acl').classList.add('on'); $('ac').setAttribute('aria-expanded','true'); ACI=0; acMark();}
+  $('acl').innerHTML=h||`<div class="empty">Sin resultados para “${esc($('ac').value)}”. Prueba con un municipio, “distrito 5” o un número de sección. Para buscar personas usa Actores.</div>`; $('acl').classList.add('on'); $('ac').setAttribute('aria-expanded','true'); ACI=0; acMark();}
 const acMark=()=>$('acl').querySelectorAll('button').forEach((b,j)=>b.classList.toggle('cur',j===ACI));
 const acClose=()=>{$('acl').classList.remove('on'); $('ac').setAttribute('aria-expanded','false');};
 function acPick(o){acClose(); $('ac').value=''; $('ac').blur(); o.go();}

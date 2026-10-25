@@ -10,10 +10,62 @@
    "columna_estado": "CVE_ENT",
    "columna_clave": "NOM_MUN",
    "variables": [
-    {"id": "im", "nombre": "Índice de marginación", "descripcion": "índice municipal de CONAPO (escala 2020): más alto = menos marginación", "expresion": "IM_2020", "unidad": "indice", "decimales": 1, "sentido": "mayor_mejor"},
-    {"id": "analf", "nombre": "Analfabetismo", "descripcion": "población de 15 años o más analfabeta, % del municipio", "expresion": "ANALF", "unidad": "pct", "decimales": 1, "sentido": "mayor_peor"},
-    {"id": "sbasc", "nombre": "Sin educación básica", "descripcion": "población de 15 años o más sin educación básica, % del municipio", "expresion": "SBASC", "unidad": "pct", "decimales": 1, "sentido": "mayor_peor"},
-    {"id": "po2sm", "nombre": "Ingresos bajos", "descripcion": "población ocupada con ingresos de hasta 2 salarios mínimos, % del municipio", "expresion": "PO2SM", "unidad": "pct", "decimales": 1, "sentido": "mayor_peor"}
+    {
+     "id": "im",
+     "nombre": "Índice de marginación",
+     "descripcion": "índice municipal de CONAPO (escala 2020): más alto = menos marginación",
+     "expresion": "IM_2020",
+     "unidad": "indice",
+     "decimales": 1,
+     "sentido": "mayor_mejor"
+    },
+    {
+     "id": "analf",
+     "nombre": "Analfabetismo",
+     "descripcion": "población de 15 años o más analfabeta, % del municipio",
+     "expresion": "ANALF",
+     "unidad": "pct",
+     "decimales": 1,
+     "sentido": "mayor_peor"
+    },
+    {
+     "id": "sbasc",
+     "nombre": "Sin educación básica",
+     "descripcion": "población de 15 años o más sin educación básica, % del municipio",
+     "expresion": "SBASC",
+     "unidad": "pct",
+     "decimales": 1,
+     "sentido": "mayor_peor"
+    },
+    {
+     "id": "po2sm",
+     "nombre": "Ingresos bajos",
+     "descripcion": "población ocupada con ingresos de hasta 2 salarios mínimos, % del municipio",
+     "expresion": "PO2SM",
+     "unidad": "pct",
+     "decimales": 1,
+     "sentido": "mayor_peor"
+    }
+   ]
+  },
+  {
+   "id": "judicial25",
+   "nombre": "Elección judicial 2025",
+   "fuente": "INE, cómputos de la elección de ministras y ministros de la SCJN 2025, por casilla",
+   "archivo": "LAB_POLITICO_DATOS/03_CONSULTAS/JUDICIAL_2025/judicial2025_seccion.csv",
+   "nivel": "seccion",
+   "columna_estado": "ID_ESTADO",
+   "columna_clave": "SECCION",
+   "variables": [
+    {
+     "id": "part",
+     "nombre": "Participación judicial 2025",
+     "descripcion": "personas que votaron en la elección judicial de 2025 (SCJN) entre la lista nominal de la sección: mide la capacidad de movilización sin partidos en la boleta",
+     "expresion": "PERSONAS_VOTARON / LISTA_NOMINAL * 100",
+     "unidad": "pct",
+     "decimales": 1,
+     "sentido": "mayor_mejor"
+    }
    ]
   }
  ]

@@ -224,3 +224,10 @@ Botón "Estrategia" junto a Tabla y Mapa. Solo muestra los cargos que se eligen 
 **Dónde quedan los datos ahora.** `construir` escribe `privado/<estado>.json` (antes `data/<estado>.json`). `sitio` arma la ficha pública y, si existe el Excel, cifra los datos y genera los usuarios en el mismo paso.
 
 **Elecciones extraordinarias.** Si en la carpeta de un año existe `AYUNTAMIENTOS_EXT/*_SEC_EXT.csv`, sus resultados reemplazan las secciones del municipio donde se anuló la elección ordinaria (ej. Tamiahua, Veracruz 2025).
+
+## Actores, referencias y escenarios (oct 2026)
+
+- **Actores** (botón junto a Presentación): personas que ganaron un cargo, con trayectoria, votación, cambios de partido, quién puede reelegirse en 2027, "Ver en el mapa" y descarga de la lista. Sale de `BASE/GANADORES/ganadores_todos.csv`, que se arma con los archivos de integración y candidaturas ganadoras del INE (`pipeline/ganadores.py`). Solo trae a quien ganó.
+- **Referencias** (Datos generales y capa del mapa): elección judicial 2025 por sección, revocación 2022 y consulta 2021 por municipio, afiliados por partido por estado (`pipeline/referencias.py`, capa `judicial25` en `pipeline/capas.json`).
+- **Alianzas y encuestas 2027**: se capturan en `BASE/ESCENARIOS/escenarios_2027.xlsx` (plantilla: `python pipeline/lab.py escenarios --plantilla`). Al correr `python pipeline/lab.py sitio` se aplican para todo el equipo; varias encuestas del mismo estado y cargo se promedian (más peso a las recientes y de muestra grande).
+- Todo esto corre solo dentro de `python pipeline/lab.py sitio`.

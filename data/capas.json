@@ -72,5 +72,55 @@
     "sentido": "mayor_peor"
    }
   ]
+ },
+ {
+  "id": "judicial25",
+  "nombre": "Elección judicial 2025",
+  "fuente": "INE, cómputos de la elección de ministras y ministros de la SCJN 2025, por casilla",
+  "nivel": "seccion",
+  "estados": [
+   "ags",
+   "bc",
+   "bcs",
+   "camp",
+   "chis",
+   "chih",
+   "cdmx",
+   "coah",
+   "col",
+   "dgo",
+   "mex",
+   "gto",
+   "gro",
+   "hgo",
+   "jal",
+   "mich",
+   "mor",
+   "nay",
+   "nl",
+   "oax",
+   "pue",
+   "qro",
+   "qroo",
+   "slp",
+   "sin",
+   "son",
+   "tab",
+   "tam",
+   "tlax",
+   "ver",
+   "yuc",
+   "zac"
+  ],
+  "variables": [
+   {
+    "id": "part",
+    "nombre": "Participación judicial 2025",
+    "descripcion": "personas que votaron en la elección judicial de 2025 (SCJN) entre la lista nominal de la sección: mide la capacidad de movilización sin partidos en la boleta",
+    "unidad": "pct",
+    "decimales": 1,
+    "sentido": "mayor_mejor"
+   }
+  ]
  }
 ]

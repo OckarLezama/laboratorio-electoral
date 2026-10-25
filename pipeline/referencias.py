@@ -22,6 +22,7 @@ FUENTES = {
     'cp21': (CONS / 'CONSULTA_POPULAR_2021' / 'DEOE-DatosAbiertos-2021_SEE_CP_NAL_SEC.csv', 'SI', 'TOTAL'),
 }
 AFIL = BASE / 'AFILIADOS' / 'afiliados_conteos.json'
+JUD = CONS / 'JUDICIAL_2025' / 'judicial2025_seccion.csv'  # por sección (casillas seccionales): exacto
 
 
 def _n(s):
@@ -93,8 +94,20 @@ def afiliados():
     return out
 
 
+def judicial():
+    """{ent: {seccion: [personas que votaron, lista nominal]}}"""
+    out = collections.defaultdict(dict)
+    if not JUD.exists():
+        print(f'[referencias] falta {JUD}')
+        return out
+    with open(JUD, encoding='utf-8-sig', newline='') as fh:
+        for r in csv.DictReader(fh):
+            out[_num(r['ID_ESTADO'])][_num(r['SECCION'])] = [_num(r['PERSONAS_VOTARON']), _num(r['LISTA_NOMINAL'])]
+    return out
+
+
 def generar():
-    C = consultas(); F = afiliados()
+    C = consultas(); F = afiliados(); J = judicial()
     for f in sorted(PLANO.glob('*.json')):
         if f.name == 'claves.json':
             continue
@@ -111,13 +124,20 @@ def generar():
                 else:
                     sin.append(mid)
             ref[k] = {'est': c['est'], 'm': mm, 'sin': sin}
+        if J.get(e):  # elección judicial 2025: votos y lista nominal de la elección, por municipio y estado
+            est = [0, 0]; mm = collections.defaultdict(lambda: [0, 0])
+            for s_ in d['S']:
+                v = J[e].get(int(s_[0]))
+                if v:
+                    est[0] += v[0]; est[1] += v[1]; mm[str(s_[1])][0] += v[0]; mm[str(s_[1])][1] += v[1]
+            ref['pj25'] = {'est': est, 'm': dict(mm)}
         if e in F:
             ref['af'] = {'p': F[e]['p'], 'y': {p: dict(sorted(v.items())) for p, v in F[e]['y'].items()},
                          'corte': 'padrones de afiliados del INE, 2026'}
         m['ref'] = ref
         f.write_text(json.dumps(d, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
         nm_ok = {k: f"{len(v['m'])}/{len(m['municipios'])}" for k, v in ref.items() if k != 'af'}
-        print(f"[referencias] {m['cab']}: municipios {nm_ok}" + (f" sin cruce {sum(len(v['sin']) for k, v in ref.items() if k != 'af')}" if any(ref.get(k, {}).get('sin') for k in ('rm22', 'cp21')) else '')
+        print(f"[referencias] {m['cab']}: municipios {nm_ok}" + (f" sin cruce {sum(len(v.get('sin', [])) for k, v in ref.items() if k != 'af')}" if any(ref.get(k, {}).get('sin') for k in ('rm22', 'cp21')) else '')
               + (f" · afiliados {sum(ref['af']['p'].values()):,}" if 'af' in ref else ''))
 
 

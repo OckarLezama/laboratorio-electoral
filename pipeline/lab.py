@@ -5,6 +5,8 @@
   python pipeline/lab.py capas chis         paso 2b: genera las bases adicionales de pipeline/capas.json
   python pipeline/lab.py proyeccion         paso 2c: calibra la proyección 2027 con todos los estados
   python pipeline/lab.py referencias        paso 2d: revocación 2022, consulta 2021 y afiliados por partido (meta.ref)
+  python pipeline/lab.py escenarios         alianzas y encuestas 2027 del Excel de escenarios (--plantilla lo crea)
+  python pipeline/lab.py ganadores          registro de personas que ganaron (corre también dentro de sitio)
   python pipeline/lab.py sitio              paso 3: arma index.html, inicio.html, css/, js/, data/estados.json y data/inicio/
   python pipeline/lab.py nacional           paso 4: resumen de los 32 estados para la vista general (data/nacional.json y data/inicio/nac_zonas.json)
   python pipeline/lab.py panorama           paso 4d: datos del Panorama nacional (data/inicio/panorama.json); requiere el padrón
@@ -34,6 +36,10 @@ def construir(e):
 def main(a):
     if not a or a[0] in ('-h', '--help', 'ayuda'):
         print(__doc__); return
+    if a[0] == 'escenarios':
+        from escenarios import generar as escs, plantilla
+        plantilla() if '--plantilla' in a else escs()
+        return
     if a[0] == 'acceso':
         from acceso import main as acc
         acc(a[1:]); return
@@ -64,9 +70,13 @@ def main(a):
         r = subprocess.run([sys.executable, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'modelo.py')])
         if r.returncode:
             raise SystemExit('Falló el modelo de proyección.')
-    if cmd in ('referencias', 'sitio', 'todo'):
+    if cmd in ('referencias', 'ganadores', 'sitio', 'todo'):
         from referencias import generar as refs
         refs()
+        from ganadores import generar as gans
+        gans()
+        from escenarios import generar as escs
+        escs()
     if cmd in ('sitio', 'todo'):
         from sitio import sitio
         sitio()
@@ -96,7 +106,7 @@ def main(a):
             raise SystemExit('Falló el resumen nacional.')
         from sitio import sitio
         sitio()
-    if cmd not in ('preparar', 'construir', 'capas', 'todo', 'sitio', 'proyeccion', 'nacional', 'zonas', 'panorama', 'acceso', 'referencias'):
+    if cmd not in ('preparar', 'construir', 'capas', 'todo', 'sitio', 'proyeccion', 'nacional', 'zonas', 'panorama', 'acceso', 'referencias', 'ganadores'):
         raise SystemExit(f'Comando no reconocido: {cmd}. Usa: preparar, construir, capas, proyeccion, sitio, nacional, zonas, todo o estados.')
 
 
