@@ -39,17 +39,21 @@ function pjRun(T,ii,party,shift,NS){const B=pjBase(T),BL=pjBlocs(T),G={},sig=pjS
   const sc=((MODELO.sigma[T]||{}).comun||10)/Math.SQRT2,sl=((MODELO.sigma[T]||{}).local||15)/Math.SQRT2,nb=BL.length;
   U.forEach(u=>{const s100=u.s.map(x=>100*x),oth=s100.reduce((a,x,j)=>a+(j===fi?0:x),0)||1; u.e=s100.map((x,j)=>j===fi?x+sh:x-sh*x/oth); const riv=Math.max(...u.e.filter((_,j)=>j!==fi)); u.m=u.e[fi]-riv; u.w=0;});
   const R=NS||2000,wins=new Int16Array(R); let seed=7; const rn=()=>{seed=(seed*16807)%2147483647; return seed/2147483647;},gs=()=>{let a=0,b=0; while(!a) a=rn(); while(!b) b=rn(); return Math.sqrt(-2*Math.log(a))*Math.cos(2*Math.PI*b);};
-  const cb=new Float64Array(nb);
+  const cb=new Float64Array(nb),WB=Array.from({length:nb},()=>new Int16Array(R)); U.forEach(u=>u.wb=new Int32Array(nb));
   for(let r=0;r<R;r++){for(let j=0;j<nb;j++) cb[j]=gs()*sc; let n=0;
-    U.forEach(u=>{let best=-1e9,bj=-1; for(let j=0;j<nb;j++){const v=u.e[j]+cb[j]+gs()*sl; if(v>best){best=v; bj=j;}} if(bj===fi){u.w++; n++;}}); wins[r]=n;}
+    U.forEach(u=>{let best=-1e9,bj=-1; for(let j=0;j<nb;j++){const v=u.e[j]+cb[j]+gs()*sl; if(v>best){best=v; bj=j;}} u.wb[bj]++; WB[bj][r]++; if(bj===fi){u.w++; n++;}}); wins[r]=n;}
   /* calibración: lo que la simulación dice contra lo que pasó en 2021 y 2024 (tabla de data/modelo.json) */
   const CS=(MODELO.cal_sim||[]).slice().sort((a,b)=>a[0]-b[0]); for(let k=1;k<CS.length;k++) if(CS[k][1]<CS[k-1][1]) CS[k][1]=CS[k-1][1];
   const cal=x=>{if(!CS.length) return x; if(x<=CS[0][0]) return Math.max(0,CS[0][1]*x/CS[0][0]); if(x>=CS[CS.length-1][0]) return CS[CS.length-1][1]+(1-CS[CS.length-1][1])*(x-CS[CS.length-1][0])/(1-CS[CS.length-1][0]); for(let k=1;k<CS.length;k++) if(x<=CS[k][0]){const a=CS[k-1],b=CS[k],t=(x-a[0])/(b[0]-a[0]); return a[1]+t*(b[1]-a[1]);} return x;};
-  U.forEach(u=>{u.p=cal(u.w/R); u.lead=u.m>=0?fi:u.e.indexOf(Math.max(...u.e.filter((_,j)=>j!==fi)));});
+  U.forEach(u=>{const c=Array.from(u.wb,w=>cal(w/R)),t=c.reduce((a,b)=>a+b,0)||1; u.pn=c.map(x=>x/t);}); /* calibrada y normalizada: en cada lugar las probabilidades suman 1, así los totales suman el número de lugares */
+  U.forEach(u=>{u.p=u.pn[fi]; u.lead=u.m>=0?fi:u.e.indexOf(Math.max(...u.e.filter((_,j)=>j!==fi)));});
   const expC=U.reduce((a,u)=>a+u.p,0),expR=Array.from(wins).reduce((a,b)=>a+b,0)/R,dl=expC-expR,sw=Array.from(wins).map(x=>Math.max(0,Math.min(U.length,x+dl))).sort((a,b)=>a-b),q=f=>Math.round(sw[Math.min(R-1,Math.floor(f*R))]),half=Math.floor(U.length/2)+1;
   const all=ii.length===ALL.length,sdS=(all?sc:Math.hypot(sc,sl/Math.sqrt(U.length)))*1.28;
   const UL=U.filter(u=>u.ea),last={y:D.E[LE].year,n:UL.filter(u=>u.ea.indexOf(Math.max(...u.ea))===fi).length,of:UL.length,v:UL.length===1?100*UL[0].ea[fi]:null,m:UL.length===1?100*(UL[0].ea[fi]-Math.max(...UL[0].ea.filter((_,j)=>j!==fi))):null};
-  return {T,BL,fi,U,tot,sh,sig,n:U.length,last,exp:expC,lo:q(.1),hi:q(.9),half,pMaj:U.length===1?U[0].p:sw.filter(x=>x>=half).length/R,share:tot[fi]*100+sh,band:sdS,
+  /* panorama de todas las fuerzas (sin partido elegido): lo más probable, rango y probabilidad de mayoría de cada una */
+  const pano=BL.map((ms,j)=>{const lk=U.filter(u=>u.e.indexOf(Math.max(...u.e))===j).length,ex=U.reduce((a,u)=>a+u.pn[j],0),raw=Array.from(WB[j]).reduce((a,b)=>a+b,0)/R,d=ex-raw,w=Array.from(WB[j]).map(x=>Math.max(0,Math.min(U.length,x+d))).sort((a,b)=>a-b),qq=f=>Math.round(w[Math.min(R-1,Math.floor(f*R))]);
+    return {ms,j,lk,exp:ex,lo:qq(.1),hi:qq(.9),pM:U.length===1?null:w.filter(x=>x>=half).length/R,lead:U.filter(u=>u.e.indexOf(Math.max(...u.e))===j).length,p1:U.length===1?U[0].pn[j]:null,share:100*tot[j]};}).sort((a,b)=>b.exp-a.exp||b.share-a.share);
+  return {T,BL,fi,U,tot,sh,sig,n:U.length,last,pano,likely:(()=>{const lead=U.filter(u=>u.e.indexOf(Math.max(...u.e))===fi).length,lo=q(.1),hi=q(.9); return lead>=lo&&lead<=hi?lead:Math.round(expC);})(),lead:U.filter(u=>u.e.indexOf(Math.max(...u.e))===fi).length,exp:expC,lo:q(.1),hi:q(.9),half,pMaj:U.length===1?U[0].p:sw.filter(x=>x>=half).length/R,share:tot[fi]*100+sh,band:sdS,
     cat:{seg:U.filter(u=>u.p>=.85).length,pro:U.filter(u=>u.p>=.65&&u.p<.85).length,com:U.filter(u=>u.p>.35&&u.p<.65).length,con:U.filter(u=>u.p<=.35).length}};}
 /* votos para llegar a 70 %: margen necesario según la dispersión local del modelo (dos fuerzas punteras) */
 const pjMeta=(u,a,T)=>{const sl=((MODELO.sigma[T]||{}).local||15),sc=((MODELO.sigma[T]||{}).comun||10),need=.5244*Math.hypot(sl,sc); if(u.m>=need) return null; const v=(need-u.m)/100*u.V; return {nuevos:Math.round(v),quitados:Math.round(v/2)};};
@@ -60,25 +64,70 @@ function pjParties(T,idx){if(!pjOK()||!MODELO.a[T]||!lastOf(T)) return null; con
   idx.forEach(i=>{const x=B.pr[i]; if(!x) return; W+=B.w[i]; P.forEach((p,j)=>acc[j]+=B.w[i]*x[j]);}); if(!W) return null;
   const sig=pjSig(T),all=idx.length===ALL.length,sd=(all?sig.sc:Math.hypot(sig.sc,sig.sl/3))/2*1.28,o={};
   P.forEach((p,j)=>{const v=100*acc[j]/W; o[p]={v,lo:Math.max(0,v-sd*Math.sqrt(Math.max(.05,v/50))),hi:v+sd*Math.sqrt(Math.max(.05,v/50))};}); return o;}
-/* tarjeta del panel */
-function pjCard(ctx,ii0,inner){const T=pjType(); if(!T) return ''; const ii=ii0||(ctx?ctx.idx:scope()),p=st.party,R=pjRun(T,ii,p,st.pj.s); if(!R||R.none) return '';
-  const NN=PJN[T],fb=R.BL[R.fi],col=pjCol(fb),vm=(MODELO.estados[M0.cab]||{})[T],multi=R.n>1,pct=x=>Math.round(x*100)+' %';
-  const pos=x=>(100*x/Math.max(1,R.n)).toFixed(1)+'%';
-  const comp=R.U.slice().sort((a,b)=>Math.abs(a.p-.5)-Math.abs(b.p-.5)).slice(0,multi?5:1);
-  const sc=[-5,-3,0,3,5].map(s=>{if(s===R.sh) return {s,e:R.exp,pm:R.pMaj,lo:R.lo,hi:R.hi}; const x=pjRun(T,ii,p,s,600); return {s,e:x.exp,pm:x.pMaj,lo:x.lo,hi:x.hi};});
-  const hd2=ctx?ctx.hd('proy',`Proyección ${TY[T]} 2027`,`${esc(pjBN(fb))}`):`<h4 class="pjh">Proyección ${TY[T]} 2027 <small>${esc(pjBN(fb))}</small></h4>`;
-  return `<div class="${inner?'pjc pjin':'cd pjc'}" style="--pc:${col}">${hd2}<span class="pjtag">${pjEnc(T)?((st.es.poll[T]||{}).mid?'escenario: intermedia como 2021':(st.es.poll[T]||{}).of?'ajustada con '+((st.es.poll[T].of.n>1)?'el promedio de '+st.es.poll[T].of.n+' encuestas':'1 encuesta'):'ajustada con tu encuesta'):'solo resultados históricos · sin encuesta'}</span>
-   ${multi?`<div class="pjbig"><b>${Math.round(R.exp)}</b><span>de ${R.n} ${NN[1]}</span></div>
-   <div class="pjrg"><i class="tr"></i><i class="bd" style="left:${pos(R.lo)};width:calc(${pos(R.hi)} - ${pos(R.lo)})"></i><i class="mj" style="left:${pos(R.half-.5)}"><span>mayoría ${R.half}</span></i><i class="pt" style="left:${pos(R.exp)}"></i><span class="ax" style="left:0">0</span><span class="ax" style="left:${pos(R.lo)}">${R.lo}</span><span class="ax" style="left:${pos(R.hi)}">${R.hi}</span><span class="ax" style="left:100%">${R.n}</span></div>
-   <div class="pjs">Va adelante en <b>${R.U.filter(u=>u.m>=0).length}</b>. Contando el error, lo esperable es <b>${Math.round(R.exp)}</b>, con rango de <b>${R.lo} a ${R.hi}</b> (8 de cada 10 escenarios)</div><div class="pjs pjref">Si se repitiera ${R.last.y}: ${R.last.n} de ${R.last.of}</div>
-   <div class="pjpm"><span>Probabilidad de ganar la mayoría de ${NN[1]}</span><b>${pct(R.pMaj)}</b></div>
-   <div class="pjcat"><div style="--c:${col}"><b>${R.cat.seg}</b><span>Seguros</span></div><div style="--c:${mix(col,.5)}"><b>${R.cat.pro}</b><span>Probables</span></div><div style="--c:#F5A47C"><b>${R.cat.com}</b><span>Competidos</span></div><div style="--c:#B9C1C1"><b>${R.cat.con}</b><span>En contra</span></div></div>`
-   :`<div class="pjbig"><b>${pct(R.U[0].p)}</b><span>probabilidad de ganar</span></div><div class="pjs">Votación esperada: <b>${R.share.toFixed(1)} %</b> (rango ${Math.max(0,R.share-R.band).toFixed(0)}–${(R.share+R.band).toFixed(0)} %) · margen ${R.U[0].m>=0?'+':'−'}${Math.abs(R.U[0].m).toFixed(1)} pts</div>${R.last.v!=null?`<div class="pjs pjref">Si se repitiera ${R.last.y}: ${R.last.v.toFixed(1)} % · ${R.last.m>=0?'ganaría por':'perdería por'} ${Math.abs(R.last.m).toFixed(1)} pts</div>`:''}`}
-   <div class="pjsc"><div class="l"><span>¿Y si cambia el voto en todo el estado?</span><b id="pjsv">${R.sh>0?'+':''}${R.sh} pts</b></div><input type="range" id="pjsl" min="-5" max="5" step="1" value="${R.sh}" aria-label="Cambio estatal en puntos">
-    <div class="pjst">${sc.map(x=>`<div class="${x.s===R.sh?'on':''}"><b>${multi?Math.round(x.e):pct(x.pm)}</b><span>${x.s>0?'+':''}${x.s} pts</span>${multi?`<em>${pct(x.pm)}</em>`:''}</div>`).join('')}</div></div>
-   ${multi?`<h5>${NN[1][0].toUpperCase()+NN[1].slice(1)} más competidos</h5><div class="pjl">${comp.map(u=>{const mt=pjMeta(u,R.sig.a,T); return `<div title="${mt?`Para 70 % de probabilidad: ${fmt(mt.nuevos)} votos nuevos o ${fmt(mt.quitados)} votos ganados al rival`:'Ya supera 70 % de probabilidad'}"><b>${esc(pjName(T,u.k).replace(/^Distrito (local|federal) /,'D'+(T==='DIPL'?'L':'F')+' ').split(' · ')[0])}</b><i style="--p:${(u.p*100).toFixed(0)}%;--c:${col}"></i><span>${pct(u.p)}</span></div>`;}).join('')}</div>`:''}
-   ${(()=>{const u=comp[0],mt=u&&pjMeta(u,R.sig.a,T); return mt?`<p class="pjn">Para ganar ${esc(multi?pjName(T,u.k).split(' · ')[0]:'')} con 70 % de probabilidad: <b>${fmt(mt.nuevos)} votos nuevos</b> o <b>${fmt(mt.quitados)}</b> ganados al rival.</p>`:'';})()}
-   ${vm&&vm.n>=10?`<p class="pjn">En ${esc(EST)} este modelo acertó al ganador en <b>${vm.acierto} %</b> de ${vm.n} casos al predecir 2021 y 2024${vm.repetir!=null?` (repetir la última elección: ${vm.repetir} %)`:''}. Con una encuesta el rango se cierra.</p>`:''}
-   ${ctx?ctx.ft('INE 2015–2024; proyección propia validada con 2021 y 2024'):''}</div>`;}
-function pjBind(root){const sl=root&&root.querySelector('#pjsl'); if(!sl) return; sl.oninput=()=>{$('pjsv').textContent=(+sl.value>0?'+':'')+sl.value+' pts';}; sl.onchange=()=>{st.pj.s=+sl.value; render();};}
+/* tarjeta del panel: resumen corto; el detalle se abre en una ventana ("Ver detalle") */
+const pjTag=T=>pjEnc(T)?((st.es.poll[T]||{}).mid?'escenario: intermedia como 2021':(st.es.poll[T]||{}).of?'ajustada con '+((st.es.poll[T].of.n>1)?'el promedio de '+st.es.poll[T].of.n+' encuestas':'1 encuesta'):'ajustada con tu encuesta'):'solo resultados históricos · sin encuesta';
+const pjPct=x=>Math.round(x*100)+' %';
+function pjBar(R){const pos=x=>(100*x/Math.max(1,R.n)).toFixed(1)+'%'; return `<div class="pjrg"><i class="tr"></i><i class="bd" style="left:${pos(R.lo)};width:calc(${pos(R.hi)} - ${pos(R.lo)})"></i><i class="mj" style="left:${pos(R.half-.5)}"><span>mayoría ${R.half}</span></i><i class="pt" style="left:${pos(R.exp)}"></i><span class="ax" style="left:0">0</span><span class="ax" style="left:${pos(R.lo)}">${R.lo}</span><span class="ax" style="left:${pos(R.hi)}">${R.hi}</span><span class="ax" style="left:100%">${R.n}</span></div>`;}
+function pjPanoRows(R,n){const NN=PJN[R.T],multi=R.n>1; return `<div class="pjpan">${R.pano.slice(0,n).filter(x=>multi?x.lk>0||x.exp>=1:x.p1>=.005).map(x=>`<div><span><i style="background:${pjCol(x.ms)}"></i>${esc(pjBN(x.ms))}</span>${multi?`<b>${x.lk>=x.lo&&x.lk<=x.hi?x.lk:Math.round(x.exp)}</b><em>entre ${x.lo} y ${x.hi}${x.lk>=x.lo&&x.lk<=x.hi?'':` · adelante en ${x.lk}`}</em><small>${x.pM!=null?'mayoría '+pjPct(x.pM):''}</small>`:`<b>${pjPct(x.p1)}</b><em>${x.share.toFixed(1)} % de los votos</em><small></small>`}</div>`).join('')}</div>`;}
+function pjCard(ctx,ii0,inner){const T=pjType(); if(!T) return ''; const ii=ii0||(ctx?ctx.idx:scope()),p=st.party,R=pjRun(T,ii,p,0); if(!R||R.none) return '';
+  const NN=PJN[T],fb=R.BL[R.fi],col=p?pjCol(fb):'#1C7F79',multi=R.n>1;
+  const tit=`Proyección ${TY[T]} 2027`,sub=p?pjBN(fb):'todas las fuerzas';
+  const hd2=ctx?ctx.hd('proy',tit,esc(sub)):`<h4 class="pjh">${tit} <small>${esc(sub)}</small></h4>`;
+  let body;
+  if(!p) body=`${pjPanoRows(R,4)}<p class="pjs pjref">${multi?`Cuántos ${NN[1]} ganaría cada fuerza según la proyección, y su rango probable.`:'Probabilidad de ganar de cada fuerza.'} Elige un partido para ver su detalle.</p>`;
+  else if(multi) body=`<div class="pjbig"><b>${R.likely}</b><span>de ${R.n} ${NN[1]} · ${R.likely===R.lead?'según la proyección':'lo esperable'}</span></div>${pjBar(R)}
+   <div class="pjs">Lo más probable: <b>${R.likely}</b>, en un rango de <b>${R.lo} a ${R.hi}</b>.</div>
+   <div class="pjpm"><span>Probabilidad de ganar la mayoría de ${NN[1]}</span><b>${pjPct(R.pMaj)}</b></div>`;
+  else body=`<div class="pjbig"><b>${pjPct(R.U[0].p)}</b><span>probabilidad de ganar</span></div><div class="pjs">Votación más probable: <b>${R.share.toFixed(1)} %</b> (entre ${Math.max(0,R.share-R.band).toFixed(0)} y ${(R.share+R.band).toFixed(0)} %) · diferencia ${R.U[0].m>=0?'+':'−'}${Math.abs(R.U[0].m).toFixed(1)} pts</div>`;
+  return `<div class="${inner?'pjc pjin':'cd pjc'}" style="--pc:${col}">${hd2}<span class="pjtag">${pjTag(T)}</span>${body}
+   <button class="pjdet" data-pjdet="${inner?'in':'card'}">Ver detalle</button>${ctx?ctx.ft('INE 2015–2024; proyección propia probada contra 2021 y 2024'):''}</div>`;}
+/* ventana de detalle de la proyección: responde ¿cuántos gana?, ¿dónde se decide? y ¿qué necesita? */
+const pjShort=(T,k)=>pjName(T,k).split(' · ')[0].replace(/^Distrito local /,'DL ').replace(/^Distrito federal /,'DF ');
+function pjStrip(R,col,party){const NN=PJN[R.T],U=R.U.slice();
+  const cc=u=>{if(!party){const j=u.pn.indexOf(Math.max(...u.pn)),q=u.pn[j]; return {c:pjCol(R.BL[j]),o:q>=.85?1:q>=.65?.7:.45,t:`${pjBN(R.BL[j])} · ${pjPct(q)}`};}
+    const q=u.p; return {c:q>=.85?col:q>=.65?mix(col,.5):q>.35?'#F5A47C':'#D5DDDD',o:1,t:`${pjPct(q)} de ganar`};};
+  if(party) U.sort((a,b)=>b.p-a.p); else U.sort((a,b)=>{const ja=a.pn.indexOf(Math.max(...a.pn)),jb=b.pn.indexOf(Math.max(...b.pn)); return R.pano.findIndex(x=>x.j===ja)-R.pano.findIndex(x=>x.j===jb)||Math.max(...b.pn)-Math.max(...a.pn);});
+  const big=U.length>60;
+  return `<div class="pjst${big?' sm':''}">${U.map((u,n)=>{const x=cc(u); return `${party&&n===R.half?'<s class="mk"><b>Mayoría · '+R.half+'</b></s>':''}<i style="background:${x.c};opacity:${x.o}" data-tip="${esc(`<b>${pjName(R.T,u.k)}</b>${x.t}`)}"></i>`;}).join('')}</div>`;}
+function pjDetalle(ii,tab){const T=pjType(); if(!T) return; const p=st.party,R=pjRun(T,ii,p,0); if(!R||R.none) return; const NN=PJN[T],fb=R.BL[R.fi],col=p?pjCol(fb):'#1C7F79',multi=R.n>1;
+  const hasCg=T==='DIPL'&&ii.length===ALL.length&&typeof congTab==='function'&&typeof RPN==='function'&&RPN().rp>0;
+  st.pjTab=hasCg&&(tab||st.pjTab)==='cg'?'cg':'d';
+  let L='',Rt='';
+  if(st.pjTab==='cg'){const c=congTab(); L=c[0]; Rt=c[1];}
+  else if(!p&&multi){L=`<h4>¿Cuántos gana cada fuerza?</h4>${pjPanoRows(R,8)}`;
+    Rt=`<h4>¿Quién gana dónde?</h4>${pjStrip(R,col,false)}<div class="pjlg"><span>Cada cuadro es un ${NN[0]}, con el color de quien lo ganaría; más claro, menos seguro.</span></div>`;}
+  else if(multi){const jj=R.U.filter(u=>u.p>.2&&u.p<.7&&pjMeta(u,R.sig.a,T)).sort((a,b)=>Math.abs(a.p-.5)-Math.abs(b.p-.5)).slice(0,8),pos=x=>(100*x/R.n).toFixed(1)+'%';
+    L=`<h4>¿Cuántos ${NN[1]} gana?</h4><div class="pjbig"><b>${R.likely}</b><span>de ${R.n} · ${R.likely===R.lead?'según la proyección':'lo esperable'}</span></div>${R.likely!==R.lead?`<p class="pjsub" style="margin-top:6px">Va adelante en ${R.lead}, pero muchos por poco; con lo que suele acertar la proyección en ${NN[1]}, lo esperable es ${R.likely}.</p>`:''}
+     <div class="pjr3"><i class="t"></i><i class="b" style="left:${pos(R.lo)};width:calc(${pos(R.hi)} - ${pos(R.lo)})"></i><i class="m mk" style="left:${pos(R.half-.5)}"><b>Mayoría · ${R.half}</b></i><i class="p" style="left:${pos(R.likely)}"></i></div>
+     <div class="pjax"><span>0</span><span>${R.n}</span></div>
+     <div class="pj3"><div><span>Rango probable</span><b>${R.lo} a ${R.hi}</b></div>${hasCg?'':`<div><span>Probabilidad de mayoría</span><b>${pjPct(R.pMaj)}</b></div>`}</div>
+     <h4>¿Dónde se decide?</h4>${pjStrip(R,col,true)}
+     <div class="pjlg"><span><i style="background:${col}"></i>${R.cat.seg} seguros</span><span><i style="background:${mix(col,.5)}"></i>${R.cat.pro} probables</span><span><i style="background:#F5A47C"></i>${R.cat.com} en juego</span><span><i style="background:#D5DDDD"></i>${R.cat.con} en contra</span></div>`;
+    const cl=R.U.map(u=>({u,v:u.m/100*u.V})).sort((a,b)=>Math.abs(a.v)-Math.abs(b.v)).slice(0,8);
+    Rt=`<h4>Los ${NN[1]} más cerrados</h4><p class="pjsub">Donde pocos votos cambiarían el resultado. Toca uno para ir a su estrategia, con sus secciones.</p>
+     <div class="pjcl">${cl.map(({u,v})=>`<button data-dl="${u.k}" data-lv="${T==='DIPL'?'dl':T==='DIPF'?'df':T==='AYU'?'mun':''}" ${T==='GOB'?'disabled':''}><b>${esc(pjShort(T,u.k))}</b><span class="${v>=0?'w':'l'}">${Math.abs(v)<100?(v>=0?'ganaría por menos de 100 votos':'perdería por menos de 100 votos'):(v>=0?'ganaría':'perdería')+' por aprox. '+fmt(Math.round(Math.abs(v)/10)*10)+' votos'}</span><em data-tip="Probabilidad de ganarlo: ${pjPct(u.p)}">${u.p>=.4&&u.p<=.6?'casi empate':u.p>.6?'probable':u.p>=.25?'posible':'difícil'}</em></button>`).join('')}</div>`;}
+  else {const pn=R.pano,u=R.U[0]; let mt=p?pjMeta(u,R.sig.a,T):null; if(p&&typeof eDuel27==='function'&&typeof eSegOf==='function'){const d=eDuel27(ii,eAlly()); if(d){const f=Math.round(eSegOf(d))+1-Math.round(d.mine); mt=f>0?{nuevos:f,quitados:Math.round(f/2)}:null;}}
+    L=`<h4>${p?'¿Gana?':'¿Quién gana?'}</h4>${p?`<div class="pjbig"><b>${pjPct(u.p)}</b><span>probabilidad de ganar</span></div>`:''}
+     <div class="pjvs">${pn.filter(x=>x.share>=1).slice(0,6).map(x=>{const lo=Math.max(0,x.share-R.band),hi=x.share+R.band,mx=Math.min(100,Math.max(...pn.map(y=>y.share))+R.band+5); return `<div><span><i style="background:${pjCol(x.ms)}"></i>${esc(pjBN(x.ms))}</span><div class="vb"><u style="left:${(100*lo/mx).toFixed(1)}%;width:${(100*(hi-lo)/mx).toFixed(1)}%;background:${pjCol(x.ms)}"></u><s style="left:${(100*x.share/mx).toFixed(1)}%;background:${pjCol(x.ms)}"></s></div><b>${x.share.toFixed(1)} %</b><em>${pjPct(x.p1)}</em></div>`;}).join('')}</div>
+     <div class="pjlg"><span>Votación más probable · la franja es su rango · a la derecha, probabilidad de ganar</span></div>`;
+    if(p){const E=typeof eSecs==='function'?eSecs():null,A=typeof eAlly==='function'?eAlly():null,d=A&&typeof eDuel27==='function'?eDuel27(ii,A):null,me=A?esc(eSide(A)):'';
+      let mt='';
+      if(d){const mn=Math.round(d.riv?d.riv.votes:0)+1,sg=Math.round(eSegOf(d))+1,es=Math.round(d.mine),row=(t,v,sb)=>`<div class="pjgo"><div><b>${t}</b><small>${sb}</small></div><div><b>${fmt(v)}</b><em class="${es>=v?'ok':'no'}">${es>=v?'ya los tendría':'le faltarían '+fmt(v-es)}</em></div></div>`;
+        mt=`<div class="pjnow">Hoy tendría unos <b>${fmt(Math.round(es/100)*100)}</b> votos; ${esc(d.rvN)}, unos <b>${fmt(Math.round((d.riv?d.riv.votes:0)/100)*100)}</b>.</div>${row('Para ganar',mn,'un voto más que '+esc(d.rvN))}${row('Para 70 % de probabilidad',sg,'una ventaja más segura')}`;}
+      const xs=E?ii.map(i=>E.by[i]).filter(x=>x&&x.rv>x.mine&&x.mg>-10).sort((a,b)=>(a.rv-a.mine)-(b.rv-b.mine)):[],secN=i=>String(S[i].s),munN=i=>MUN[S[i].m]||'';
+      const pot=E?ii.map(i=>E.by[i]).filter(x=>x&&x.mine>x.rv&&(V2.maxT[x.i]||0)>x.tp).map(x=>({i:x.i,v:((V2.maxT[x.i]||0)-x.tp)/100*x.ln*(x.mine/x.V)})).filter(x=>x.v>=1).sort((a,b)=>b.v-a.v).slice(0,5):[];
+      Rt=`<h4>¿Qué le falta?</h4>${mt}
+       ${xs.length?`<h4>¿Dónde conseguirlos?</h4><p class="pjsub">Secciones que perdería por poco: las más fáciles de voltear.</p><table class="cgtb"><thead><tr><th>Sección</th><th>Municipio</th><th>Votos que le faltarían</th></tr></thead><tbody>${xs.slice(0,6).map(x=>`<tr><td>${secN(x.i)}</td><td>${esc(munN(x.i))}</td><td>${fmt(Math.round(x.rv-x.mine)+1)}</td></tr>`).join('')}</tbody></table><p class="cgq">Son ${fmt(xs.length)} secciones a disputar; todas están en "Dónde trabajar".</p>`:''}
+       ${pot.length?`<p class="pjsub" style="margin-top:14px">Y donde ${me} ganaría pero votó menos gente que en su mejor elección:</p><table class="cgtb"><thead><tr><th>Sección</th><th>Municipio</th><th>Votos al alcance</th></tr></thead><tbody>${pot.map(x=>`<tr><td>${secN(x.i)}</td><td>${esc(munN(x.i))}</td><td>hasta ${fmt(Math.round(x.v))}</td></tr>`).join('')}</tbody></table>`:''}`;}
+    else Rt=`<h4>Para ver metas</h4><p class="pjn">Elige un partido en la Estrategia para ver cuántos votos le faltan y dónde conseguirlos.</p>`;}
+  let W=$('pjw'); if(!W){W=document.createElement('div'); W.id='pjw'; W.className='actw pjw'; W.setAttribute('role','dialog'); document.body.appendChild(W);
+    W.addEventListener('click',e=>{const dl=e.target.closest('[data-dl]'); if(dl&&dl.dataset.dl&&!dl.disabled){pjGoDL(dl.dataset.dl,dl.dataset.lv); return;} const tb=e.target.closest('[data-pjtab]'); if(tb){pjDetalle(W._ii,tb.dataset.pjtab); return;} if(e.target===W||e.target.closest('#pjx')){W.classList.remove('on'); document.body.classList.remove('actm');}});
+    document.addEventListener('keydown',e=>{if(e.key==='Escape'&&W.classList.contains('on')){W.classList.remove('on'); document.body.classList.remove('actm');}});}
+  W._ii=ii; const where=ii.length<ALL.length&&st.es.u!=null&&typeof eName==='function'?eName(eLv(),st.es.u):EST;
+  W.innerHTML=`<div class="ac-bx pj-bx" style="--pc:${col}"><div class="pj-top"><div><b>${TY[T]} 2027 · ${esc(p?pjBN(fb):'todas las fuerzas')}</b><span>${esc(where)}</span></div><div class="pj-tr">${hasCg?`<div class="pj-tabs"><button data-pjtab="d" class="${st.pjTab==='d'?'on':''}"><span class="lg">Quién ganaría cada distrito</span><span class="sm">Distritos</span></button><button data-pjtab="cg" class="${st.pjTab==='cg'?'on':''}"><span class="lg">Cómo quedaría el congreso</span><span class="sm">Congreso</span></button></div>`:''}<button class="ac-x" id="pjx" aria-label="Cerrar">✕</button></div></div>
+   <div class="pj-g"><div class="pj-c">${L}</div><div class="pj-c">${Rt}</div></div><div class="pj-f">${pjTag(T)} · INE, resultados por sección 2015–2024 · proyección propia</div></div>`;
+  W.classList.add('on'); document.body.classList.add('actm');
+  if(!matchMedia('(prefers-reduced-motion: reduce)').matches) W.querySelectorAll('.pjbig b,.cgr b').forEach(el=>{const m=el.textContent.match(/^(\d+)/); if(!m) return; const to=+m[1],rest=el.textContent.slice(m[1].length),t0=performance.now(); const f=t=>{const k=Math.min(1,(t-t0)/600),e=1-Math.pow(1-k,3); el.textContent=Math.round(to*e)+rest; if(k<1) requestAnimationFrame(f);}; requestAnimationFrame(f);});}
+function pjGoDL(k,lv){lv=lv||'dl'; const W=$('pjw'); if(W){W.classList.remove('on'); document.body.classList.remove('actm');} st.es.lv=lv; st.es.u=+k; applyScope(lv,st.es.u);}
+function pjBind(root){if(!root) return; root.querySelectorAll('[data-pjdet]').forEach(b=>b.onclick=()=>{const v=b.dataset.pjdet; pjDetalle(v==='card'?scope():v==='cg'?ALL:eSelII(),v==='cg'?'cg':'d');});}
 tarjeta({id:'proy',titulo:'Proyección 2027',resumen:'votos, rango y probabilidad del cargo consultado',icono:'<path d="M3 15 9 9l4 3 7-8" fill="none" stroke="#1C7F79" stroke-width="2.2"/><path d="M20 4v5h-5" fill="none" stroke="#4CC1BA" stroke-width="2.2" stroke-dasharray="2 2"/>',html:ctx=>pjCard(ctx)});
