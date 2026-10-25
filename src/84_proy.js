@@ -26,8 +26,9 @@ function pjName(T,k){return T==='GOB'?EST:T==='AYU'?(M0.cab==='cdmx'?'Alcaldía 
 /* proyección completa del cargo T en el territorio ii */
 function pjRun(T,ii,party,shift,NS){const B=pjBase(T),BL=pjBlocs(T),G={},sig=pjSig(T),LE=lastOf(T);
   /* solo unidades que eligen por partidos (p. ej. en Oaxaca los municipios por sistemas normativos no tienen resultados) */
-  ii.forEach(i=>{const x=B.pr[i]; if(!x||!row(LE,i)) return; const k=pjKey(T,i),g=G[k]||(G[k]={k,w:0,s:BL.map(()=>0)}); g.w+=B.w[i]; BL.forEach((ms,j)=>g.s[j]+=B.w[i]*pjSh(x,ms));});
-  const U=Object.values(G).filter(g=>g.w>0).map(g=>({k:g.k,V:g.w,s:g.s.map(v=>v/g.w)}));
+  ii.forEach(i=>{const x=B.pr[i]; if(!x||!row(LE,i)) return; const k=pjKey(T,i),g=G[k]||(G[k]={k,w:0,s:BL.map(()=>0)}); g.w+=B.w[i]; BL.forEach((ms,j)=>g.s[j]+=B.w[i]*pjSh(x,ms));
+    /* referencia simple: lo que pasó en la última elección del cargo, con las mismas alianzas */ const rr=row(LE,i); if(rr&&rr.val){const sh=D.P8.map(p=>(rr.v[p]||0)/rr.val); g.av=(g.av||0)+rr.val; g.a=g.a||BL.map(()=>0); BL.forEach((ms,j)=>g.a[j]+=rr.val*pjSh(sh,ms));}});
+  const U=Object.values(G).filter(g=>g.w>0).map(g=>({k:g.k,V:g.w,s:g.s.map(v=>v/g.w),ea:g.av?g.a.map(v=>v/g.av):null}));
   if(!U.length) return null;
   const tot=BL.map((_,j)=>U.reduce((a,u)=>a+u.s[j]*u.V,0)/U.reduce((a,u)=>a+u.V,0));
   const fi=party?BL.findIndex(ms=>ms.includes(party)):tot.indexOf(Math.max(...tot)); if(fi<0) return {none:true,BL};
@@ -47,7 +48,8 @@ function pjRun(T,ii,party,shift,NS){const B=pjBase(T),BL=pjBlocs(T),G={},sig=pjS
   U.forEach(u=>{u.p=cal(u.w/R); u.lead=u.m>=0?fi:u.e.indexOf(Math.max(...u.e.filter((_,j)=>j!==fi)));});
   const expC=U.reduce((a,u)=>a+u.p,0),expR=Array.from(wins).reduce((a,b)=>a+b,0)/R,dl=expC-expR,sw=Array.from(wins).map(x=>Math.max(0,Math.min(U.length,x+dl))).sort((a,b)=>a-b),q=f=>Math.round(sw[Math.min(R-1,Math.floor(f*R))]),half=Math.floor(U.length/2)+1;
   const all=ii.length===ALL.length,sdS=(all?sc:Math.hypot(sc,sl/Math.sqrt(U.length)))*1.28;
-  return {T,BL,fi,U,tot,sh,sig,n:U.length,exp:expC,lo:q(.1),hi:q(.9),half,pMaj:U.length===1?U[0].p:sw.filter(x=>x>=half).length/R,share:tot[fi]*100+sh,band:sdS,
+  const UL=U.filter(u=>u.ea),last={y:D.E[LE].year,n:UL.filter(u=>u.ea.indexOf(Math.max(...u.ea))===fi).length,of:UL.length,v:UL.length===1?100*UL[0].ea[fi]:null,m:UL.length===1?100*(UL[0].ea[fi]-Math.max(...UL[0].ea.filter((_,j)=>j!==fi))):null};
+  return {T,BL,fi,U,tot,sh,sig,n:U.length,last,exp:expC,lo:q(.1),hi:q(.9),half,pMaj:U.length===1?U[0].p:sw.filter(x=>x>=half).length/R,share:tot[fi]*100+sh,band:sdS,
     cat:{seg:U.filter(u=>u.p>=.85).length,pro:U.filter(u=>u.p>=.65&&u.p<.85).length,com:U.filter(u=>u.p>.35&&u.p<.65).length,con:U.filter(u=>u.p<=.35).length}};}
 /* votos para llegar a 70 %: margen necesario según la dispersión local del modelo (dos fuerzas punteras) */
 const pjMeta=(u,a,T)=>{const sl=((MODELO.sigma[T]||{}).local||15),sc=((MODELO.sigma[T]||{}).comun||10),need=.5244*Math.hypot(sl,sc); if(u.m>=need) return null; const v=(need-u.m)/100*u.V; return {nuevos:Math.round(v),quitados:Math.round(v/2)};};
@@ -68,10 +70,10 @@ function pjCard(ctx,ii0,inner){const T=pjType(); if(!T) return ''; const ii=ii0|
   return `<div class="${inner?'pjc pjin':'cd pjc'}" style="--pc:${col}">${hd2}<span class="pjtag">${pjEnc(T)?((st.es.poll[T]||{}).of?'ajustada con '+((st.es.poll[T].of.n>1)?'el promedio de '+st.es.poll[T].of.n+' encuestas':'1 encuesta'):'ajustada con tu encuesta'):'solo resultados históricos · sin encuesta'}</span>
    ${multi?`<div class="pjbig"><b>${Math.round(R.exp)}</b><span>de ${R.n} ${NN[1]}</span></div>
    <div class="pjrg"><i class="tr"></i><i class="bd" style="left:${pos(R.lo)};width:calc(${pos(R.hi)} - ${pos(R.lo)})"></i><i class="mj" style="left:${pos(R.half-.5)}"><span>mayoría ${R.half}</span></i><i class="pt" style="left:${pos(R.exp)}"></i><span class="ax" style="left:0">0</span><span class="ax" style="left:${pos(R.lo)}">${R.lo}</span><span class="ax" style="left:${pos(R.hi)}">${R.hi}</span><span class="ax" style="left:100%">${R.n}</span></div>
-   <div class="pjs">Va adelante en <b>${R.U.filter(u=>u.m>=0).length}</b>. Contando el error, lo esperable es <b>${Math.round(R.exp)}</b>, con rango de <b>${R.lo} a ${R.hi}</b> (8 de cada 10 escenarios)</div>
+   <div class="pjs">Va adelante en <b>${R.U.filter(u=>u.m>=0).length}</b>. Contando el error, lo esperable es <b>${Math.round(R.exp)}</b>, con rango de <b>${R.lo} a ${R.hi}</b> (8 de cada 10 escenarios)</div><div class="pjs pjref">Si se repitiera ${R.last.y}: ${R.last.n} de ${R.last.of}</div>
    <div class="pjpm"><span>Probabilidad de ganar la mayoría de ${NN[1]}</span><b>${pct(R.pMaj)}</b></div>
    <div class="pjcat"><div style="--c:${col}"><b>${R.cat.seg}</b><span>Seguros</span></div><div style="--c:${mix(col,.5)}"><b>${R.cat.pro}</b><span>Probables</span></div><div style="--c:#F5A47C"><b>${R.cat.com}</b><span>Competidos</span></div><div style="--c:#B9C1C1"><b>${R.cat.con}</b><span>En contra</span></div></div>`
-   :`<div class="pjbig"><b>${pct(R.U[0].p)}</b><span>probabilidad de ganar</span></div><div class="pjs">Votación esperada: <b>${R.share.toFixed(1)} %</b> (rango ${Math.max(0,R.share-R.band).toFixed(0)}–${(R.share+R.band).toFixed(0)} %) · margen ${R.U[0].m>=0?'+':'−'}${Math.abs(R.U[0].m).toFixed(1)} pts</div>`}
+   :`<div class="pjbig"><b>${pct(R.U[0].p)}</b><span>probabilidad de ganar</span></div><div class="pjs">Votación esperada: <b>${R.share.toFixed(1)} %</b> (rango ${Math.max(0,R.share-R.band).toFixed(0)}–${(R.share+R.band).toFixed(0)} %) · margen ${R.U[0].m>=0?'+':'−'}${Math.abs(R.U[0].m).toFixed(1)} pts</div>${R.last.v!=null?`<div class="pjs pjref">Si se repitiera ${R.last.y}: ${R.last.v.toFixed(1)} % · ${R.last.m>=0?'ganaría por':'perdería por'} ${Math.abs(R.last.m).toFixed(1)} pts</div>`:''}`}
    <div class="pjsc"><div class="l"><span>¿Y si cambia el voto en todo el estado?</span><b id="pjsv">${R.sh>0?'+':''}${R.sh} pts</b></div><input type="range" id="pjsl" min="-5" max="5" step="1" value="${R.sh}" aria-label="Cambio estatal en puntos">
     <div class="pjst">${sc.map(x=>`<div class="${x.s===R.sh?'on':''}"><b>${multi?Math.round(x.e):pct(x.pm)}</b><span>${x.s>0?'+':''}${x.s} pts</span>${multi?`<em>${pct(x.pm)}</em>`:''}</div>`).join('')}</div></div>
    ${multi?`<h5>${NN[1][0].toUpperCase()+NN[1].slice(1)} más competidos</h5><div class="pjl">${comp.map(u=>{const mt=pjMeta(u,R.sig.a,T); return `<div title="${mt?`Para 70 % de probabilidad: ${fmt(mt.nuevos)} votos nuevos o ${fmt(mt.quitados)} votos ganados al rival`:'Ya supera 70 % de probabilidad'}"><b>${esc(pjName(T,u.k).replace(/^Distrito (local|federal) /,'D'+(T==='DIPL'?'L':'F')+' ').split(' · ')[0])}</b><i style="--p:${(u.p*100).toFixed(0)}%;--c:${col}"></i><span>${pct(u.p)}</span></div>`;}).join('')}</div>`:''}

@@ -1265,3 +1265,13 @@ h5 small{font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0
 .prl .vm{border:0;background:none;color:var(--teal3);font:600 11px var(--f);cursor:pointer;padding:0;white-space:nowrap}.prl .vm:hover{text-decoration:underline}
 .pcb.re{background:var(--tealxl);border-left-color:var(--teal3);color:var(--teal3)}
 .pcb+.pcb{margin-top:6px}
+
+.pjs.pjref{color:var(--muted);margin-top:2px}
+.prl .vr .nm{font-size:10.5px;color:var(--muted);margin-left:auto;text-align:right}
+.prl>div.lost b,.prl>div.lost span{color:var(--ink)}.prl .cmp{font-style:normal;font-size:10.5px;background:var(--hair);color:var(--ink);border-radius:8px;padding:1px 6px;margin-right:2px}.prl .vt.pd{color:var(--muted)}
+.tpq{display:flex;flex-wrap:wrap;align-items:center;gap:6px}.tpq .sm{font-size:11.5px}
+.tbl .tper{border:0;background:none;padding:0;font:inherit;color:var(--muted);cursor:pointer}.tbl .tper:hover{color:var(--teal3);text-decoration:underline}
+.tbl tr[data-terr]{cursor:pointer}.tbl tr[data-terr]:hover td{background:var(--bg)}
+.tpq .qe{display:inline-flex;flex-wrap:wrap;gap:6px;margin:0}
+.tbl .tpn{display:block;text-align:left;margin-top:1px}
+.tbl .tper{text-align:left}

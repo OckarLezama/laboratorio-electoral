@@ -10,11 +10,13 @@ uso: python pipeline/lab.py ganadores
 """
 import collections
 import csv
+import glob
 import json
+import os
 import re
 import unicodedata
 
-from comun import BASE, PLANO
+from comun import BASE, ESTADOS, PLANO
 
 FUENTE = BASE / 'GANADORES' / 'ganadores_todos.csv'
 ALCN = 'Alcaldía'
@@ -100,6 +102,93 @@ def resultado(d, ek, ii, tokens):
     return [round(100 * bl[0][0] / V, 1), round(100 * (bl[0][0] - (bl[1][0] if len(bl) > 1 else 0)) / V, 1)]
 
 
+DATOS = BASE / 'LAB_POLITICO_DATOS'
+CANDF = BASE / 'GANADORES' / 'candidaturas_fed_2024.csv'  # candidaturas federales 2024 del INE (solo nombre, cargo, lugar y partido)
+SIGLA = {'SIGAMOS HACIENDO HISTORIA': 'MORENA_PT_PVEM', 'FUERZA Y CORAZON POR MEXICO': 'PAN_PRI_PRD', 'MOVIMIENTO CIUDADANO': 'MC',
+         'PARTIDO REVOLUCIONARIO INSTITUCIONAL': 'PRI', 'PARTIDO ACCION NACIONAL': 'PAN', 'MORENA': 'MORENA', 'PARTIDO VERDE ECOLOGISTA DE MEXICO': 'PVEM',
+         'PARTIDO DEL TRABAJO': 'PT', 'PARTIDO DE LA REVOLUCION DEMOCRATICA': 'PRD', 'CANDIDATURA INDEPENDIENTE': 'IND'}
+
+
+def lugar(d, ek, ii, tokens):
+    """(% de votos, distancia al ganador en puntos, lugar) del bloque que incluye a la persona."""
+    e = d['E'].get(ek)
+    if not e or not ii:
+        return None
+    P = d['P8']; NP = len(P); tot = [0] * NP
+    for i in ii:
+        r = e['r'][i]
+        if r:
+            for j in range(NP):
+                tot[j] += r[j]
+    V = sum(tot); ix = {p: j for j, p in enumerate(P)}
+    if not V:
+        return None
+    bl = sorted(((sum(tot[ix[x]] for x in b['members'] if x in ix), set(b['members'])) for b in e['blocs']), key=lambda x: -x[0])
+    for n, (v, ms) in enumerate(bl):
+        if tokens & ms:
+            return [round(100 * v / V, 1), round(100 * (v - bl[0][0]) / V, 1)], n + 1
+    return None
+
+
+def candidaturas(e):
+    """Propietarias de mayoría relativa (diputaciones y senadurías) de 2024 en el estado e."""
+    if not CANDF.exists():
+        return []
+    out = []
+    with open(CANDF, encoding='utf-8', newline='') as fh:
+        for r in csv.DictReader(fh):
+            if r['TIPO_CANDIDATO'] != 'Persona Propietaria' or 'MR' not in r['CARGO']:
+                continue
+            en = _n(r['ENTIDAD']); ent = 15 if en in ('MEXICO', 'ESTADO DE MEXICO') else next((x['ent'] for x in ESTADOS if _n(x['nombre']) == en), None)
+            if ent is None:  # nombres cortos: Coahuila, Michoacán, Veracruz
+                ent = next((x['ent'] for x in ESTADOS if _n(x['nombre']).startswith(en + ' ') or en.startswith(_n(x['nombre']) + ' ')), None)
+            if ent != e['ent']:
+                continue
+            out.append(r)
+    return out
+_FED = {}
+
+
+def _secdist(f, col, ent=None):
+    out = {}
+    with open(f, encoding='utf-8-sig', errors='ignore', newline='') as fh:
+        for r in csv.DictReader(fh):
+            if ent is not None and _num(r.get('ID_ESTADO')) != ent:
+                continue
+            s_, d_ = _num(r.get('SECCION')), _num(r.get(col))
+            if s_ and d_:
+                out[s_] = d_
+    return out
+
+
+def vigentes(e, S):
+    """Elecciones de diputaciones cuyos distritos son los del mapa de hoy: se compara, sección por sección, el
+    distrito con el que se votó (archivo del INE) contra el distrito de hoy. Si coincide en 97 % o más, es la misma
+    distritación y se puede llevar al mapa; si no, hubo redistritación. Así se ajusta solo cuando cambie el mapa."""
+    hoy_dl = {s_[0]: s_[2] for s_ in S}; hoy_df = {s_[0]: s_[3] for s_ in S}; ok = set()
+    def compara(m, hoy):
+        com = [k for k in m if k in hoy]
+        return len(com) >= 20 and sum(m[k] == hoy[k] for k in com) >= .97 * len(com)
+    for y in (2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025):
+        fs = glob.glob(str(DATOS / '02_LOCAL' / e['carpeta_local'] / str(y) / 'DIPUTACIONES_LOC_MR*' / '*_SEC.[cC][sS][vV]'))
+        fs = [f for f in fs if 'EXT' not in os.path.basename(f).upper()]
+        if fs and compara(_secdist(fs[0], 'ID_DISTRITO_LOCAL'), hoy_dl):
+            ok.add(('dl', y))
+        if y in (2015, 2018, 2021, 2024):
+            if y not in _FED:
+                ff = glob.glob(str(DATOS / '01_FEDERAL' / 'DIPUTACIONES_FED_MR' / str(y) / '*NAL_SEC.[cC][sS][vV]'))
+                _FED[y] = collections.defaultdict(dict)
+                if ff:
+                    with open(ff[0], encoding='utf-8-sig', errors='ignore', newline='') as fh:
+                        for r in csv.DictReader(fh):
+                            en, s_, d_ = _num(r.get('ID_ESTADO')), _num(r.get('SECCION')), _num(r.get('ID_DISTRITO_FEDERAL'))
+                            if en and s_ and d_:
+                                _FED[y][en][s_] = d_
+            if compara(_FED[y].get(e['ent'], {}), hoy_df):
+                ok.add(('df', y))
+    return ok
+
+
 def generar():
     if not FUENTE.exists():
         print(f'[ganadores] falta {FUENTE}')
@@ -120,6 +209,7 @@ def generar():
             MI[s_[1]].append(i); DLI[s_[2]].append(i); DFI[s_[3]].append(i)
         ys = lambda t: sorted(int(k.split('_')[1]) for k in d['E'] if k.startswith(t + '_'))
         YAY, YDLs = ys('AYU'), ys('DIPL'); YDL = YDLs[-1] if YDLs else None
+        VIG = vigentes(next(x for x in ESTADOS if x['ent'] == e), d['S']); Y0 = min(int(k.split('_')[1]) for k in d['E'])
         for r in sorted(rs, key=lambda r: (_num(r['anio']) or 0)):
             # mismas palabras en cualquier orden = misma persona (algunos archivos ponen primero los apellidos)
             k = ' '.join(sorted(_n(r['nombre']).split()))
@@ -146,16 +236,31 @@ def generar():
             par = (r['partido'] or '').strip().upper(); act = (r['actor'] or '').strip().upper()
             if r['amb'] == 'jud':  # la elección judicial no tiene partidos (el actor es el poder que postuló)
                 par = act = ''
-            y = _num(r['anio']); tok = set(re.split(r'[_\-\s]+', par + ' ' + act)) - {''}; res = loc = None
-            if cl in ('Presidencia municipal', 'Alcaldía') and mid and str(mid) in m['municipios']:
-                res = resultado(d, f'AYU_{y}', MI.get(mid, []), tok); loc = ['m', mid]
-            elif cl == 'Diputación local' and _num(r['dl']) and y == YDL:  # distritos de hoy: solo la última elección local
-                res = resultado(d, f'DIPL_{y}', DLI.get(_num(r['dl']), []), tok); loc = ['dl', _num(r['dl'])]
-            elif cl == 'Diputación federal' and _num(r['df']) and y == 2024:  # distritación federal vigente desde 2024
-                res = resultado(d, f'DIPF_{y}', DFI.get(_num(r['df']), []), tok); loc = ['df', _num(r['df'])]
+            y = _num(r['anio']); tok = set(re.split(r'[_\-\s]+', par + ' ' + act)) - {''}; res = loc = why = None
+            MUNI = ('Presidencia municipal', 'Alcaldía', 'Regiduría', 'Regiduría (plurinominal)', 'Sindicatura', 'Concejalía')
+            if r['amb'] == 'jud':
+                pass
+            elif y and y < Y0:
+                why = 'pre'  # sin resultados por sección en la plataforma
+            elif cl in MUNI and mid and str(mid) in m['municipios']:
+                if cl in ('Presidencia municipal', 'Alcaldía'):
+                    res = resultado(d, f'AYU_{y}', MI.get(mid, []), tok)
+                loc = ['m', mid, f'AYU_{y}']
+            elif cl == 'Diputación local' and _num(r['dl']):
+                if ('dl', y) in VIG:  # mismos distritos que el mapa de hoy (comprobado sección por sección)
+                    res = resultado(d, f'DIPL_{y}', DLI.get(_num(r['dl']), []), tok); loc = ['dl', _num(r['dl']), f'DIPL_{y}']
+                else:
+                    why = 'redis'
+            elif cl == 'Diputación federal' and _num(r['df']):
+                if ('df', y) in VIG:
+                    res = resultado(d, f'DIPF_{y}', DFI.get(_num(r['df']), []), tok); loc = ['df', _num(r['df']), f'DIPF_{y}']
+                else:
+                    why = 'redis'
             elif cl == 'Gubernatura':
-                res = resultado(d, f'GOB_{y}', list(range(len(d['S']))), tok)
-            R.append([pid[k], y, cid[cl], u, par, act if act != par else '', res, loc])
+                res = resultado(d, f'GOB_{y}', list(range(len(d['S']))), tok); loc = ['e', 0, f'GOB_{y}']
+            elif cl == 'Senaduría':
+                loc = ['e', 0, f'SEN_{y}']
+            R.append([pid[k], y, cid[cl], u, par, act if act != par else '', res, loc, why])
             if cl in ('Presidencia municipal', 'Alcaldía') and mid and str(mid) in m['municipios']:
                 PM[str(mid)].append([_num(r['anio']), pid[k], par or act, act if act != par else ''])
         # quién puede reelegirse en 2027 (regla general vigente hasta 2030: alcaldías una vez, diputaciones locales
@@ -182,11 +287,40 @@ def generar():
                             break
                     if n < 4:
                         RE.setdefault(q, f'Diputación local · {n}.º periodo seguido')
+        # quienes compitieron por una diputación o senaduría federal de mayoría en 2024 y no ganaron
+        gan24 = {(x[0], C[x[2]]) for x in R if x[1] == 2024}; nperd = 0
+        for r in candidaturas(next(x for x in ESTADOS if x['ent'] == e)):
+            k = ' '.join(sorted(_n(r['NOMBRE_CANDIDATO']).split()))
+            if not k:
+                continue
+            cl = 'Diputación federal' if 'DIPUTA' in _n(r['CARGO']) else 'Senaduría'
+            if k in pid and (pid[k], cl) in gan24:
+                continue
+            if k not in pid:
+                pid[k] = len(P); P.append(nombre(r['NOMBRE_CANDIDATO']))
+            if cl not in cid:
+                cid[cl] = len(C); C.append(cl)
+            sig = SIGLA.get(_n(r['PARTIDO_COALICION']), _n(r['PARTIDO_COALICION'])); tok = set(sig.split('_'))
+            dfn = _num((r['DISTRITO_FEDERAL'] or '').split('-')[0]); res = loc = why = None; pl = None
+            if cl == 'Diputación federal':
+                if not dfn:
+                    continue
+                u = f'Distrito federal {dfn}'
+                if ('df', 2024) in VIG:
+                    x = lugar(d, 'DIPF_2024', DFI.get(dfn, []), tok); loc = ['df', dfn, 'DIPF_2024']
+                    if x: res, pl = x
+                else:
+                    why = 'redis'
+            elif cl == 'Senaduría':
+                u = ''; x = lugar(d, 'SEN_2024', list(range(len(d['S']))), tok); loc = ['e', 0, 'SEN_2024']
+                if x: res, pl = x
+            par = sig if '_' not in sig else ''
+            R.append([pid[k], 2024, cid[cl], u, par, sig if '_' in sig else '', res, loc, why, pl or 0]); nperd += 1
         m['gan'] = {'p': P, 'c': C, 'r': R, 'pm': dict(PM), 're': {str(k): v for k, v in RE.items()},
-                    'fuente': 'INE, integración de cargos y candidaturas ganadoras: locales 2018–2025, federales 2000–2024 y elección judicial 2025'}
+                    'fuente': 'INE, integración de cargos y candidaturas ganadoras: locales 2018–2025, federales 2000–2024 y elección judicial 2025; candidaturas federales de mayoría 2024 (quienes no ganaron)'}
         f.write_text(json.dumps(d, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
-        rep = sum(1 for v in collections.Counter(x[0] for x in R).values() if v > 1)
-        print(f"[ganadores] {m['cab']}: {len(P):,} personas, {len(R):,} cargos ganados, {rep:,} ganaron más de una vez, presidencias en {len(PM)}/{len(m['municipios'])} municipios, {len(RE)} pueden reelegirse en 2027, {sum(1 for x in R if x[6]):,} con votación")
+        rep = sum(1 for v in collections.Counter(x[0] for x in R if len(x) < 10).values() if v > 1)
+        print(f"[ganadores] {m['cab']}: {len(P):,} personas, {len(R):,} cargos ganados, {rep:,} ganaron más de una vez, presidencias en {len(PM)}/{len(m['municipios'])} municipios, {len(RE)} pueden reelegirse en 2027, {nperd} candidaturas federales 2024 que no ganaron, {sum(1 for x in R if x[6]):,} con votación, distritos vigentes {sorted(VIG)}")
 
 
 if __name__ == '__main__':
