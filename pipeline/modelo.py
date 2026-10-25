@@ -341,6 +341,9 @@ def main():
     print('calibración de la simulación', cal_sim)
     MOD = {'version': 1, 'cal_sim': cal_sim, 'metodo': rep['metodo'], 'pesos': fin, 'a': rep['logistica_final'], 'sigma': sig,
            'calibracion': rep['calibracion'], 'nacional': nac, 'estados': pe}
+    vs = REPO / 'pipeline' / 'insumos' / 'validacion_secciones.json'  # ver pipeline/val_secciones.py
+    if vs.exists():
+        MOD['sec'] = json.loads(vs.read_text(encoding='utf-8'))
     (REPO / 'data' / 'modelo.json').write_text(json.dumps(MOD, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
     out = REPO / 'pipeline' / 'insumos' / 'validacion.json'
     out.write_text(json.dumps(rep, ensure_ascii=False, indent=1), encoding='utf-8')

@@ -10,10 +10,10 @@ Método
    y acierto del ganador, por estado y por municipio o distrito). Se elige la de menor error.
 3. Participación: se prueban tres reglas (misma elección de hace 6 años, mismo ciclo electoral; la última
    elección; el promedio) y se elige la de menor error por sección.
-4. Rendimiento de alianzas: en elecciones del mismo día en las que unos partidos fueron juntos en una y
-   separados en otra, se mide qué parte de los votos de los aliados llega a la alianza:
-   r = (votos de la alianza − votos del partido principal) / votos de los demás aliados. Se usa la mediana
-   de todos los casos de las entidades cargadas.
+4. Alianzas: en la plataforma se suman completos los votos de sus partidos (en la boleta cada partido conserva su logo
+   y sus votos se suman al candidato común). Aquí todavía se calcula, solo como diagnóstico, un "rendimiento" comparando
+   elecciones del mismo día donde fueron juntos y separados; NO se usa porque mezcla el arrastre de la otra elección
+   (p. ej. la presidencial de 2024) y da valores sin sentido (más de 100 %).
 5. Rango: el 80 % de los errores de la prueba fue menor a este valor; se muestra como ± en la diferencia.
 
 Uso: python pipeline/proyeccion.py   (procesa todos los data/*.json)
@@ -241,7 +241,7 @@ def transferencias(P, E):
                     if sb[0] <= 0 or sum(sb[1:]) < .01:
                         continue
                     coal = sum(sA[j] for j in m)
-                    out.append(((coal - sb[0]) / sum(sb[1:]), A, B, [P[j] for j in m]))
+                    out.append(((coal - sb[0]) / sum(sb[1:]), A, B, [P[j] for j in m], E[A]['y']))
     return out
 
 
@@ -321,11 +321,19 @@ def main():
     best = max((.05, .1, .15, .2), key=lambda th: (sum(m for m, u in mv if u >= th) / max(1, sum(1 for _, u in mv if u >= th))) if sum(1 for _, u in mv if u >= th) >= 200 else 0)
     sel = [m for m, u in mv if u >= best]
     mov = {'th': best, 'prec': round(100 * sum(sel) / max(1, len(sel))), 'base': round(100 * base), 'n': len(mv), 'n_sel': len(sel)}
-    rs = [max(0, min(1.3, t[1])) for t in tr]
+    # rendimiento de alianzas: solo 2021 en adelante (el sistema de alianzas cambió mucho desde 2018) y, cuando hay
+    # suficientes casos, por alianza (mismos partidos); si no, el de todas las alianzas recientes
+    rec = [t for t in tr if t[5] >= 2021]
+    rs = [max(0, min(1.3, t[1])) for t in rec] or [max(0, min(1.3, t[1])) for t in tr]
     rmed = round(stt.median(rs), 2) if rs else 1.0
     rq = (round(q(rs, .25), 2), round(q(rs, .75), 2)) if rs else (1, 1)
+    gk = {}
+    for t in rec:
+        gk.setdefault('+'.join(sorted(t[4])), []).append(max(0, min(1.3, t[1])))
+    rk = {k: [round(stt.median(v), 2), round(q(v, .25), 2), round(q(v, .75), 2), len(v)] for k, v in gk.items() if len(v) >= 5}
+    print('Rendimiento por alianza (2021+):', rk)
     for c, (d, pr) in todos.items():
-        pr.update({'r': rmed, 'r_q': rq, 'r_n': len(rs), 'mov': mov, 'reg': registro(c, d)})
+        pr.update({'r': rmed, 'r_q': rq, 'r_n': len(rs), 'rk': rk, 'mov': mov, 'reg': registro(c, d)})
         print(c, 'registro', pr['reg']['sin'], 'conservan', pr['reg']['conf'], 'por confirmar', pr['reg']['por_confirmar'])
         d['meta']['proy'] = pr
         json.dump(d, open(PLANO / f'{c}.json', 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))

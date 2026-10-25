@@ -64,6 +64,7 @@ def main(a):
     if cmd in ('proyeccion', 'todo'):
         print('[proyección] Calibrando el modelo 2027 con todos los estados de privado/')
         r = subprocess.run([sys.executable, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'proyeccion.py')])
+        subprocess.run([sys.executable, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'val_secciones.py')])
         if r.returncode:
             raise SystemExit('Falló la calibración de la proyección.')
         print('[proyección] Modelo de proyección 2027 (data/modelo.json)')
