@@ -1,0 +1,93 @@
+{
+ "camp": {
+  "mr": 21,
+  "rp": 14,
+  "umbral": 0.03,
+  "directa": true,
+  "desc": false,
+  "max": 21,
+  "capbase": "estatal",
+  "resumen": "21 de mayoría y 14 plurinominales; umbral 3 %; una curul directa a cada partido con 3 %; resto por cociente natural y resto mayor; máximo 21 por partido; tope +8 puntos.",
+  "fuente": "Constitución de Campeche art. 31; Ley de Instituciones y Procedimientos Electorales de Campeche arts. 569–577",
+  "validacion": "Reproduce exactamente las plurinominales de 2024 (IEEC CG/116/2024).",
+  "cert": "media"
+ },
+ "chis": {
+  "mr": 24,
+  "rp": 16,
+  "umbral": 0.03,
+  "directa": true,
+  "desc": true,
+  "max": null,
+  "capbase": "estatal",
+  "resumen": "24 de mayoría y 16 plurinominales; umbral 3 %; una curul directa a cada partido con 3 %; resto con votación modificada (descontando lo usado en la directa), cociente natural y resto mayor; tope +8 puntos.",
+  "fuente": "Constitución de Chiapas art. 38; Ley de Instituciones y Procedimientos Electorales de Chiapas arts. 20–23",
+  "validacion": "Reproduce exactamente las plurinominales de 2024.",
+  "cert": "media-baja (no se leyó el texto vigente de los arts. 20–23)"
+ },
+ "oax": {
+  "mr": 25,
+  "rp": 17,
+  "umbral": 0.03,
+  "directa": false,
+  "desc": false,
+  "max": 25,
+  "capbase": "estatal",
+  "resumen": "25 de mayoría y 17 plurinominales (una migrante); umbral 3 %; cociente natural y resto mayor; máximo 25 por partido; tope +8 y corrección de subrepresentación −8 puntos.",
+  "fuente": "Constitución de Oaxaca art. 33; Ley de Instituciones y Procedimientos Electorales de Oaxaca art. 264; acuerdo IEEPCO-CG-125/2024",
+  "validacion": "Reproduce exactamente las plurinominales de 2024, incluida la corrección de subrepresentación (PVEM→PT).",
+  "cert": "alta"
+ },
+ "qroo": {
+  "mr": 15,
+  "rp": 10,
+  "umbral": 0.03,
+  "directa": false,
+  "desc": false,
+  "max": null,
+  "capbase": "total",
+  "resumen": "15 de mayoría y 10 plurinominales; umbral 3 %; cociente electoral y resto mayor; tope +8 puntos sobre la votación emitida. Desde 2026 la lista de 10 es única (ya no hay mejores perdedores).",
+  "fuente": "Constitución de Quintana Roo art. 54 (Decreto 257, 29-may-2026); Ley de Instituciones y Procedimientos Electorales (Decreto 251); SCJN AI 78/2026",
+  "validacion": "Reproduce exactamente las plurinominales de 2024.",
+  "cert": "media-alta"
+ },
+ "tab": {
+  "mr": 21,
+  "rp": 14,
+  "umbral": 0.03,
+  "directa": true,
+  "desc": true,
+  "max": 21,
+  "capbase": "estatal",
+  "resumen": "21 de mayoría y 14 plurinominales en dos circunscripciones; umbral 3 %; una curul directa a cada partido con 3 %; resto con cociente rectificado y resto mayor; máximo 21 por partido; tope +8 puntos.",
+  "fuente": "Constitución de Tabasco arts. 12 y 14; Ley Electoral y de Partidos Políticos de Tabasco arts. 15–22",
+  "validacion": "Reproduce exactamente las plurinominales de 2024.",
+  "cert": "alta"
+ },
+ "ver": {
+  "mr": 30,
+  "rp": 20,
+  "umbral": 0.03,
+  "directa": false,
+  "desc": false,
+  "max": 30,
+  "capbase": "estatal",
+  "resumen": "30 de mayoría y 20 plurinominales; umbral 3 %; cociente natural y resto mayor; máximo 30 por partido; tope +8 puntos y nuevo cociente con la votación efectiva.",
+  "fuente": "Constitución de Veracruz art. 21; Código Electoral de Veracruz arts. 247–251; SUP-REC-22835/2024",
+  "validacion": "Reproduce exactamente las plurinominales de 2024.",
+  "cert": "media"
+ },
+ "yuc": {
+  "mr": 21,
+  "rp": 14,
+  "umbral": 0.03,
+  "directa": true,
+  "desc": true,
+  "max": null,
+  "capbase": "total",
+  "resumen": "21 de mayoría y 14 plurinominales; umbral 3 %; una curul por porcentaje mínimo a cada partido con 3 %; resto por cociente de unidad y resto mayor; tope +8 puntos sobre la votación emitida.",
+  "fuente": "Constitución de Yucatán arts. 20–21; Ley de Instituciones y Procedimientos Electorales de Yucatán arts. 329–333; SUP-REC-1240/2024",
+  "validacion": "Difiere en 1 curul de 2024 (PVEM y MC, separados por 0.2 puntos de votación).",
+  "cert": "alta"
+ }
+}

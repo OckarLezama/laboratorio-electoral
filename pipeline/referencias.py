@@ -13,6 +13,7 @@ import collections
 import csv
 import json
 import unicodedata
+from pathlib import Path
 
 from comun import BASE, ESTADOS, PLANO
 
@@ -106,7 +107,11 @@ def judicial():
     return out
 
 
+RPR = {}
+
+
 def generar():
+    RPR.update(json.loads((Path(__file__).resolve().parent / 'insumos' / 'rp_reglas.json').read_text(encoding='utf-8')))
     C = consultas(); F = afiliados(); J = judicial()
     for f in sorted(PLANO.glob('*.json')):
         if f.name == 'claves.json':
@@ -135,6 +140,10 @@ def generar():
             ref['af'] = {'p': F[e]['p'], 'y': {p: dict(sorted(v.items())) for p, v in F[e]['y'].items()},
                          'corte': 'padrones de afiliados del INE, 2026'}
         m['ref'] = ref
+        if m['cab'] in RPR:  # reglas de plurinominales verificadas en la ley del estado (pipeline/insumos/rp_reglas.json)
+            m['rpr'] = RPR[m['cab']]
+        else:
+            m.pop('rpr', None)
         f.write_text(json.dumps(d, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
         nm_ok = {k: f"{len(v['m'])}/{len(m['municipios'])}" for k, v in ref.items() if k != 'af'}
         print(f"[referencias] {m['cab']}: municipios {nm_ok}" + (f" sin cruce {sum(len(v.get('sin', [])) for k, v in ref.items() if k != 'af')}" if any(ref.get(k, {}).get('sin') for k in ('rm22', 'cp21')) else '')

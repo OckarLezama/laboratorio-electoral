@@ -258,6 +258,8 @@ function estPanel(){const p=st.party,lv=eLv(),nat=eNat(),ii=eSelII(),F=eFocus();
   h+=`<div class="es-row es-pick"><span>¿Qué partido analizamos?</span><div class="es-ch"><button data-epar="" aria-pressed="${!p}">Todos (panorama)</button>${EPARTIES.map(q=>`<button data-epar="${q}" aria-pressed="${p===q}"><i style="background:${C[q]}"></i>${NM[q]}</button>`).join('')}</div></div>`;
   /* proyección 2027 del cargo elegido (modelo validado; ver 84_proy.js) */
   if(typeof pjCard==='function') h+=pjCard(null,ii,true);
+  /* congreso local 2027 por escenario (mayoría + plurinominales; ver 86_congreso.js) */
+  if(typeof congHTML==='function'&&(st.es.u==null||eLv()==='est')) h+=congHTML();
   /* nivel 1 */
   const an=eAnswer(),aRel=st.es.obj==='AYU'&&p;
   h+=`${aRel?'<span class="es-badge">Mapa de fuerza · no es un pronóstico</span>':''}${p?eCompare():ePanoCards(ii)}${eDark(an,ii)}`;
