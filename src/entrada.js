@@ -7,9 +7,27 @@
 const LAB_SK = 'lab_sesion';
 function LAB_SES() {
   for (const st of [sessionStorage, localStorage]) {
-    try { const s = JSON.parse(st.getItem(LAB_SK) || 'null'); if (s && (!s.exp || s.exp > Date.now())) return s; if (s) st.removeItem(LAB_SK); } catch (e) {}
+    try { const s = JSON.parse(st.getItem(LAB_SK) || 'null'), t = Date.now();
+      if (s && s.la && (!s.exp || s.exp > t) && !(s.ia && t - s.la > s.ia * 6e4)) return s; /* sesiones sin registro de uso (versión anterior) piden entrar de nuevo */ if (s) st.removeItem(LAB_SK); } catch (e) {}
   }
   return null;
+}
+/* cierre automático: cada uso de la plataforma renueva la sesión; sin uso por ia minutos (o al pasar exp) se cierra,
+   se borran las llaves y la página se recarga para soltar los datos de la memoria */
+function LAB_VIGILA() {
+  const st = () => { for (const x of [sessionStorage, localStorage]) { try { if (x.getItem(LAB_SK)) return x; } catch (e) {} } return null; };
+  let ult = 0;
+  const uso = () => { const t = Date.now(); if (t - ult < 2e4) return; ult = t; const x = st(); if (!x) return; try { const s = JSON.parse(x.getItem(LAB_SK)); if (s && LAB_SES()) { s.la = t; x.setItem(LAB_SK, JSON.stringify(s)); } } catch (e) {} };
+  const fin = () => { LAB_SALIR(); const d = document.createElement('div'); d.className = 'lab-fin';
+    d.innerHTML = '<div><b>Tu sesión se cerró</b><p>Por seguridad, se cierra sola después de un tiempo sin usar la plataforma.</p><button>Entrar de nuevo</button></div>';
+    d.style.cssText = 'position:fixed;inset:0;z-index:99999;display:grid;place-items:center;background:rgba(20,32,31,.55);backdrop-filter:blur(6px);font-size:15px;line-height:1.5';
+    d.firstChild.style.cssText = 'background:#fff;border-radius:16px;padding:26px 28px;max-width:360px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.25)';
+    d.querySelector('button').style.cssText = 'margin-top:12px;border:0;border-radius:10px;background:#1C7F79;color:#fff;font-weight:600;font-size:14px;font-family:inherit;padding:10px 18px;cursor:pointer';
+    d.querySelector('button').onclick = () => { location.hash = ''; location.reload(); };
+    document.body.innerHTML = ''; document.body.appendChild(d); clearInterval(iv); };
+  ['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(ev => addEventListener(ev, uso, { passive: true }));
+  const iv = setInterval(() => { if (!LAB_SES()) fin(); }, 3e4);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && !LAB_SES()) fin(); });
 }
 function LAB_PUEDE(cab) { const s = LAB_SES(); return !!(s && s.k && s.k[cab]); }
 function LAB_SALIR() { for (const st of [sessionStorage, localStorage]) { try { st.removeItem(LAB_SK); } catch (e) {} } }
@@ -28,7 +46,8 @@ async function LAB_ENTRAR(usuario, clave, recordar) {
   try {
     for (const cab in e.k) { const b = _b64(e.k[cab]); k[cab] = btoa(String.fromCharCode(...new Uint8Array(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b.slice(0, 12) }, kek, b.slice(12))))); }
   } catch (err) { return { error: 'Usuario o clave incorrectos.' }; }
-  const s = { u: usuario.trim(), n: e.n, a: e.a || [], k, exp: recordar ? Date.now() + 30 * 864e5 : 0 };
+  const C = A.ses || { inact: 30, max_h: 12, rec_d: 7 }, t = Date.now();
+  const s = { u: usuario.trim(), n: e.n, a: e.a || [], k, exp: t + (recordar ? C.rec_d * 864e5 : C.max_h * 36e5), ia: e.ia || C.inact, la: t };
   try { (recordar ? localStorage : sessionStorage).setItem(LAB_SK, JSON.stringify(s)); } catch (err) {}
   return { ok: s };
 }

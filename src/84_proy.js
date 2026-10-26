@@ -45,7 +45,7 @@ function pjRun(T,ii,party,shift,NS){const B=pjBase(T),BL=pjBlocs(T),G={},sig=pjS
   for(let r=0;r<R;r++){for(let j=0;j<nb;j++) cb[j]=gs()*sc; let n=0;
     U.forEach(u=>{let best=-1e9,bj=-1; for(let j=0;j<nb;j++){const v=u.e[j]+cb[j]+gs()*sl; if(v>best){best=v; bj=j;}} u.wb[bj]++; WB[bj][r]++; if(bj===fi){u.w++; n++;}}); wins[r]=n;}
   /* calibración: lo que la simulación dice contra lo que pasó en 2021 y 2024 (tabla de data/modelo.json) */
-  const CS=(MODELO.cal_sim||[]).slice().sort((a,b)=>a[0]-b[0]); for(let k=1;k<CS.length;k++) if(CS[k][1]<CS[k-1][1]) CS[k][1]=CS[k-1][1];
+  const CT=(MODELO.cal_sim_t||{})[T],CS=(CT&&CT.length>=4?CT:(MODELO.cal_sim||[])).map(x=>x.slice()).sort((a,b)=>a[0]-b[0]); /* tabla del mismo cargo si hay suficientes casos */ for(let k=1;k<CS.length;k++) if(CS[k][1]<CS[k-1][1]) CS[k][1]=CS[k-1][1];
   const cal=x=>{if(!CS.length) return x; if(x<=CS[0][0]) return Math.max(0,CS[0][1]*x/CS[0][0]); if(x>=CS[CS.length-1][0]) return CS[CS.length-1][1]+(1-CS[CS.length-1][1])*(x-CS[CS.length-1][0])/(1-CS[CS.length-1][0]); for(let k=1;k<CS.length;k++) if(x<=CS[k][0]){const a=CS[k-1],b=CS[k],t=(x-a[0])/(b[0]-a[0]); return a[1]+t*(b[1]-a[1]);} return x;};
   U.forEach(u=>{const c=Array.from(u.wb,w=>cal(w/R)),t=c.reduce((a,b)=>a+b,0)||1; u.pn=c.map(x=>x/t);}); /* calibrada y normalizada: en cada lugar las probabilidades suman 1, así los totales suman el número de lugares */
   U.forEach(u=>{u.p=u.pn[fi]; u.lead=u.m>=0?fi:u.e.indexOf(Math.max(...u.e.filter((_,j)=>j!==fi)));});

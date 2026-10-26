@@ -24,7 +24,11 @@ from comun import BASE, ESTADOS, PLANO, REPO, estado
 
 IT = 210_000
 NIVELES = {1: 'Administrador: todos los estados', 2: 'Estado completo', 3: 'Distritos federales', 4: 'Distritos locales', 5: 'Municipios'}
-COLS = ['USUARIO', 'NIVEL', 'ESTADO', 'AMBITO', 'CLAVE', 'VIGENCIA', 'ACTIVO', 'NOTAS']
+COLS = ['USUARIO', 'NIVEL', 'ESTADO', 'AMBITO', 'CLAVE', 'VIGENCIA', 'ACTIVO', 'NOTAS', 'INACTIVIDAD_MIN']
+# cierre automático de sesión (se puede cambiar por usuario con la columna INACTIVIDAD_MIN del Excel)
+SES = {'inact': 30,   # minutos sin usar la plataforma: se cierra la sesión
+       'max_h': 12,   # horas máximas de una sesión sin "recordar"
+       'rec_d': 7}    # días que dura "Recordar en este dispositivo"
 b64 = lambda b: base64.b64encode(b).decode()
 
 
@@ -73,6 +77,8 @@ def plantilla(ruta):
            'CLAVE: mínimo 10 caracteres. Mezcla letras y números. Cada persona con su propia clave.',
            'VIGENCIA: fecha en que deja de funcionar (AAAA-MM-DD). Vacío = sin fecha de vencimiento.',
            'ACTIVO: SI o NO. Con NO, el usuario no puede entrar aunque siga en la lista.',
+           'INACTIVIDAD_MIN (opcional): minutos sin usar la plataforma para que su sesión se cierre sola. Vacío = 30.',
+           'Toda sesión se cierra también a las 12 horas, o a los 7 días si marcó "Recordar en este dispositivo".',
            '',
            'Después de editar: python pipeline/lab.py acceso  y sube a GitHub data/acceso.json y la carpeta data/seguro/.',
            'Este archivo tiene claves: NUNCA lo subas a GitHub ni lo mandes por correo.',
@@ -202,7 +208,13 @@ def generar(ruta):
         s = secrets.token_bytes(16)
         kek = hashlib.pbkdf2_hmac('sha256', cl.encode(), s, IT, 32)
         hu = hashlib.sha256((llaves['_sal'] + '|' + us.lower()).encode()).hexdigest()
-        U[hu] = {'s': b64(s), 'n': niv, 'a': amb, 'vig': vig.isoformat() if vig else None,
+        ia = g('INACTIVIDAD_MIN')
+        try:
+            ia = int(float(ia)) if ia not in (None, '') else None
+            assert ia is None or 5 <= ia <= 720
+        except Exception:
+            err.append(f'{pref}: INACTIVIDAD_MIN debe ser minutos entre 5 y 720 (vacío = {SES["inact"]})'); continue
+        U[hu] = {'s': b64(s), 'n': niv, 'a': amb, 'vig': vig.isoformat() if vig else None, **({'ia': ia} if ia else {}),
                  'k': {c: b64(_cifra(kek, base64.b64decode(llaves[c]))) for c in est}}
     if err:
         print('[acceso] No se generó nada. Corrige el Excel:')
@@ -211,7 +223,7 @@ def generar(ruta):
         raise SystemExit(1)
     PLANO.mkdir(exist_ok=True)
     fk.write_text(json.dumps(llaves, indent=1), encoding='utf-8')
-    (REPO / 'data' / 'acceso.json').write_text(json.dumps({'v': 1, 'it': IT, 'sal': llaves['_sal'], 'u': U}, separators=(',', ':')), encoding='utf-8')
+    (REPO / 'data' / 'acceso.json').write_text(json.dumps({'v': 1, 'it': IT, 'sal': llaves['_sal'], 'ses': SES, 'u': U}, separators=(',', ':')), encoding='utf-8')
     for a in avisos:
         print('   aviso ·', a)
     por = {}

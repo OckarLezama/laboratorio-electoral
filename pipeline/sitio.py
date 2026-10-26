@@ -87,7 +87,7 @@ const ENT_CSS={ent_css};
   if(!a){{boot(); ENTRADA(); return;}}
   if(!LAB_PUEDE(a.cab)){{boot(); ENTRADA(a.cab); return;}}
   try{{msg('Cargando '+a.estado+'…'); let DATA=await LAB_DATOS(a.cab,(got,tot)=>msg('Cargando '+a.estado+'… '+(got/1e6).toFixed(1)+' MB'+(tot&&tot>=got?' de '+(tot/1e6).toFixed(1)+' MB':'')));
-    const ses=LAB_SES(); DATA=LAB_RECORTE(DATA,ses); APP(DATA); boot();
+    const ses=LAB_SES(); DATA=LAB_RECORTE(DATA,ses); APP(DATA); boot(); LAB_VIGILA();
     try{{const mm=JSON.parse(sessionStorage.getItem('lab_mun')||'null'); sessionStorage.removeItem('lab_mun'); if(mm&&mm.cab===a.cab&&DATA.meta.municipios[mm.m]&&window.LAB) setTimeout(()=>LAB.setTerr(String(mm.m)),300);}}catch(e){{}} try{{localStorage.setItem('lab_ultimo_ok',a.cab);}}catch(e){{}}
     const av=document.querySelector('.rail .av'); if(av){{av.textContent=(ses.u||'?').slice(0,1).toUpperCase(); av.title='Sesión: '+ses.u; av.setAttribute('role','button'); av.tabIndex=0; av.style.cursor='pointer';
       av.onclick=()=>{{let p=document.getElementById('sesp'); if(p){{p.remove(); return;}} p=document.createElement('div'); p.id='sesp'; p.className='epop sesp'; p.innerHTML='<div class="sesu">Sesión: <b></b></div><button id="sesx">Salir</button>'; p.querySelector('b').textContent=ses.u; document.body.appendChild(p); const r=av.getBoundingClientRect(); p.style.left=(r.right+10)+'px'; p.style.top=Math.max(8,r.bottom-p.offsetHeight)+'px'; document.getElementById('sesx').onclick=()=>{{LAB_SALIR(); location.hash='';}};}};}}

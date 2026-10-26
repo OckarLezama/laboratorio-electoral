@@ -380,7 +380,7 @@ def main():
         pe[st['cab']] = d
     nac = {t: {'solo': round(100 * statistics.mean(c['ok'] for c in M if c['t'] == t)), 'encuesta': round(enc['encuesta_error_3'][t]['acierto']) if enc['encuesta_error_3'].get(t) else None} for t in TARGETS if any(c['t'] == t for c in M)}
     # 7) probabilidad por simulación de bloques (la que usa la plataforma) y su tabla de calibración
-    rng2 = np.random.default_rng(3); cb_ = {}
+    rng2 = np.random.default_rng(3); cb_ = {}; cbt_ = {}  # cbt_: la misma tabla por cargo (ayuntamientos es más incierto)
     for st in ST:
         for Y, prmY in ((2024, best[2021]), (2021, best[2024])):
             for ek in objetivos(st, Y):
@@ -396,9 +396,12 @@ def main():
                 fav = S_.argmax(1); pf = ((S_[None] + cbs + loc).argmax(2) == fav[None]).mean(0); okv = A.argmax(1) == fav
                 for p_, o_ in zip(pf, okv):
                     k_ = min(9, int(p_ * 10)); cb_.setdefault(k_, [0, 0]); cb_[k_][0] += 1; cb_[k_][1] += int(o_)
+                    cbt_.setdefault(T, {}).setdefault(k_, [0, 0]); cbt_[T][k_][0] += 1; cbt_[T][k_][1] += int(o_)
     cal_sim = [[round(k_ / 10 + .05, 2), round(v[1] / v[0], 3), v[0]] for k_, v in sorted(cb_.items()) if v[0] >= 20]
     print('calibración de la simulación', cal_sim)
-    MOD = {'version': 1, 'cal_sim': cal_sim, 'metodo': rep['metodo'], 'pesos': fin, 'a': rep['logistica_final'], 'sigma': sig,
+    cal_sim_t = {T: [[round(k_ / 10 + .05, 2), round(v[1] / v[0], 3), v[0]] for k_, v in sorted(t_.items()) if v[0] >= 20] for T, t_ in cbt_.items()}
+    print('calibración por cargo', cal_sim_t)
+    MOD = {'version': 1, 'cal_sim': cal_sim, 'cal_sim_t': cal_sim_t, 'metodo': rep['metodo'], 'pesos': fin, 'a': rep['logistica_final'], 'sigma': sig,
            'calibracion': rep['calibracion'], 'nacional': nac, 'estados': pe}
     vs = REPO / 'pipeline' / 'insumos' / 'validacion_secciones.json'  # ver pipeline/val_secciones.py
     if vs.exists():

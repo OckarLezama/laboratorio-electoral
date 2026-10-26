@@ -1293,7 +1293,7 @@ function pjRun(T,ii,party,shift,NS){const B=pjBase(T),BL=pjBlocs(T),G={},sig=pjS
   for(let r=0;r<R;r++){for(let j=0;j<nb;j++) cb[j]=gs()*sc; let n=0;
     U.forEach(u=>{let best=-1e9,bj=-1; for(let j=0;j<nb;j++){const v=u.e[j]+cb[j]+gs()*sl; if(v>best){best=v; bj=j;}} u.wb[bj]++; WB[bj][r]++; if(bj===fi){u.w++; n++;}}); wins[r]=n;}
   /* calibración: lo que la simulación dice contra lo que pasó en 2021 y 2024 (tabla de data/modelo.json) */
-  const CS=(MODELO.cal_sim||[]).slice().sort((a,b)=>a[0]-b[0]); for(let k=1;k<CS.length;k++) if(CS[k][1]<CS[k-1][1]) CS[k][1]=CS[k-1][1];
+  const CT=(MODELO.cal_sim_t||{})[T],CS=(CT&&CT.length>=4?CT:(MODELO.cal_sim||[])).map(x=>x.slice()).sort((a,b)=>a[0]-b[0]); /* tabla del mismo cargo si hay suficientes casos */ for(let k=1;k<CS.length;k++) if(CS[k][1]<CS[k-1][1]) CS[k][1]=CS[k-1][1];
   const cal=x=>{if(!CS.length) return x; if(x<=CS[0][0]) return Math.max(0,CS[0][1]*x/CS[0][0]); if(x>=CS[CS.length-1][0]) return CS[CS.length-1][1]+(1-CS[CS.length-1][1])*(x-CS[CS.length-1][0])/(1-CS[CS.length-1][0]); for(let k=1;k<CS.length;k++) if(x<=CS[k][0]){const a=CS[k-1],b=CS[k],t=(x-a[0])/(b[0]-a[0]); return a[1]+t*(b[1]-a[1]);} return x;};
   U.forEach(u=>{const c=Array.from(u.wb,w=>cal(w/R)),t=c.reduce((a,b)=>a+b,0)||1; u.pn=c.map(x=>x/t);}); /* calibrada y normalizada: en cada lugar las probabilidades suman 1, así los totales suman el número de lugares */
   U.forEach(u=>{u.p=u.pn[fi]; u.lead=u.m>=0?fi:u.e.indexOf(Math.max(...u.e.filter((_,j)=>j!==fi)));});
@@ -1883,9 +1883,27 @@ const ENT_CSS="\n:host{--teal:#4CC1BA;--teal2:#2FA59D;--teal3:#1C7F79;--tealxl:#
 const LAB_SK = 'lab_sesion';
 function LAB_SES() {
   for (const st of [sessionStorage, localStorage]) {
-    try { const s = JSON.parse(st.getItem(LAB_SK) || 'null'); if (s && (!s.exp || s.exp > Date.now())) return s; if (s) st.removeItem(LAB_SK); } catch (e) {}
+    try { const s = JSON.parse(st.getItem(LAB_SK) || 'null'), t = Date.now();
+      if (s && s.la && (!s.exp || s.exp > t) && !(s.ia && t - s.la > s.ia * 6e4)) return s; /* sesiones sin registro de uso (versión anterior) piden entrar de nuevo */ if (s) st.removeItem(LAB_SK); } catch (e) {}
   }
   return null;
+}
+/* cierre automático: cada uso de la plataforma renueva la sesión; sin uso por ia minutos (o al pasar exp) se cierra,
+   se borran las llaves y la página se recarga para soltar los datos de la memoria */
+function LAB_VIGILA() {
+  const st = () => { for (const x of [sessionStorage, localStorage]) { try { if (x.getItem(LAB_SK)) return x; } catch (e) {} } return null; };
+  let ult = 0;
+  const uso = () => { const t = Date.now(); if (t - ult < 2e4) return; ult = t; const x = st(); if (!x) return; try { const s = JSON.parse(x.getItem(LAB_SK)); if (s && LAB_SES()) { s.la = t; x.setItem(LAB_SK, JSON.stringify(s)); } } catch (e) {} };
+  const fin = () => { LAB_SALIR(); const d = document.createElement('div'); d.className = 'lab-fin';
+    d.innerHTML = '<div><b>Tu sesión se cerró</b><p>Por seguridad, se cierra sola después de un tiempo sin usar la plataforma.</p><button>Entrar de nuevo</button></div>';
+    d.style.cssText = 'position:fixed;inset:0;z-index:99999;display:grid;place-items:center;background:rgba(20,32,31,.55);backdrop-filter:blur(6px);font-size:15px;line-height:1.5';
+    d.firstChild.style.cssText = 'background:#fff;border-radius:16px;padding:26px 28px;max-width:360px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.25)';
+    d.querySelector('button').style.cssText = 'margin-top:12px;border:0;border-radius:10px;background:#1C7F79;color:#fff;font-weight:600;font-size:14px;font-family:inherit;padding:10px 18px;cursor:pointer';
+    d.querySelector('button').onclick = () => { location.hash = ''; location.reload(); };
+    document.body.innerHTML = ''; document.body.appendChild(d); clearInterval(iv); };
+  ['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(ev => addEventListener(ev, uso, { passive: true }));
+  const iv = setInterval(() => { if (!LAB_SES()) fin(); }, 3e4);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && !LAB_SES()) fin(); });
 }
 function LAB_PUEDE(cab) { const s = LAB_SES(); return !!(s && s.k && s.k[cab]); }
 function LAB_SALIR() { for (const st of [sessionStorage, localStorage]) { try { st.removeItem(LAB_SK); } catch (e) {} } }
@@ -1904,7 +1922,8 @@ async function LAB_ENTRAR(usuario, clave, recordar) {
   try {
     for (const cab in e.k) { const b = _b64(e.k[cab]); k[cab] = btoa(String.fromCharCode(...new Uint8Array(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b.slice(0, 12) }, kek, b.slice(12))))); }
   } catch (err) { return { error: 'Usuario o clave incorrectos.' }; }
-  const s = { u: usuario.trim(), n: e.n, a: e.a || [], k, exp: recordar ? Date.now() + 30 * 864e5 : 0 };
+  const C = A.ses || { inact: 30, max_h: 12, rec_d: 7 }, t = Date.now();
+  const s = { u: usuario.trim(), n: e.n, a: e.a || [], k, exp: t + (recordar ? C.rec_d * 864e5 : C.max_h * 36e5), ia: e.ia || C.inact, la: t };
   try { (recordar ? localStorage : sessionStorage).setItem(LAB_SK, JSON.stringify(s)); } catch (err) {}
   return { ok: s };
 }
@@ -2121,7 +2140,7 @@ async function ENTRADA(pedido) {
   if(!a){boot(); ENTRADA(); return;}
   if(!LAB_PUEDE(a.cab)){boot(); ENTRADA(a.cab); return;}
   try{msg('Cargando '+a.estado+'…'); let DATA=await LAB_DATOS(a.cab,(got,tot)=>msg('Cargando '+a.estado+'… '+(got/1e6).toFixed(1)+' MB'+(tot&&tot>=got?' de '+(tot/1e6).toFixed(1)+' MB':'')));
-    const ses=LAB_SES(); DATA=LAB_RECORTE(DATA,ses); APP(DATA); boot();
+    const ses=LAB_SES(); DATA=LAB_RECORTE(DATA,ses); APP(DATA); boot(); LAB_VIGILA();
     try{const mm=JSON.parse(sessionStorage.getItem('lab_mun')||'null'); sessionStorage.removeItem('lab_mun'); if(mm&&mm.cab===a.cab&&DATA.meta.municipios[mm.m]&&window.LAB) setTimeout(()=>LAB.setTerr(String(mm.m)),300);}catch(e){} try{localStorage.setItem('lab_ultimo_ok',a.cab);}catch(e){}
     const av=document.querySelector('.rail .av'); if(av){av.textContent=(ses.u||'?').slice(0,1).toUpperCase(); av.title='Sesión: '+ses.u; av.setAttribute('role','button'); av.tabIndex=0; av.style.cursor='pointer';
       av.onclick=()=>{let p=document.getElementById('sesp'); if(p){p.remove(); return;} p=document.createElement('div'); p.id='sesp'; p.className='epop sesp'; p.innerHTML='<div class="sesu">Sesión: <b></b></div><button id="sesx">Salir</button>'; p.querySelector('b').textContent=ses.u; document.body.appendChild(p); const r=av.getBoundingClientRect(); p.style.left=(r.right+10)+'px'; p.style.top=Math.max(8,r.bottom-p.offsetHeight)+'px'; document.getElementById('sesx').onclick=()=>{LAB_SALIR(); location.hash='';};};}
