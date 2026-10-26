@@ -7,3 +7,4 @@ $('map').setAttribute('aria-label','Mapa de '+EST+' por sección');
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(st.view==='tbl') setView2('map'); else if(st.sel!=null){st.sel=null; paint();} else if(st.terr) setTerr(null);}});
 if(innerWidth<=860) st.fp=false; layout(); render(true); setView([...VB]); requestAnimationFrame(()=>fit(ALL,false));
 let rt; addEventListener('resize',()=>{clearTimeout(rt); rt=setTimeout(()=>{render(); fit(LASTFIT&&LASTFIT.length?LASTFIT:ALL.filter(munScope),false);},150);});
+window.LAB={st,setView2,setTerr,paint,render}; /* la usa el cargador (sitio.py) para abrir el municipio elegido en la entrada */

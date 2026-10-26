@@ -122,7 +122,7 @@ async function ENTRADA(pedido) {
   }
   function cal() {
     const S = +new Date('2026-09-10'), E = +new Date('2027-08-31'), x = d => Math.max(0, Math.min(100, (+new Date(d) - S) / (E - S) * 100)).toFixed(2) + '%', w = (a, b) => ((+new Date(b) - +new Date(a)) / (E - S) * 100).toFixed(2) + '%';
-    const J = new Date('2027-06-06T12:00'); if (HOY > new Date('2027-06-07T00:00')) return `<p class="src">Fuente: INE. Lista nominal al 8 de octubre de 2026; resultados electorales por sección 2015–2024. <a class="pan" href="inicio.html">Panorama nacional</a></p>`;
+    const J = new Date('2027-06-06T12:00'); if (HOY > new Date('2027-06-07T00:00')) return `<p class="src">Fuente: INE. Lista nominal al 8 de octubre de 2026; resultados electorales por sección 2015–2024.</p>`;
     const hoyP = x(HOY), fal = Math.ceil((J - HOY) / 864e5), hs = HOY.toLocaleDateString('es-MX', { day: 'numeric', month: 'short' });
     const M = ['sep', 'oct', 'nov', 'dic', 'ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago'];
     const F = [['2027-01-04', 'Precampañas, desde enero'], ['2027-02-12', 'Precampañas, hasta el 12 de febrero'], ['2027-04-03', 'Campañas, desde el 3 de abril'], ['2027-06-02', 'Campañas, hasta el 2 de junio'], ['2027-06-06', 'Jornada electoral, 6 de junio']], nx = F.find(f => new Date(f[0]) > HOY);
@@ -133,7 +133,7 @@ async function ENTRADA(pedido) {
   ${M.map((m, i) => { const p = (i + .5) / 12 * 100; return Math.abs(p - parseFloat(hoyP)) < 5 ? '' : `<div class="tk" style="left:${p.toFixed(1)}%">${m}</div>`; }).join('')}
   <div class="jd" style="left:${x('2027-06-06')}"></div><div class="jl" style="left:${x('2027-06-06')}">Jornada · 6 jun</div>
   <div class="hoy"><i></i><span>Hoy · ${hs}</span></div></div></div>
-<p class="src">Fuente: INE. Lista nominal al 8 de octubre de 2026; resultados electorales por sección 2015–2024. <a class="pan" href="inicio.html">Panorama nacional</a></p></div>`;
+<p class="src">Fuente: INE. Lista nominal al 8 de octubre de 2026; resultados electorales por sección 2015–2024.</p></div>`;
   }
   function lista() {
     const qq = nz(q); let h = '';

@@ -7,7 +7,7 @@
   python pipeline/lab.py referencias        paso 2d: revocación 2022, consulta 2021 y afiliados por partido (meta.ref)
   python pipeline/lab.py escenarios         alianzas y encuestas 2027 del Excel de escenarios (--plantilla lo crea)
   python pipeline/lab.py ganadores          registro de personas que ganaron (corre también dentro de sitio)
-  python pipeline/lab.py sitio              paso 3: arma index.html, inicio.html, css/, js/, data/estados.json y data/inicio/
+  python pipeline/lab.py sitio              paso 3: arma index.html, css/, js/, data/estados.json y data/inicio/
   python pipeline/lab.py nacional           paso 4: resumen de los 32 estados para la vista general (data/nacional.json y data/inicio/nac_zonas.json)
   python pipeline/lab.py panorama           paso 4d: datos del Panorama nacional (data/inicio/panorama.json); requiere el padrón
   python pipeline/lab.py zonas              paso 4b: mapas nacionales de estados, distritos federales y municipios (solo si cambia la cartografía)

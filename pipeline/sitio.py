@@ -122,6 +122,6 @@ const ENT_CSS={ent_css};
     munis()
     from inicio import generar
     generar()
-    (REPO / 'inicio.html').write_text((SRC / 'inicio.html').read_text(encoding='utf-8'), encoding='utf-8')
-    print(f'[sitio] index.html, inicio.html, css/estilos.css, js/app.js y data/estados.json listos ({len(av)} estados: '
+    (REPO / 'inicio.html').unlink(missing_ok=True)  # el Panorama nacional se quitó (oct 2026): Inicio lleva a la entrada
+    print(f'[sitio] index.html, css/estilos.css, js/app.js y data/estados.json listos ({len(av)} estados: '
           + ', '.join(x['estado'] for x in av) + ')')

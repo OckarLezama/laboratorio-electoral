@@ -11,8 +11,7 @@ async function NACION(){
   const gobN={}; A.forEach(x=>{if(x.gob) gobN[x.gob.l]=(gobN[x.gob.l]||0)+1;});
   const n=document.createElement('div'); n.id='nat'; n.className='nat';
   n.innerHTML=`<header class="top"><div class="ttl"><small><span>México</span></small><h1>República Mexicana</h1><div class="nsub">Elige un estado para analizarlo sección por sección</div></div>
-    <div class="ctl"><div class="ac"><svg class="mg" viewBox="0 0 12 12"><circle cx="5" cy="5" r="3.6"/><path d="M8 8l3 3"/></svg><div class="box"><input id="nq" autocomplete="off" placeholder="Buscar estado" aria-label="Buscar estado"><kbd>/</kbd></div></div>
-      <a class="nbtn" href="inicio.html">Panorama nacional</a></div></header>
+    <div class="ctl"><div class="ac"><svg class="mg" viewBox="0 0 12 12"><circle cx="5" cy="5" r="3.6"/><path d="M8 8l3 3"/></svg><div class="box"><input id="nq" autocomplete="off" placeholder="Buscar estado" aria-label="Buscar estado"><kbd>/</kbd></div></div></div></header>
   <div class="nbody">
     <section class="ncard nmap"><div class="nk">
       <div><b>${fmt(T.ln)}</b><span>Lista nominal</span></div><div><b>${A.length}</b><span>Estados</span></div><div><b>${T.mun.toLocaleString('es-MX')}</b><span>Municipios</span></div><div><b>${T.sec.toLocaleString('es-MX')}</b><span>Secciones</span></div>
