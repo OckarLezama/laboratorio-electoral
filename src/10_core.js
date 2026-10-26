@@ -36,11 +36,20 @@ const AGEY=Object.keys(V2.age).sort().pop();
 /* resultados por sección con caché */
 const RC={};
 function row(ek,i){const c=RC[ek]||(RC[ek]=[]); if(c[i]!==undefined) return c[i]; const r=D.E[ek].r[i]; if(!r) return c[i]=null; const v={}; let val=0; D.P8.forEach((p,j)=>{v[p]=r[j]; val+=r[j];}); return c[i]={v,val,t:r[NP],ln:r[NP+1]};}
+/* partidos que en cada sección compitieron fuera de la coalición estatal: E.sx (detectado con las combinaciones de
+   votos, pipeline/coaliciones.py) y E.so (diputaciones federales 2024, con las candidaturas del INE) */
+const SXC={};
+function SXI(ek){if(ek in SXC) return SXC[ek]; const e=D.E[ek]; if(!e.sx&&!e.so) return SXC[ek]=null; const a=[];
+  (e.sx||[]).forEach(([gs,ii])=>ii.forEach(i=>{a[i]=(a[i]||[]).concat(gs.map(g=>g.join('+')));}));
+  if(e.so) ALL.forEach(i=>{const x=e.so[S[i].df]; if(x) a[i]=[...new Set((a[i]||[]).concat(x))];});
+  return SXC[ek]=a;}
 function totals(ek,idx){const tot={}; let val=0,t=0,ln=0; idx.forEach(i=>{const r=row(ek,i); if(!r) return; t+=r.t; ln+=r.ln; val+=r.val; for(const p in r.v) tot[p]=(tot[p]||0)+r.v[p];});
   /* distritos donde un partido de la coalición fue con candidatura propia (E.so): si todo el territorio consultado
      cae en esos distritos, ese partido cuenta aparte de sus aliados */
-  let BL=D.E[ek].blocs; const so=D.E[ek].so; if(so&&idx.length){let sp=null; for(const i of idx){const x=so[S[i].df]||[]; sp=sp?sp.filter(p=>x.includes(p)):x.slice(); if(!sp.length) break;}
-    if(sp&&sp.length){BL=[]; D.E[ek].blocs.forEach(b=>{const keep=b.members.filter(m=>!sp.includes(m)),out=b.members.filter(m=>sp.includes(m)); if(keep.length) BL.push({lead:keep.includes(b.lead)?b.lead:keep.slice().sort((a,c)=>(tot[c]||0)-(tot[a]||0))[0],members:keep}); out.forEach(m=>BL.push({lead:m,members:[m]}));});}}
+  let BL=D.E[ek].blocs; const sxi=SXI(ek); if(sxi&&idx.length){let sp=null; for(const i of idx){const x=sxi[i]||[]; sp=sp?sp.filter(p=>x.includes(p)):x.slice(); if(!sp.length) break;}
+    if(sp&&sp.length){const G=sp.map(k=>k.split('+')),lead=ms=>ms.slice().sort((a,c)=>(tot[c]||0)-(tot[a]||0))[0]; BL=[];
+      D.E[ek].blocs.forEach(b=>{let keep=b.members.slice(); G.forEach(g=>{const o=keep.filter(m=>g.includes(m)); if(o.length&&o.length<keep.length){keep=keep.filter(m=>!o.includes(m)); BL.push({lead:lead(o),members:o});}});
+        BL.push({lead:keep.includes(b.lead)?b.lead:lead(keep),members:keep});});}}
   const bl=BL.filter(b=>b.lead!=='OTROS').map(b=>{const parts=b.members.filter(m=>m!=='OTROS').map(m=>({p:m,v:tot[m]||0})).sort((a,c)=>(c.p===b.lead)-(a.p===b.lead)||c.v-a.v); return {lead:b.lead,members:b.members,name:parts.length>3?parts.slice(0,3).map(x=>NM[x.p]).join('-')+' y '+(parts.length-3)+' más':parts.map(x=>NM[x.p]).join('-'),c:C[parts[0].p],votes:parts.reduce((a,x)=>a+x.v,0),parts};}).sort((a,b)=>b.votes-a.votes);
   bl.forEach(b=>b.pct=val?100*b.votes/val:0); return {bl,val,t,ln,tot,turn:ln?100*t/ln:null};}
 const WC={};

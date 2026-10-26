@@ -74,6 +74,8 @@ def main(a):
     if cmd in ('referencias', 'ganadores', 'sitio', 'todo'):
         from referencias import generar as refs
         refs()
+        from coaliciones import generar as coals
+        coals()
         from ganadores import generar as gans
         gans()
         from escenarios import generar as escs

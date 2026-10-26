@@ -93,10 +93,24 @@ def _bloques(d, ek, ii, solos=()):
                 tot[j] += r[j]
     V = sum(tot); ix = {p: j for j, p in enumerate(P)}
     bl = [(sum(tot[ix[x]] for x in b['members'] if x in ix), set(b['members'])) for b in e['blocs']]
-    for t in solos:
+    grupos = [{t} for t in solos]  # cada partido con candidatura propia va solo
+    if e.get('sx'):  # coaliciones que no fueron en todo el estado (pipeline/coaliciones.py): grupos que fueron aparte
+        m = {}
+        for gs, jj in e['sx']:
+            k = {tuple(g) for g in gs}
+            for j in jj:
+                m.setdefault(j, set()).update(k)
+        sp = None
+        for i in ii:
+            sp = set(m.get(i, ())) if sp is None else sp & m.get(i, set())
+            if not sp:
+                break
+        grupos += [set(g) for g in (sp or ())]
+    for G in grupos:
         for j, (v, ms) in enumerate(bl):
-            if t in ms and len(ms) > 1 and t in ix:
-                bl[j] = (v - tot[ix[t]], ms - {t}); bl.append((tot[ix[t]], {t}))
+            if G & ms and len(ms - G) > 0:
+                Gi = G & ms; vg = sum(tot[ix[t]] for t in Gi if t in ix)
+                bl[j] = (v - vg, ms - Gi); bl.append((vg, Gi))
                 break
     bl.sort(key=lambda x: -x[0])
     return bl, V
