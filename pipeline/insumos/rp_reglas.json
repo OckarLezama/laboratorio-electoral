@@ -22,7 +22,7 @@
   "capbase": "estatal",
   "resumen": "24 de mayoría y 16 plurinominales; umbral 3 %; una curul directa a cada partido con 3 %; resto con votación modificada (descontando lo usado en la directa), cociente natural y resto mayor; tope +8 puntos.",
   "fuente": "Constitución de Chiapas art. 38; Ley de Instituciones y Procedimientos Electorales de Chiapas arts. 20–23",
-  "validacion": "No se pudo comprobar contra el reparto de 2024: faltan datos oficiales completos de votación o de mayoría por partido.",
+  "validacion": "Reproduce exactamente las plurinominales de 2024 (IEPC/CG-A/272/2024, confirmado por SX-JRC-268/2024), calculado con los resultados por sección y el registro de ganadores.",
   "cert": "media-baja (no se leyó el texto vigente de los arts. 20–23)"
  },
  "oax": {
@@ -115,7 +115,7 @@
   "capbase": "estatal",
   "resumen": "17 de mayoría y hasta 8 plurinominales; umbral 3 % de la votación válida; una curul directa a cada partido con 3 %; el resto se calcula como % × 25 menos las curules ya ganadas, y lo que sobra por resto mayor; máximo 17 por partido; tope +8 puntos.",
   "fuente": "Constitución de Baja California arts. 14 y 15 fr. I-V (última reforma POE 30-dic-2025); Ley Electoral de Baja California arts. 22 (requisitos), 23 (directa), 24 (máximo 17 y ±8), 25 (deducción por excedente), 26 (fórmula y resto mayor), 27; IEEBC acuerdo IEEBC/CGE148/2024 (16 jul 2024), confirmado por el Tribunal local (28 jul 2024) y por la Sala Guadalajara en SG-JDC-532/2024 y acumulados.",
-  "validacion": "No se pudo comprobar contra la última asignación: faltan datos oficiales completos de votación o de mayoría por partido.",
+  "validacion": "Difiere de 2024 en 1 curul: el modelo da MC 2 (real 1) y PAN 2 (real 3) (IEEBC/CGE148/2024).",
   "cert": "media",
   "verificado": "oct-2026"
  },
@@ -172,7 +172,7 @@
   "capbase": "estatal",
   "resumen": "22 de mayoría y 11 plurinominales; umbral 3 %; una curul a cada partido con 3 %, otra con más de 5 %, otra con más de 9 % y otra con más de 20 %; las demás una a una por orden de votación; máximo 22 por partido; tope +8 puntos sobre la votación estatal válida.",
   "fuente": "Ley Electoral del Estado de Chihuahua arts. 11.1, 15.1–15.5, 16.1–16.2, 17.1–17.4 (art. 17.2 reformado por Decreto LXVIII/RFLYC/0558/2026, POE 30-jun-2026, No. 51 EE); acuerdo IEE/CE249/2024 (15-ago-2024); SG-JRC-259/2024 y acumulados (Sala Guadalajara, 31-ago-2024); SUP-REC-13779/2024 (proyecto de desechamiento)",
-  "validacion": "No se pudo comprobar contra la última asignación: faltan datos oficiales completos de votación o de mayoría por partido.",
+  "validacion": "Difiere de 2024 en 1 curul: el modelo da PRI 2 (real 1) y PAN 0 (real 1) (IEE/CE249/2024 modificado por SG-JRC-259/2024).",
   "cert": "media",
   "verificado": "oct-2026",
   "rondas": [
@@ -192,7 +192,7 @@
   "capbase": "estatal",
   "resumen": "33 de distrito, 1 migrante de mayoría y 32 plurinominales; umbral 3 %; sin curul directa; reparto por cociente natural y resto mayor con listas A y B intercaladas; máximo 33 por partido según el Código (40 según la Constitución); tope +8 puntos.",
   "fuente": "Constitución Política de la Ciudad de México art. 29 A.2 y B.2; Código de Instituciones y Procedimientos Electorales de la CDMX arts. 11, 13, 17, 23, 24 (fr. I–XII), 26 y 27 (fr. I reformada por decreto de 2-jun-2023; compilación actualizada al 9-abr-2026); acuerdo IECM/ACU-CG-124/2024 (8–9 jun 2024); TECDMX-JEL-273/2024 y acumulados (2-ago-2024, confirma); SCM-JDC-1646/2024 y acumulados (confirma)",
-  "validacion": "No se pudo comprobar contra la última asignación: faltan datos oficiales completos de votación o de mayoría por partido.",
+  "validacion": "Difiere de 2024 en 7 curules: el modelo da 16 a Morena (real 9) y ninguna a PT ni PVEM (real 3 y 4). En la Ciudad de México los límites se aplican por partido según el siglado de la candidatura común, y eso no se reconstruye con los datos por sección (IECM/ACU-CG-124/2024). Usar con cautela.",
   "cert": "media",
   "verificado": "oct-2026"
  },
@@ -206,7 +206,7 @@
   "capbase": "total",
   "resumen": "15 de mayoría y 10 plurinominales; umbral 3 %; sin curul directa; reparto por cociente natural y resto mayor; máximo 15 por partido; tope +8 puntos sobre la votación emitida.",
   "fuente": "Constitución Política del Estado de Durango arts. 66 y 68 (última reforma Dec. 426, P.O. 44 Bis, 31-may-2026); Ley de Instituciones y Procedimientos Electorales para el Estado de Durango arts. 12, 14, 16, 283–284; Jurisprudencia TEED 1/2021; acuerdo IEPC de asignación 2024 no localizado",
-  "validacion": "No se pudo comprobar contra la última asignación: faltan datos oficiales completos de votación o de mayoría por partido.",
+  "validacion": "Reproduce las plurinominales de 2024 según la prensa local; no se encontró el acuerdo oficial del IEPC para confirmarlo.",
   "cert": "media",
   "verificado": "oct-2026"
  },
@@ -277,7 +277,7 @@
   "capbase": "total",
   "resumen": "45 de mayoría y 30 plurinominales; umbral 3 %; una curul directa a cada partido con 3 %; resto por cociente de distribución y resto mayor sin restar votos; sin tope fijo; tope +8 y piso −8 puntos.",
   "fuente": "Constitución del Estado de México art. 39; Código Electoral del Estado de México arts. 20, 24, 25, 26, 363–371 (asignación en 364–366, límites en 367, fórmula en 368); IEEM/CG/163/2024 (9/jun/2024); TEEM JDCL/300/2024 y acum.; IEEM/CG/171/2024 (2/ago/2024)",
-  "validacion": "No se pudo comprobar contra la última asignación: faltan datos oficiales completos de votación o de mayoría por partido.",
+  "validacion": "Difiere de 2024 en 2 curules: el modelo da Morena 6 (real 7), PVEM 3 (real 4) y 2 a candidaturas comunes que en la realidad se cuentan por partido (IEEM/CG/171/2024).",
   "cert": "media",
   "verificado": "oct-2026"
  },
@@ -291,7 +291,7 @@
   "capbase": "estatal",
   "resumen": "24 de mayoría y 16 plurinominales; umbral 3 % de la votación válida; sin curul directa; reparto por cociente natural sobre la votación efectiva y resto mayor; máximo 24 por partido; tope +8 y piso −8 puntos.",
   "fuente": "Constitución de Michoacán (artículo de integración del Congreso no verificado); Código Electoral de Michoacán arts. 174 y 175 (Decreto 367, POE 3/dic/2020, tras la AI 133/2020); acuerdo del IEM del 9/jun/2024 (clave no confirmada)",
-  "validacion": "No se pudo comprobar contra la última asignación: faltan datos oficiales completos de votación o de mayoría por partido.",
+  "validacion": "Reproduce las plurinominales de 2024 según la prensa local; no se encontró el acuerdo oficial del IEM para confirmarlo.",
   "cert": "media",
   "verificado": "oct-2026"
  },
@@ -305,7 +305,7 @@
   "capbase": "estatal",
   "resumen": "12 de mayoría y 8 plurinominales; umbral 3 %; una curul directa a cada partido con 3 %; resto por cociente natural y resto mayor; máximo 12 por partido; tope +8 y piso −8 puntos.",
   "fuente": "Constitución de Morelos art. 24 (texto previo al Decreto 433, que vuelve a regir); Código de Instituciones y Procedimientos Electorales de Morelos art. 16 (reformado por Decreto 1013 de 2023); IMPEPAC/CEE/333/2024 (11/jun/2024); SCM-JDC-2063/2024 y acum. (24/ago/2024); SCJN AI 90/2025 (25/nov/2025)",
-  "validacion": "No se pudo comprobar contra la última asignación: faltan datos oficiales completos de votación o de mayoría por partido.",
+  "validacion": "Difiere de 2024 en 1 curul: el modelo da PRD 1 y Nueva Alianza Morelos 0 (real 0 y 1) (IMPEPAC/CEE/333/2024).",
   "cert": "baja",
   "verificado": "oct-2026"
  },
@@ -375,7 +375,7 @@
   "capbase": "total",
   "resumen": "15 de mayoría y 12 plurinominales; umbral 3.7 % de la votación válida; una curul directa a cada partido que lo alcanza, descontando esos votos; resto por cociente natural y resto mayor; tope +8 puntos.",
   "fuente": "Constitución Política del Estado de San Luis Potosí art. 42; Ley Electoral del Estado de San Luis Potosí arts. 387–393 (393 fr. I umbral; fr. II cociente) y 391 (límites); Lineamientos CEEPAC arts. 6–7; asignación CEEPAC del 9-jun-2024, confirmada por TEESLP/JDC/91/2024 y SM-JRC-291/2024.",
-  "validacion": "No se pudo comprobar contra la última asignación: faltan datos oficiales completos de votación o de mayoría por partido.",
+  "validacion": "Reproduce las plurinominales de 2024 (CEEPAC, confirmado por SUP-REC-13780/2024), calculado con los resultados por sección y el registro de ganadores.",
   "cert": "baja",
   "verificado": "oct-2026"
  },
@@ -403,7 +403,7 @@
   "capbase": "estatal",
   "resumen": "21 de mayoría y hasta 12 plurinominales; umbral 3 %; una curul directa a cada partido con 3 %; resto por cociente natural y resto mayor; máximo 21 por partido; tope de +8 puntos sobre la votación estatal válida.",
   "fuente": "Constitución de Sonora arts. 31 y 32; LIPEES arts. 99, 99 Bis, 170 y 261-263; Lineamientos de paridad arts. 17-18; Acuerdo IEEyPC CG210/2024 (30-jun-2024, Boletín Oficial Tomo CCXIV núm. 8 secc. III), confirmado por TEE Sonora JE-TP-12/2024 y modificado solo en el ajuste de paridad por SG-JRC-221/2024 (22-ago-2024).",
-  "validacion": "No se pudo comprobar contra la última asignación: faltan datos oficiales completos de votación o de mayoría por partido.",
+  "validacion": "Difiere de 2024 en 5 curules: el modelo da 6 a Morena (real 1). En Sonora los votos de las candidaturas comunes se reparten por convenio entre los partidos, y eso no se puede reconstruir con los datos por sección (IEEyPC CG210/2024, SUP-REC-2999/2024).",
   "cert": "media",
   "verificado": "oct-2026"
  },
@@ -431,7 +431,7 @@
   "capbase": "total",
   "resumen": "15 de mayoría y 10 plurinominales; umbral 3.125 %; sin curul directa; reparto por cociente electoral y luego resto mayor; máximo 15 por partido; tope de +8 puntos.",
   "fuente": "Constitución de Tlaxcala arts. 32 y 33; LIPEET arts. 255 (máximo 15, adicionado por Decreto 33, POE 31-ago-2017) y 257-261; Acuerdo ITE-CG 223/2024 (9-jun-2024), que quedó firme por SCM-JDC-2188/2024 (25-ago-2024), sentencia que revocó el ITE-CG 230/2024; el SUP-REC-10083/2024 fue desechado.",
-  "validacion": "No se pudo comprobar contra la última asignación: faltan datos oficiales completos de votación o de mayoría por partido.",
+  "validacion": "Difiere de 2024 en 2 curules: el modelo da Morena 3 (real 1) y deja sin plurinominal a PVEM y Fuerza por México Tlaxcala (ITE-CG 230/2024).",
   "cert": "media",
   "verificado": "oct-2026"
  },

@@ -222,7 +222,7 @@ function eDark(an,ii){const p=st.party,F=eFocus(),nat=eNat(),niv=F.mode==='con'?
   let part=g.V?`<p class="es-part">Supone participación de ${g.tp.toFixed(0)}% sobre la lista nominal vigente (${fmt(Math.round(g.ln))} electores, ${esc(CORTE)}): unos ${fmt(Math.round(g.V))} votos válidos ${ei('part')}</p>`:'';
   let tag,p1,big,sub=an.sub||'',body='';
   if(an.d){const d=an.d,e=an.e,c=an.c,cx=c.ii.map(i=>eSecs().by[i]).filter(Boolean),R=d.riv?d.riv.votes:0,mn=Math.round(R)+1,sg=Math.round(eSegOf(d))+1,es=Math.round(d.mine),seguro=es>=sg,emp=e&&Math.abs(d.mg)<e;
-    tag='Compite contra '+esc(d.rvN); p1=`Con las tendencias actuales, ${esc(eSide(eAlly()))} ${d.mg>=0?'ganaría':'perdería'} ${esc(st.es.u!=null&&eLv()!=='est'?eName(eLv(),st.es.u):EST)} ${d.mg>=0?'a':'frente a'} ${esc(d.rvN)} por unos ${fmt(Math.abs(d.gap))} votos.`;
+    tag=(st.es.u!=null&&eLv()!=='est'?esc(eName(eLv(),st.es.u).split(' · ')[0])+' · ':'')+'compite contra '+esc(d.rvN); p1=`Con las tendencias actuales, ${esc(eSide(eAlly()))} ${d.mg>=0?'ganaría':'perdería'} ${esc(st.es.u!=null&&eLv()!=='est'?eName(eLv(),st.es.u):EST)} ${d.mg>=0?'a':'frente a'} ${esc(d.rvN)} por unos ${fmt(Math.abs(d.gap))} votos.`;
     big=''; sub=an.sub||'';
     body='';}
   else if(!p&&F.mode!=='multi'){const w=eWin27(ii); tag='Proyección 2027'; p1=w?`${esc(w.bl[0].name)} va adelante en ${esc(st.es.u!=null&&eLv()!=='est'?eName(eLv(),st.es.u):EST)} por ${w.m.toFixed(1)} puntos sobre ${esc(w.bl[1]?w.bl[1].name:'—')}.`:'Sin datos.'; big=an.v.includes('empate')?'Empate técnico':'Ventaja clara';
@@ -278,7 +278,8 @@ function estPanel(){const p=st.party,lv=eLv(),nat=eNat(),ii=eSelII(),F=eFocus();
   h+=`<section class="es-lv2"><div class="es-h">${p?'Dónde trabajar':'Dónde se decide'} ${ei('sit')}${p?ei('ruta'):''}</div>`;
   if(p) h+=eSummary(ii,an)+eActs(ii)+ePri(ii); else h+=eTiles(ii)+`<button class="es-tb" id="etab">Ver tabla de secciones</button>`;
   if(lv!=='est'&&st.es.u==null){const U=eUnitSort(eUnits(lv)); h+=`<div class="es-h">Por ${ENN[lv][0]}</div><div class="es-ul">${U.map(z=>eUnitBtn(z)).join('')}</div>`;}
-  if(p) h+=`<button class="es-x es-all" id="etab">Ver todas las secciones y metas</button>`;
+  if(p) h+=`<button class="es-x es-all" id="etab">Ver todas las secciones y metas</button><div class="es-dl" id="esdl"><button data-secdl="1">⤓ Descargar secciones (Excel)</button><button data-ficha="1">🖨 Ficha para imprimir</button></div>`;
+  else h+=`<div class="es-dl" id="esdl"><button data-secdl="1">⤓ Descargar secciones (Excel)</button></div>`;
   h+=`</section>`;
   /* nivel 3 */
   h+=eDetail(A0)+`</div>`;
@@ -301,9 +302,13 @@ function eCorto(){/* se muestra dentro del bloque oscuro */const p=st.party; if(
     L1.push(['Situación',ok?`${R.likely===R.lead?`Según la proyección, ${esc(me)} ganaría <b>${R.likely} de ${R.n}</b> ${NN[1]}`:`${esc(me)} va adelante en ${R.lead} de ${R.n} ${NN[1]}, pero en muchos por poco: lo esperable es que gane unos <b>${R.likely}</b>`} (rango probable: ${R.lo} a ${R.hi})${pr?'':`; probabilidad de ganar la mayoría: <b>${Math.round(100*R.pMaj)} %</b>`}.`:`${esc(me)} va adelante hoy en <b>${w} de ${cs.length}</b> ${NN[1]}.`]);
     if(ok){const jj=R.U.filter(u=>u.p>.35&&u.p<.65).sort((a,b)=>Math.abs(a.p-.5)-Math.abs(b.p-.5)),nm=u=>esc(pjName(st.es.obj,u.k).split(' · ')[0].replace(/^Distrito (local|federal) /,'distrito '));
       L1.push(['Riesgo',jj.length||R.cat.pro?`${jj.length?`<b>${jj.length}</b> ${jj.length===1?NN[0]+' está':NN[1]+' están'} en juego (entre 35 y 65 % de probabilidad)${jj.length?': '+jj.slice(0,3).map(nm).join(', '):''}`:''}${jj.length&&R.cat.pro?'; ':''}${R.cat.pro?`<b>${R.cat.pro}</b> son probables pero aún podría perderlos`:''}.`:`Ningún ${NN[0]} está en juego.`]);}}
+  else if(nat!=='est'&&st.es.u!=null&&eLv()!==nat){/* un municipio o distrito de otro nivel dentro de una elección por distritos o municipios: decir en cuáles cae y cómo iría en cada uno */
+    const ks=[...new Set(ii.map(i=>eKey(nat,i)))].filter(k=>E.CT[k]),vt=d=>`${d.gap<=0?'ganaría a':'perdería frente a'} ${esc(d.rvN)} por aprox. ${fmt(Math.round(Math.abs(d.gap)/100)*100)} votos`;
+    L1.push(['Situación',`${esc(eName(eLv(),st.es.u).split(' · ')[0])} está en ${ks.length===1?'el':'los'} ${ks.length===1?NN[0]:ks.length+' '+NN[1]}: ${ks.slice(0,4).map(k=>`<b>${esc(eName(nat,k).split(' · ')[0])}</b>, donde ${esc(me)} ${vt(E.CT[k].d)}`).join('; ')}${ks.length>4?'; y otros '+(ks.length-4):''}.`]);
+    L1.push(['Riesgo',`Aquí no se elige un cargo propio: lo que cuenta es el resultado de ${ks.length===1?'ese '+NN[0]:'esos '+NN[1]}. Las secciones de abajo son las de este territorio.`]);}
   else {const c=E.CT[st.es.u!=null&&eLv()===nat?st.es.u:0]||Object.values(E.CT)[0],d=c&&c.d; if(d){const emp=e&&Math.abs(d.mg)<e;
     const R1=typeof pjRun==='function'?pjRun(st.es.obj,c.ii,p,0,800):null,pw=R1&&!R1.none&&R1.n===1?R1.U[0].p:null,pl=pw==null?'':pw>=.85?'muy probable':pw>=.6?'probable':pw>=.4?'casi empate':pw>=.15?'difícil':'muy difícil';
-    L1.push(['Situación',`Según la proyección, ${esc(me)} ${d.gap<=0?'ganaría a':'perdería frente a'} ${esc(d.rvN)} por aprox. <b>${fmt(Math.round(Math.abs(d.gap)/100)*100)}</b> votos (${d.a.toFixed(1)} % contra ${d.b.toFixed(1)} %).`]);
+    const wh=st.es.u!=null&&eLv()===nat&&nat!=='est'?eName(nat,st.es.u):(nat==='est'?EST:null); L1.push(['Situación',`Según la proyección, ${wh?`en <b>${esc(wh)}</b> `:''}${esc(me)} ${d.gap<=0?'ganaría a':'perdería frente a'} ${esc(d.rvN)} por aprox. <b>${fmt(Math.round(Math.abs(d.gap)/100)*100)}</b> votos (${d.a.toFixed(1)} % contra ${d.b.toFixed(1)} %).`]);
     if(pw!=null) L1.push(['Riesgo',`Probabilidad de ganar: <b>${Math.round(100*pw)} %</b>, ${pl}. ${pw>=.4&&pw<.6?'La ventaja puede voltearse con poco.':pw>=.6?'Hay ventaja, pero no está asegurada.':'Necesitaría crecer más de lo habitual.'}`]);}}
   const D=typeof MODELO!=='undefined'&&MODELO&&MODELO.sec&&MODELO.sec.duro&&MODELO.sec.duro[p]; if(D&&D.sostuvo<60) L1[1]&&(L1[1][1]+=` El voto duro de ${esc(NM[p])} solo se sostuvo en ${D.sostuvo}% de las secciones entre 2021 y 2024.`);
   const mov=xs.filter(x=>x.act==='mov'),con=xs.filter(x=>x.act==='con'),cui=xs.filter(x=>x.act==='cui'),need=x=>Math.max(0,Math.round(x.rv-x.mine)+1);
@@ -369,6 +374,7 @@ function morphPanel(C2,html){const again=C2.dataset.v==='est',sc=C2.scrollTop,RM
   [...C2.querySelectorAll(numSel)].forEach((e,j)=>{if(e.children.length) return; const t1=e.textContent,t0=oN[j]; if(!t0||t0===t1||!isN(t0)||!isN(t1)) return; const a=parseFloat(t0.replace(/,/g,'')),b2=parseFloat(t1.replace(/,/g,'')),dec=((t1.match(/\.(\d+)/)||[,''])[1]).length,pc2=/%/.test(t1),cm=/,/.test(t1)||b2>=1000,st0=performance.now();
     const f=v=>(cm?v.toLocaleString('en-US',{minimumFractionDigits:dec,maximumFractionDigits:dec}):v.toFixed(dec))+(pc2?'%':''),step=n=>{const u=Math.min(1,(n-st0)/550),k=1-Math.pow(1-u,3); e.textContent=f(a+(b2-a)*k); if(u<1) requestAnimationFrame(step); else e.textContent=t1;}; requestAnimationFrame(step);});}
 function estRender(){const C2=$('col'); morphPanel(C2,estPanel()); if(typeof pjBind==='function') pjBind(C2);
+  C2.querySelectorAll('[data-secdl]').forEach(b=>b.onclick=()=>secCSV()); C2.querySelectorAll('[data-ficha]').forEach(b=>b.onclick=()=>fichaOpen()); if(st.party&&typeof guiaStart==='function') setTimeout(()=>guiaStart(false),1200);
   const go=()=>{const lv=eLv(); if(st.es.u!=null&&lv!=='est') applyScope(lv,st.es.u); else applyScope('all',0);};
   $('eback').onclick=()=>setView2('map');
   C2.querySelectorAll('[data-eobj]').forEach(b=>b.onclick=()=>{st.es.obj=b.dataset.eobj; st.es.lv=null; st.es.u=null; st.es.seg=null; st.elec=eRef(); $('elec').value=st.elec; go();});
