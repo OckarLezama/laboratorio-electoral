@@ -116,6 +116,21 @@ def _bloques(d, ek, ii, solos=()):
     return bl, V
 
 
+# los registros escriben los partidos locales con otras siglas que los resultados (mismos alias que construir.py)
+ALIAS_T = {'ES': 'PES', 'ESQROO': 'PES', 'FXMO': 'FXM', 'FXMV': 'FXM', 'FXMQROO': 'FXM', 'NAO': 'NA', 'NAY': 'NA', 'PNA': 'NA',
+           'PANAL': 'NA', 'CXQROO': 'CQROO', 'PCU': 'PCHU', 'MVC': 'PMCH'}
+
+
+def _tok(x):
+    x = re.sub(r'MOVIMIENTO\s+CIUDADANO', 'MC', str(x).upper()); x = re.sub(r'(NVA|NUEVA)[\s_]+ALIANZA', 'NA', x)
+    t = set()
+    for p in re.split(r'[_\-\s]+', x):
+        if not p or p.isdigit():
+            continue
+        t.add('IND' if re.fullmatch(r'(CAND|CAN)?IND\d*|INDEPENDIENTE', p) else ALIAS_T.get(p, p))
+    return t - {'CAND', 'CAN', 'CANDIDATURA', 'C', 'COMUN'}
+
+
 def resultado(d, ek, ii, tokens, solos=()):
     """(% del ganador, ventaja en puntos) en la elección ek sobre las secciones ii, si el bloque ganador incluye
     el partido o la coalición de la persona; None si no hay datos o no coincide."""
@@ -264,7 +279,7 @@ def generar():
             par = (r['partido'] or '').strip().upper(); act = (r['actor'] or '').strip().upper()
             if r['amb'] == 'jud':  # la elección judicial no tiene partidos (el actor es el poder que postuló)
                 par = act = ''
-            y = _num(r['anio']); tok = set(re.split(r'[_\-\s]+', par + ' ' + act)) - {''}; res = loc = why = None
+            y = _num(r['anio']); tok = _tok(par + ' ' + act); res = loc = why = None
             MUNI = ('Presidencia municipal', 'Alcaldía', 'Regiduría', 'Regiduría (plurinominal)', 'Sindicatura', 'Concejalía')
             if r['amb'] == 'jud':
                 pass
@@ -288,6 +303,15 @@ def generar():
                 res = resultado(d, f'GOB_{y}', list(range(len(d['S']))), tok); loc = ['e', 0, f'GOB_{y}']
             elif cl == 'Senaduría':
                 loc = ['e', 0, f'SEN_{y}']
+            if res is None and loc and why is None and loc[2] in d['E'] and cl in ('Presidencia municipal', 'Alcaldía', 'Diputación local', 'Diputación federal', 'Gubernatura'):
+                # ganó según el registro oficial, pero con la suma por sección su bloque no queda primero (recuentos,
+                # casillas anuladas, resoluciones de tribunales o elecciones extraordinarias): se muestra la diferencia
+                ii_ = MI.get(mid, []) if loc[0] == 'm' else DLI.get(loc[1], []) if loc[0] == 'dl' else DFI.get(loc[1], []) if loc[0] == 'df' else list(range(len(d['S'])))
+                bl_, V_ = _bloques(d, loc[2], ii_)
+                if bl_ and V_:
+                    v_ = next((v for v, ms in bl_ if tok & ms), None)
+                    if v_ is not None:
+                        res = [round(100 * v_ / V_, 1), round(100 * (v_ - bl_[0][0]) / V_, 1)]; why = 'dif'
             R.append([pid[k], y, cid[cl], u, par, act if act != par else '', res, loc, why])
             if cl in ('Presidencia municipal', 'Alcaldía') and mid and str(mid) in m['municipios']:
                 PM[str(mid)].append([_num(r['anio']), pid[k], par or act, act if act != par else ''])
