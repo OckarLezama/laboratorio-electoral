@@ -194,7 +194,7 @@ async function slBuild(){const {ii,ref,T,P,blocOf,els,won,pv}=slData(),title=slT
 /* ---------- visor ---------- */
 let SLI=0;
 async function slMake(btn,busy){const o=btn&&btn.innerHTML; if(btn){btn.disabled=true; btn.textContent=busy;} await new Promise(r=>setTimeout(r,40));
-  try{return await slBuild();}catch(e){console.error(e); toast('No se pudo armar la presentación.'); return null;} finally{if(btn){btn.disabled=false; btn.innerHTML=o;}}}
+  try{return await (st.view==='est'&&st.party&&typeof esDeck==='function'?esDeck():slBuild());}catch(e){console.error(e); toast('No se pudo armar la presentación.'); return null;} finally{if(btn){btn.disabled=false; btn.innerHTML=o;}}}
 async function openSlides(btn){const SS=await slMake(btn,'Preparando…'); if(!SS) return;
   const d=document.createElement('div'); d.id='deck'; d.className='deck'; d.setAttribute('role','dialog'); d.setAttribute('aria-label','Presentación');
   const names=SS.map(h=>{const m=h.match(/<h2>(.*?)<\/h2>/); return m?m[1].replace(/<[^>]+>/g,''):'Portada';});
