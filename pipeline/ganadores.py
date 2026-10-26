@@ -80,24 +80,33 @@ def cargo(c, lista, amb):
     return c.title() or 'Cargo'
 
 
-def resultado(d, ek, ii, tokens):
-    """(% del ganador, ventaja en puntos) en la elección ek sobre las secciones ii, si el bloque ganador incluye
-    el partido o la coalición de la persona; None si no hay datos o no coincide."""
+def _bloques(d, ek, ii, solos=()):
+    """votos por bloque en las secciones ii; los partidos de `solos` (candidatura propia ahí) cuentan aparte de su coalición."""
     e = d['E'].get(ek)
     if not e or not ii:
-        return None
+        return None, 0
     P = d['P8']; NP = len(P); tot = [0] * NP
     for i in ii:
         r = e['r'][i]
         if r:
             for j in range(NP):
                 tot[j] += r[j]
-    V = sum(tot)
-    if not V:
-        return None
-    ix = {p: j for j, p in enumerate(P)}
-    bl = sorted(((sum(tot[ix[x]] for x in b['members'] if x in ix), b['members']) for b in e['blocs']), key=lambda x: -x[0])
-    if not bl or not tokens & set(bl[0][1]):
+    V = sum(tot); ix = {p: j for j, p in enumerate(P)}
+    bl = [(sum(tot[ix[x]] for x in b['members'] if x in ix), set(b['members'])) for b in e['blocs']]
+    for t in solos:
+        for j, (v, ms) in enumerate(bl):
+            if t in ms and len(ms) > 1 and t in ix:
+                bl[j] = (v - tot[ix[t]], ms - {t}); bl.append((tot[ix[t]], {t}))
+                break
+    bl.sort(key=lambda x: -x[0])
+    return bl, V
+
+
+def resultado(d, ek, ii, tokens, solos=()):
+    """(% del ganador, ventaja en puntos) en la elección ek sobre las secciones ii, si el bloque ganador incluye
+    el partido o la coalición de la persona; None si no hay datos o no coincide."""
+    bl, V = _bloques(d, ek, ii, solos)
+    if not bl or not V or not tokens & bl[0][1]:
         return None
     return [round(100 * bl[0][0] / V, 1), round(100 * (bl[0][0] - (bl[1][0] if len(bl) > 1 else 0)) / V, 1)]
 
@@ -109,25 +118,30 @@ SIGLA = {'SIGAMOS HACIENDO HISTORIA': 'MORENA_PT_PVEM', 'FUERZA Y CORAZON POR ME
          'PARTIDO DEL TRABAJO': 'PT', 'PARTIDO DE LA REVOLUCION DEMOCRATICA': 'PRD', 'CANDIDATURA INDEPENDIENTE': 'IND'}
 
 
-def lugar(d, ek, ii, tokens):
+def lugar(d, ek, ii, tokens, solos=()):
     """(% de votos, distancia al ganador en puntos, lugar) del bloque que incluye a la persona."""
-    e = d['E'].get(ek)
-    if not e or not ii:
+    bl, V = _bloques(d, ek, ii, set(solos) | (set(tokens) if len(tokens) == 1 else set()))
+    if not bl or not V:
         return None
-    P = d['P8']; NP = len(P); tot = [0] * NP
-    for i in ii:
-        r = e['r'][i]
-        if r:
-            for j in range(NP):
-                tot[j] += r[j]
-    V = sum(tot); ix = {p: j for j, p in enumerate(P)}
-    if not V:
-        return None
-    bl = sorted(((sum(tot[ix[x]] for x in b['members'] if x in ix), set(b['members'])) for b in e['blocs']), key=lambda x: -x[0])
     for n, (v, ms) in enumerate(bl):
         if tokens & ms:
             return [round(100 * v / V, 1), round(100 * (v - bl[0][0]) / V, 1)], n + 1
     return None
+
+
+_SOLO = {}
+
+
+def solos_df(ent):
+    """{distrito federal: partidos que postularon candidatura propia en 2024} (de las candidaturas del INE)."""
+    if ent not in _SOLO:
+        S_ = collections.defaultdict(set)
+        for r in candidaturas(next(x for x in ESTADOS if x['ent'] == ent)):
+            sg = SIGLA.get(_n(r['PARTIDO_COALICION']), _n(r['PARTIDO_COALICION']))
+            if 'DIPUTA' in _n(r['CARGO']) and '_' not in sg:
+                S_[_num((r['DISTRITO_FEDERAL'] or '').split('-')[0])].add(sg)
+        _SOLO[ent] = S_
+    return _SOLO[ent]
 
 
 def candidaturas(e):
@@ -253,7 +267,7 @@ def generar():
                     why = 'redis'
             elif cl == 'Diputación federal' and _num(r['df']):
                 if ('df', y) in VIG:
-                    res = resultado(d, f'DIPF_{y}', DFI.get(_num(r['df']), []), tok); loc = ['df', _num(r['df']), f'DIPF_{y}']
+                    res = resultado(d, f'DIPF_{y}', DFI.get(_num(r['df']), []), tok, solos_df(e).get(_num(r['df']), ()) if y == 2024 else ()); loc = ['df', _num(r['df']), f'DIPF_{y}']
                 else:
                     why = 'redis'
             elif cl == 'Gubernatura':
@@ -289,6 +303,7 @@ def generar():
                         RE.setdefault(q, f'Diputación local · {n}.º periodo seguido')
         # quienes compitieron por una diputación o senaduría federal de mayoría en 2024 y no ganaron
         gan24 = {(x[0], C[x[2]]) for x in R if x[1] == 2024}; nperd = 0
+        SOLO = solos_df(e)
         for r in candidaturas(next(x for x in ESTADOS if x['ent'] == e)):
             k = ' '.join(sorted(_n(r['NOMBRE_CANDIDATO']).split()))
             if not k:
@@ -307,7 +322,7 @@ def generar():
                     continue
                 u = f'Distrito federal {dfn}'
                 if ('df', 2024) in VIG:
-                    x = lugar(d, 'DIPF_2024', DFI.get(dfn, []), tok); loc = ['df', dfn, 'DIPF_2024']
+                    x = lugar(d, 'DIPF_2024', DFI.get(dfn, []), tok, SOLO.get(dfn, ())); loc = ['df', dfn, 'DIPF_2024']
                     if x: res, pl = x
                 else:
                     why = 'redis'
@@ -316,6 +331,14 @@ def generar():
                 if x: res, pl = x
             par = sig if '_' not in sig else ''
             R.append([pid[k], 2024, cid[cl], u, par, sig if '_' in sig else '', res, loc, why, pl or 0]); nperd += 1
+        # distritos federales 2024 donde un partido de coalición postuló candidatura propia: ahí sus votos van aparte
+        if ('df', 2024) in VIG and 'DIPF_2024' in d['E']:
+            ek = d['E']['DIPF_2024']; multi = {x for b in ek['blocs'] if len(b['members']) > 1 for x in b['members']}
+            so = {str(k): sorted(v & multi) for k, v in solos_df(e).items() if v & multi}
+            if so:
+                ek['so'] = so
+            else:
+                ek.pop('so', None)
         m['gan'] = {'p': P, 'c': C, 'r': R, 'pm': dict(PM), 're': {str(k): v for k, v in RE.items()},
                     'fuente': 'INE, integración de cargos y candidaturas ganadoras: locales 2018–2025, federales 2000–2024 y elección judicial 2025; candidaturas federales de mayoría 2024 (quienes no ganaron)'}
         f.write_text(json.dumps(d, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')

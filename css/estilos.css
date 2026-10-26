@@ -1536,3 +1536,13 @@ h5 small{font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0
 .mt-none{grid-column:1/-1;text-align:center;color:var(--muted);font-size:13px;padding:20px}
 [hidden]{display:none!important}
 @media (max-width:760px){.mt-hero{grid-template-columns:1fr 1fr;padding:14px 16px 0}.mt-q{margin:10px 16px 0}.mt-gl dl{grid-template-columns:1fr}.mt-bars>div{grid-template-columns:110px 1fr 40px}}
+
+.pjtp{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin:4px 0 16px}.pjtp>span{font-size:11.5px;color:var(--muted)}.pjtp .pj-tabs button{font-size:11.5px;padding:5px 10px}
+.vt .arr{font-weight:600}.vt .arr.up{color:#1C7F79}.vt .arr.dn{color:#C2410C}
+
+.mt-f{margin-top:10px;padding:10px 12px;border-radius:10px;background:var(--bg2,#F2F5F5);display:grid;gap:4px}
+.mt-f span{font-size:11.5px;color:#5B6B6B;font-weight:600}
+.mt-f code{font:13px/1.45 'STIX Two Math','Cambria Math',Georgia,serif;font-style:italic;color:#1F2D2D;white-space:normal}
+.mt-f sub{font-size:.72em;font-style:normal}
+.mt-g{display:block;columns:2;column-gap:36px}.mt-g>.mt-c{break-inside:avoid;display:inline-block;width:100%}.mt-g>.mt-gl{column-span:all;display:block}@media (max-width:760px){.mt-g{columns:1}}
+.pcb.al{background:#F2F5F5;border-left-color:#B9C1C1;color:#4A5A5A}.ac-sm{margin:10px 14px 4px;padding:10px 12px;border-radius:10px;background:#F2F5F5;font-size:12.5px;line-height:1.45;color:#3A4A4A}.ac-sm b{color:#14201F}
