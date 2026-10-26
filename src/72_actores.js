@@ -14,7 +14,9 @@ const ACTG=[['pm',M0.cab==='cdmx'?'Alcaldías':'Presidencias municipales'],['dl'
 const ACTP=['MORENA','PAN','PRI','PVEM','PT','MC','PRD'];
 if(!st.act) st.act={q:'',p:null,g:null,multi:false,camb:false,re:false,sel:null};
 const ACTRE=(GAN&&GAN.re)||{};
-const actVt=(v,r)=>{if(!v) return ''; if(r&&r.length>9) return `<small class="vt pd">${v[0].toFixed(1)}% de los votos · quedó ${r[9]}.º, a ${Math.abs(v[1]).toFixed(1)} pts del ganador</small>`; return `<small class="vt${v[1]<5?' cl':''}">${v[0].toFixed(1)}% de los votos · ganó por ${v[1].toFixed(1)} pts${v[1]<5?' (cerrado)':''}</small>`;};
+/* % del partido por sí solo en esa elección (votos de coalición repartidos en partes iguales, como en la gráfica de evolución) */
+const actOwn=r=>{try{if(!r||!r[4]||!r[7]||!r[7][2]||!D.E[r[7][2]]) return null; const lv=r[7][0],k=r[7][1],ii=ALL.filter(i=>String(lv==='mun'?S[i].m:lv==='dl'?S[i].dl:lv==='df'?S[i].df:0)===String(k)); if(!ii.length) return null; const T=totals(r[7][2],ii); return T.val?100*(T.tot[r[4]]||0)/T.val:null;}catch(e){return null;}};
+const actVt=(v,r)=>{if(!v) return ''; const co=r&&r[5]&&String(r[5]).split(/[_-]/).filter(Boolean).length>1,own=co?actOwn(r):null,who=co?`la coalición ${esc(actN(r[5]))}`:''; if(r&&r.length>9) return `<small class="vt pd">${co?who+': ':''}${v[0].toFixed(1)} % de los votos · quedó ${r[9]}.º, a ${Math.abs(v[1]).toFixed(1)} pts del ganador</small>`; return `<small class="vt${v[1]<5?' cl':''}">${co?`${who}: ${v[0].toFixed(1)} % de los votos`:`${v[0].toFixed(1)} % de los votos`} · ganó por ${v[1].toFixed(1)} pts${v[1]<5?' (cerrado)':''}${own!=null?`<br>${esc(NM[r[4]]||r[4])} por sí solo: ${own.toFixed(1)} %`:''}</small>`;};
 const actLost=r=>r.length>9;
 /* "Ver en el mapa" solo donde el lugar es el mismo en el mapa de hoy (los distritos se comprueban sección por sección) */
 const ACTWHY={redis:'Distrito de una distritación anterior: hoy es otro territorio',pre:Y0TXT()};

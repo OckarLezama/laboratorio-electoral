@@ -18,8 +18,8 @@ function cols(W,bl,prev){const top=bl.filter((b,j)=>j<2||b.pct>=.5).slice(0,5),H
      <text x="${x}" y="${base+16}" text-anchor="middle" style="font:700 10.5px var(--f);fill:var(--strong)">${esc(fitT(NM[b.lead],Math.max(4,Math.floor(gw/7.5)-1)))}${b.members.filter(m=>m!=='OTROS').length>1?'+':''}</text>
      ${d!=null?`<rect x="${(x-dw/2).toFixed(1)}" y="${base+23}" width="${dw}" height="16" rx="8" fill="${d>=0?'#E4F5F3':'#FDE8EC'}"/><text x="${x}" y="${base+34.5}" text-anchor="middle" style="font:700 9.5px var(--f);fill:${d>=0?'#1C7F79':'#C2405C'}">${dt}</text>`:''}</g>`;}).join('')}<line x1="0" x2="${W}" y1="${base}" y2="${base}" stroke="var(--line)"/></svg>`;}
 const TT={DIPL:'Diputaciones locales',AYU:'Ayuntamientos',GOB:'Gubernatura',DIPF:'Diputaciones federales',PRE:'Presidencia'};
-function tdata(idx,type,mode,proj){const ys=YEARS.filter(y=>D.E[type+'_'+y]),ps=['MORENA','PRI','PAN','MC','PT','PVEM','PRD'];
-  const ser=ps.map(p=>({p,v:ys.map(y=>{if(ccOff(type+'_'+y,p)) return null; const T=totals(type+'_'+y,idx); return mode==='abs'?(T.tot[p]||0):(T.val?100*(T.tot[p]||0)/T.val:0);})}));
+function tdata(idx,type,mode,proj,coal){const ys=YEARS.filter(y=>D.E[type+'_'+y]),ps=['MORENA','PRI','PAN','MC','PT','PVEM','PRD'];
+  const ser=ps.map(p=>({p,v:ys.map(y=>{if(ccOff(type+'_'+y,p)) return null; const T=totals(type+'_'+y,idx); if(coal){const b=(T.bl||[]).find(b=>b.members.includes(p)); if(!b||b.lead!==p) return null; return mode==='abs'?b.votes:b.pct;} return mode==='abs'?(T.tot[p]||0):(T.val?100*(T.tot[p]||0)/T.val:0);})}));
   const win=ys.map(y=>{const w=winner(type+'_'+y,idx); return w?w.lead:null;}),turn=ys.map(y=>totals(type+'_'+y,idx).turn);
   /* proyección 2027 del mismo cargo (punto punteado con su rango) */
   if(proj&&mode!=='abs'&&typeof pjParties==='function'){const pp=pjParties(type,idx); if(pp){const L=ys.length-1; ys.push(2027); const pj={};
@@ -29,7 +29,7 @@ function tdata(idx,type,mode,proj){const ys=YEARS.filter(y=>D.E[type+'_'+y]),ps=
 const RM=matchMedia('(prefers-reduced-motion: reduce)').matches,TP=['MORENA','PRI','PAN','MC','PT','PVEM','PRD'];
 const hx=(a,b,t)=>{const A=hexrgb(a),B=hexrgb(b); return '#'+A.map((v,i)=>Math.round(v+(B[i]-v)*t).toString(16).padStart(2,'0')).join('');};
 const niceMx=(m,mode)=>{if(mode==='abs'){const p=Math.pow(10,Math.floor(Math.log10(Math.max(1,m)))); return Math.ceil(m/p)*p;} return Math.max(16,Math.ceil(m/8)*8);};
-function tmodel(idx,o){const mode=o.mode||'pct',td=tdata(idx,o.type||'DIPL',mode,o.proj!==false),show=o.show||['MORENA','PRI','PAN','MC'],vis=td.ser.filter(s=>show.includes(s.p)),nY=td.ys.length,hl=o.hl||(vis.length?vis.slice().sort((a,b)=>b.v[nY-1]-a.v[nY-1])[0].p:null);
+function tmodel(idx,o){const mode=o.mode||'pct',td=tdata(idx,o.type||'DIPL',mode,o.proj!==false&&!o.coal,o.coal),show=o.show||['MORENA','PRI','PAN','MC'],vis=td.ser.filter(s=>show.includes(s.p)),nY=td.ys.length,hl=o.hl||(vis.length?vis.slice().sort((a,b)=>b.v[nY-1]-a.v[nY-1])[0].p:null);
   const tlOn=false; return {type:o.type||'DIPL',pj:td.pj||null,ys:td.ys,win:td.win,turn:td.turn,mode,hl,ta:tlOn?1:0,mx:niceMx(Math.max(1,...vis.flatMap(s=>s.v),...(td.pj?vis.map(s=>td.pj[s.p]?td.pj[s.p][1]:0):[]),...(tlOn?td.turn.filter(x=>x!=null):[])),mode),upto:o.upto==null?td.ys.length-1:o.upto,ser:td.ser.map(s=>({p:s.p,v:s.v,a:show.includes(s.p)?1:0,f:hl===s.p?1:0,d:hl&&hl!==s.p?1:0}))};}
 function lerpM(A,B,e){const L=(a,b)=>a+(b-a)*e; return {...B,ta:L(A.ta||0,B.ta||0),mx:L(A.mx,B.mx),upto:L(A.upto,B.upto),turn:B.turn.map((t,j)=>t==null||A.turn[j]==null?t:L(A.turn[j],t)),ser:B.ser.map(s=>{const o=A.ser.find(z=>z.p===s.p)||s; return {p:s.p,v:s.v.map((v,j)=>v==null?null:L(o.v[j]==null?v:o.v[j],v)),a:L(o.a,s.a),f:L(o.f,s.f),d:L(o.d,s.d)};})};}
 function mpath(P){const n=P.length; if(n<2) return n?`M${P[0][0]},${P[0][1]}`:''; const dx=[],m=[],t=[]; for(let i=0;i<n-1;i++){dx[i]=P[i+1][0]-P[i][0]; m[i]=(P[i+1][1]-P[i][1])/dx[i];}
