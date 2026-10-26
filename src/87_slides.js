@@ -172,9 +172,9 @@ async function slBuild(){const {ii,ref,T,P,blocOf,els,won,pv}=slData(),title=slT
         <div class="sl-stl"><span><i style="background:#6B7676"></i>ganó el distrito</span><span><i style="background:#fff;border:2px solid #6B7676"></i>plurinominal</span></div></div>
         <div><h3>${rt&&rt.keep?'La mayoría':`Qué necesitaría ${esc(bn)} para la mayoría`}</h3><ol class="sl-ol">${steps.map(t=>`<li>${t}</li>`).join('')}</ol>
         <p class="sl-note sm">${M0.rpr&&M0.rpr.fuente?`Regla de ${esc(EST)}: ${esc(M0.rpr.resumen||'')} ${esc(M0.rpr.fuente)}.`:'Regla general: umbral 3 % y tope de 8 puntos (art. 116 constitucional).'}</p></div></div>`);}}
-    /* 9 · qué tan bien predice */
+    /* 9 · qué tan bien estima */
     const ve=(MODELO.estados||{})[M0.cab]||{},CB=MODELO.calibracion||{},TT=['DIPL','DIPF','AYU','GOB'].filter(t=>ve[t]);
-    slide(head('¿Qué tan bien predice?','Prueba: predecir 2021 con datos hasta 2018 y 2024 con datos hasta 2021'),`<div class="sl-g2"><div>
+    slide(head('¿Qué tan precisa es la estimación?','Prueba: estimar 2021 con datos hasta 2018 y 2024 con datos hasta 2021'),`<div class="sl-g2"><div>
       <div class="sl-kr k3">${K((ve.todo?ve.todo.acierto:'—')+' %',`ganadores acertados en ${esc(EST)}`,'#1C7F79',ve.todo?`${ve.todo.n} distritos, municipios y gubernatura`:'')}${K((ve.todo&&ve.todo.repetir!=null?ve.todo.repetir:'—')+' %','si solo se repite la última elección')}${K(ve.todo?ve.todo.mae.toFixed(1):'—','puntos de error promedio',null,'por fuerza política')}</div>
       <h3>Por cargo en ${esc(EST)}</h3><table class="sl-t sl-vt"><thead><tr><th>Cargo</th><th class="r">Casos</th><th class="r">Modelo</th><th class="r">Repetir la última</th></tr></thead><tbody>${TT.map(t=>`<tr class="${t===T27?'on':''}"><td>${esc(TY[t])}</td><td class="r">${ve[t].n}</td><td class="r"><b>${ve[t].acierto} %</b></td><td class="r">${ve[t].repetir!=null?ve[t].repetir+' %':'—'}</td></tr>`).join('')}</tbody></table></div>
       <div><h3>¿Las probabilidades son honestas?</h3><div class="sl-cal">${['60-70','70-80','80-90','90-101'].map(k=>{const v=(CB[k]||{})['gano_el_favorito_%']; return `<div><span>${v!=null?Math.round(v)+' %':'—'}</span><i style="height:${v||0}%"></i><em>${k==='90-101'?'90 % o más':k.replace('-','–')+' %'}</em></div>`;}).join('')}</div>

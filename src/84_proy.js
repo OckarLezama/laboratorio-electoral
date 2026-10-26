@@ -1,6 +1,6 @@
 /* ===== Proyección 2027 con resultados históricos =====
    Votación por sección: la misma de la Estrategia (pipeline/proyeccion.py), agregada por unidad con la votación esperada;
-   incertidumbre validada en pipeline/modelo.py (data/modelo.json): probabilidad de ganar calibrada con los errores reales al predecir 2021 y 2024, y rango
+   incertidumbre validada en pipeline/modelo.py (data/modelo.json): probabilidad de ganar calibrada con los errores reales al estimar 2021 y 2024, y rango
    por simulación con un componente común a todo el estado y otro local. La proyección es del cargo consultado. */
 const PJT={AYU:'mun',DIPL:'dl',DIPF:'df',GOB:'est'},PJN={AYU:M0.cab==='cdmx'?['alcaldía','alcaldías']:['ayuntamiento','ayuntamientos'],DIPL:['distrito local','distritos locales'],DIPF:['distrito federal','distritos federales'],GOB:['gubernatura','gubernatura']};
 const pjCycle=y=>[2015,2021,2027].includes(+y)?'mid':[2018,2024].includes(+y)?'pres':'off';
@@ -34,7 +34,7 @@ function pjRun(T,ii,party,shift,NS){const B=pjBase(T),BL=pjBlocs(T),G={},sig=pjS
   const fi=party?BL.findIndex(ms=>ms.includes(party)):tot.indexOf(Math.max(...tot)); if(fi<0) return {none:true,BL};
   const sh=shift||0;
   /* simulación por bloque: cada coalición recibe un cambio común en todo el estado y uno local por unidad
-     (desviaciones medidas al predecir 2021 y 2024); gana la unidad quien queda arriba. Así una fuerza en tercer lugar
+     (desviaciones medidas al estimar 2021 y 2024); gana la unidad quien queda arriba. Así una fuerza en tercer lugar
      necesita superar a las dos primeras, no solo a una. */
   const sc=((MODELO.sigma[T]||{}).comun||10)/Math.SQRT2,sl=((MODELO.sigma[T]||{}).local||15)/Math.SQRT2,nb=BL.length;
   U.forEach(u=>{const s100=u.s.map(x=>100*x),oth=s100.reduce((a,x,j)=>a+(j===fi?0:x),0)||1; u.e=s100.map((x,j)=>j===fi?x+sh:x-sh*x/oth); const riv=Math.max(...u.e.filter((_,j)=>j!==fi)); u.m=u.e[fi]-riv; u.w=0;});
