@@ -393,7 +393,10 @@ def main():
                 nb = max(len(P[u]) for u in us)  # cada unidad puede tener distinto número de bloques: se rellena
                 S_ = np.array([P[u] + [-1.0] * (nb - len(P[u])) for u in us]) * 100; A = np.array([R[u] + [-1.0] * (nb - len(R[u])) for u in us])
                 cbs = rng2.normal(0, sig[T]['comun'] / math.sqrt(2), (1500, 1, nb)); loc = rng2.normal(0, sig[T]['local'] / math.sqrt(2), (1500, len(us), nb))
-                fav = S_.argmax(1); pf = ((S_[None] + cbs + loc).argmax(2) == fav[None]).mean(0); okv = A.argmax(1) == fav
+                # el error medido es el del margen entre los dos primeros; a los partidos menores se les aplica en proporción a su tamaño
+                # (si no, un partido con 3 % "gana" en algunos escenarios solo por el ruido)
+                seg = np.sort(S_, 1)[:, -2:-1] if nb > 1 else S_; g_ = np.clip(S_ / np.maximum(seg, 1e-6), 0, 1)
+                fav = S_.argmax(1); pf = ((S_[None] + g_[None] * (cbs + loc)).argmax(2) == fav[None]).mean(0); okv = A.argmax(1) == fav
                 for p_, o_ in zip(pf, okv):
                     k_ = min(9, int(p_ * 10)); cb_.setdefault(k_, [0, 0]); cb_[k_][0] += 1; cb_[k_][1] += int(o_)
                     cbt_.setdefault(T, {}).setdefault(k_, [0, 0]); cbt_[T][k_][0] += 1; cbt_[T][k_][1] += int(o_)
@@ -401,7 +404,15 @@ def main():
     print('calibración de la simulación', cal_sim)
     cal_sim_t = {T: [[round(k_ / 10 + .05, 2), round(v[1] / v[0], 3), v[0]] for k_, v in sorted(t_.items()) if v[0] >= 20] for T, t_ in cbt_.items()}
     print('calibración por cargo', cal_sim_t)
-    MOD = {'version': 1, 'cal_sim': cal_sim, 'cal_sim_t': cal_sim_t, 'metodo': rep['metodo'], 'pesos': fin, 'a': rep['logistica_final'], 'sigma': sig,
+    # cargos con pocos casos (gubernatura: uno por estado y año) usan la tabla de los cargos que no son municipales:
+    # en ayuntamientos el favorito pierde más seguido y arrastraría la tabla general hacia abajo
+    cm_ = {}
+    for T, t_ in cbt_.items():
+        if T == 'AYU': continue
+        for k_, v in t_.items(): cm_.setdefault(k_, [0, 0]); cm_[k_][0] += v[0]; cm_[k_][1] += v[1]
+    cal_sim_m = [[round(k_ / 10 + .05, 2), round(v[1] / v[0], 3), v[0]] for k_, v in sorted(cm_.items()) if v[0] >= 20]
+    print('calibración sin ayuntamientos', cal_sim_m, 'casos de gubernatura', {k: v for k, v in sorted(cbt_.get('GOB', {}).items())})
+    MOD = {'version': 1, 'cal_sim': cal_sim, 'cal_sim_t': cal_sim_t, 'cal_sim_m': cal_sim_m, 'metodo': rep['metodo'], 'pesos': fin, 'a': rep['logistica_final'], 'sigma': sig,
            'calibracion': rep['calibracion'], 'nacional': nac, 'estados': pe}
     vs = REPO / 'pipeline' / 'insumos' / 'validacion_secciones.json'  # ver pipeline/val_secciones.py
     if vs.exists():

@@ -57,12 +57,20 @@ function congRuta(p){const k=(p||'')+'|'+JSON.stringify((st.es.poll||{}).DIPL||n
     const tv=x0.tvx; r.plan=d==null?null:{d,votos:d/100*x0.all,de:100*x0.V[q]/tv,a:100*(x0.V[q]+d/100*x0.all)/tv,q,cap:(give(0).caps||{})[q]};}
   return CRUTA[k]=r;}
 /* congreso: tarjeta corta en el panel (número, barra, probabilidad y qué le falta) y pestaña "Congreso" de la ventana */
-function congBase(){const p=st.party,x=cong27(p,0); if(!x) return null; const NT=x.NT,half=Math.floor(NT/2)+1,blk=x.blk,bn=blk.map(m=>NM[m]||m).join('-'),tb=blk.reduce((a,m)=>a+((x.out[m]||{}).t||0),0);
-  const ord=Object.keys(x.out).sort((a,b)=>(blk.includes(b)-blk.includes(a))||x.out[b].t-x.out[a].t); return {p,x,NT,half,blk,bn,tb,ord,pr:congProb(p),rt:congRuta(p)};}
+/* El congreso se muestra con el escenario central de la simulación (no ganando todos los distritos donde va adelante,
+   que exagera cuando hay muchos cerrados). La ruta (qué le falta) sigue saliendo del cálculo por distrito. */
+function congBase(){const p=st.party,x0=cong27(p,0); if(!x0) return null; const pr=congProb(p),x=pr&&pr.medOut?Object.assign({},x0,{out:pr.medOut}):x0;
+  const NT=x.NT,half=Math.floor(NT/2)+1,blk=x.blk,bn=blk.map(m=>NM[m]||m).join('-'),tb=blk.reduce((a,m)=>a+((x.out[m]||{}).t||0),0),t0=blk.reduce((a,m)=>a+((x0.out[m]||{}).t||0),0);
+  const ord=Object.keys(x.out).sort((a,b)=>(blk.includes(b)-blk.includes(a))||x.out[b].t-x.out[a].t); return {p,x,x0,t0,NT,half,blk,bn,tb,ord,pr,rt:congRuta(p)};}
 const congVotos=v=>fmt(Math.round(v/100)*100);
-function congNeed(B,short){const rt=B.rt; if(!rt) return ''; if(rt.keep) return rt.s>=15?'Mantiene la mayoría aun perdiendo 15 puntos.':`Mantiene la mayoría mientras no pierda más de <b>${rt.s.toFixed(1)} puntos</b> (unos ${congVotos(rt.votos)} votos).`;
+function congNeed(B,short){const rt=B.rt; if(!rt) return '';
+  /* va adelante en suficientes distritos, pero en el escenario central no le alcanza: muchos son cerrados */
+  if(rt.keep&&B.tb<B.half){const U=B.x0.U||[],fi=B.x0.fi,cl=U.filter(u=>u.e.indexOf(Math.max(...u.e))===fi).map(u=>({k:u.k,m:u.e[fi]-Math.max(...u.e.filter((_,j)=>j!==fi))})).sort((a,b)=>a.m-b.m).slice(0,2).map(d=>esc(pjShort('DIPL',d.k)));
+    return `Va adelante en los distritos suficientes, pero varios son cerrados: lograría la mayoría en ${Math.round(100*(B.pr?B.pr.pM:0))} de cada 100 escenarios. Lo decisivo: retener ${cl.join(' y ')}.`;}
+  if(!rt.keep&&B.tb>=B.half) return `En el escenario central alcanzaría la mayoría, pero justa: la lograría en ${Math.round(100*(B.pr?B.pr.pM:0))} de cada 100 escenarios.`;
+  if(rt.keep) return rt.s>=15?'Mantiene la mayoría aun perdiendo 15 puntos.':`Mantiene la mayoría mientras no pierda más de <b>${rt.s.toFixed(1)} puntos</b> (unos ${congVotos(rt.votos)} votos).`;
   if(rt.s==null) return 'Ni con 15 puntos más llegaría a la mayoría.'; const nd=(rt.donde||[]).length,dd=(rt.donde||[]).slice(0,2).map(d=>esc(pjShort('DIPL',d.k))),pl=rt.plan;
-  const ps=pl&&pl.d>0?`sumar unos <b>${congVotos(pl.votos)} votos</b> en todo el estado`:''; return nd?`Para la mayoría: ganar ${nd===1?'el '+dd[0]:nd+' distritos más ('+dd.join(', ')+(nd>2?'…':'')+')'}${ps?' y '+ps:''}.`:`Para la mayoría: ${ps||'subir su votación en el estado'}.`;}
+  const ps=pl&&pl.d>0?`sumar unos <b>${congVotos(pl.votos)} votos</b> en todo el estado`:'',rc=B.t0>B.tb?'retener sus distritos cerrados, ':''; return nd?`Para la mayoría: ${rc}ganar ${nd===1?'el '+dd[0]:nd+' distritos más ('+dd.join(', ')+(nd>2?'…':'')+')'}${ps?' y '+ps:''}.`:`Para la mayoría: ${rc}${ps||'subir su votación en el estado'}.`;}
 function congHTML(){if(st.es.obj!=='DIPL'||!RPN().rp) return ''; const B=congBase(); if(!B) return ''; const {NT,half,blk,bn,tb,ord,x,pr}=B,col=C[blk[0]]||'#1C7F79';
   const who=tb>=half?`${esc(bn)} · tendría mayoría`:`${esc(bn)} · le ${half-tb===1?'faltaría 1':'faltarían '+(half-tb)} para la mayoría`;
   return `<div class="cg2"><p class="k">Congreso de ${esc(EST)} 2027</p>
@@ -115,13 +123,15 @@ function congProb(p){const key=(p||'')+'|'+JSON.stringify((st.es.poll||{}).DIPL|
   const SIG=congSig(),sc=(MODELO.sigma[T].comun||10)/Math.SQRT2,sl=(MODELO.sigma[T].local||15)/Math.SQRT2,nb=R.BL.length,all=Object.values(tot).reduce((a,b)=>a+b,0)||1,blk=R.BL[R.fi];
   const bsh=R.BL.map(ms=>ms.reduce((a,q)=>a+(tot[q]||0),0)/all);
   let seed=11; const rn=()=>{seed=(seed*16807)%2147483647; return seed/2147483647;},gs=()=>{let a=0,b=0; while(!a) a=rn(); while(!b) b=rn(); return Math.sqrt(-2*Math.log(a))*Math.cos(2*Math.PI*b);};
-  const N=600,res=[]; let half=0,q23=0;
+  const N=600,res=[],scn=[]; let half=0,q23=0;
   for(let r=0;r<N;r++){const cb=R.BL.map(()=>gs()*sc),MR={};
-    R.U.forEach(u=>{let best=-1e9,bj=0; for(let j=0;j<nb;j++){const v=u.e[j]+cb[j]+gs()*sl; if(v>best){best=v; bj=j;}} const ms=R.BL[bj],o=dv[u.k]||{},sg=SIG[u.k],w=sg&&ms.includes(sg)?sg:ms.slice().sort((a,b)=>(o[b]||0)-(o[a]||0))[0]; if(w) MR[w]=(MR[w]||0)+1;});
+    R.U.forEach(u=>{let best=-1e9,bj=0; for(let j=0;j<nb;j++){const v=u.e[j]+(u.g?u.g[j]:1)*(cb[j]+gs()*sl); if(v>best){best=v; bj=j;}} const ms=R.BL[bj],o=dv[u.k]||{},sg=SIG[u.k],w=sg&&ms.includes(sg)?sg:ms.slice().sort((a,b)=>(o[b]||0)-(o[a]||0))[0]; if(w) MR[w]=(MR[w]||0)+1;});
     /* votación estatal con el mismo cambio común de cada bloque (puntos), repartido dentro del bloque en proporción */
     const nsh=bsh.map((x,j)=>Math.max(.001,x+cb[j]/100)),ns=nsh.reduce((a,b)=>a+b,0),V={};
     R.BL.forEach((ms,j)=>{const bv=ms.reduce((a,q)=>a+(tot[q]||0),0)||1; ms.forEach(q=>V[q]=(tot[q]||0)/bv*nsh[j]/ns*all);});
     for(const q in tot) if(V[q]==null) V[q]=tot[q];
-    const x=rpAsigna(V,MR),t=blk.reduce((a,m)=>a+((x.out[m]||{}).t||0),0); res.push(t); half=x.NT; }
+    const x=rpAsigna(V,MR),t=blk.reduce((a,m)=>a+((x.out[m]||{}).t||0),0); res.push(t); scn.push([t,x.out]); half=x.NT; }
   const NT=half,h=Math.floor(NT/2)+1,c=Math.ceil(NT*2/3); res.sort((a,b)=>a-b);
-  return CPROB[key]={pM:res.filter(t=>t>=h).length/N,pQ:res.filter(t=>t>=c).length/N,lo:res[Math.floor(.1*N)],hi:res[Math.floor(.9*N)],med:res[Math.floor(N/2)],blk};}
+  /* escenario central: uno de los simulados con el total mediano (así cifra, barra y probabilidad dicen lo mismo) */
+  const med=res[Math.floor(N/2)],mc=scn.find(z=>z[0]===med);
+  return CPROB[key]={pM:res.filter(t=>t>=h).length/N,pQ:res.filter(t=>t>=c).length/N,lo:res[Math.floor(.1*N)],hi:res[Math.floor(.9*N)],med,medOut:mc?mc[1]:null,NT,blk};}
