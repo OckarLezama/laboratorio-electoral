@@ -40,6 +40,9 @@ def q(v, p):
     return v[f] + (v[min(f + 1, len(v) - 1)] - v[f]) * (k - f)
 
 
+from modelo import _grupos, bl_lugar  # noqa: E402  (mismos bloques por lugar que el modelo)
+
+
 def carga(c):
     d = json.load(open(PLANO / f'{c}.json', encoding='utf-8'))
     P = d['P8']; NP = len(P); S = d['S']; E = {}
@@ -58,6 +61,9 @@ def carga(c):
         if not sh:
             continue          # elección sin votos por sección (p. ej. sin archivo): no sirve para calibrar
         E[ek] = {'t': e['type'], 'y': int(e['year']), 'sh': sh, 'tp': tp, 'val': val, 'bl': [[P.index(m) for m in b['members'] if m in P] for b in e['blocs']]}
+        g = _grupos(e, S)  # coaliciones parciales (pipeline/coaliciones.py): grupos de partidos que fueron aparte por sección
+        if g:
+            E[ek]['gs'] = [{tuple(P.index(m) for m in x if m in P) for x in gi} for gi in g]
     return d, P, S, E
 
 
@@ -154,7 +160,7 @@ def estatal_d(sh, val):
 def errores(S, act, pr, niv):
     e, h = [], []
     for k, ii in unidades(S, niv).items():
-        A = margen(act['sh'], act['val'], ii, act['bl']); B = margen(pr, act['val'], ii, act['bl'])
+        bl = bl_lugar(act, ii); A = margen(act['sh'], act['val'], ii, bl); B = margen(pr, act['val'], ii, bl)
         if not A or not B or len(A) < 2:
             continue
         w1, w2 = A[0][1], A[1][1]; pb = dict((kk, v) for v, kk in B)

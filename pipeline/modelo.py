@@ -28,6 +28,45 @@ CYCLE = lambda y: 'mid' if y in (2015, 2021, 2027) else 'pres' if y in (2018, 20
 GRID = {'wt': [0.25, 0.5, 1.0], 'wc': [1.0, 2.0, 4.0], 'decay': [0.6, 0.8, 1.0], 'lam': [0.0, 0.3, 0.6]}
 
 
+ETR = 0.7  # en la proyección, los aliados aportan 70 % de sus votos (lo que usa la plataforma; ver 82_estrategia.js)
+
+
+def _grupos(e, S):
+    """Por sección, los grupos de partidos que compitieron fuera de su coalición estatal (E.sx de coaliciones.py y
+    E.so de las candidaturas federales 2024). None si la elección no tiene coaliciones parciales."""
+    if not e.get('sx') and not e.get('so'):
+        return None
+    g = [set() for _ in S]
+    for gs, ii in e.get('sx') or []:
+        for i in ii:
+            g[i].update(tuple(x) for x in gs)
+    for i, s in enumerate(S):
+        for p in (e.get('so') or {}).get(str(s[3]), []):
+            g[i].add((p,))
+    return g
+
+
+def bl_lugar(e, ii):
+    """Bloques de una unidad: la coalición estatal, separando los grupos que en todas sus secciones fueron aparte."""
+    gs = e.get('gs')
+    if not gs:
+        return e['bl']
+    G = None
+    for i in ii:
+        G = set(gs[i]) if G is None else G & gs[i]
+        if not G:
+            return e['bl']
+    out = []
+    for b in e['bl']:
+        keep = list(b)
+        for g in sorted(G):
+            o = [m for m in keep if m in g]
+            if o and len(o) < len(keep):
+                keep = [m for m in keep if m not in o]; out.append(o)
+        out.append(keep)
+    return out
+
+
 def cargar(cab):
     d = json.loads((PLANO / f'{cab}.json').read_text(encoding='utf-8'))
     P = d['P8']; NP = len(P); N = len(d['S'])
@@ -44,7 +83,7 @@ def cargar(cab):
         sh[~(val > 0)] = np.nan
         E[ek] = {'t': e['type'], 'y': int(e['year']), 'sh': sh, 'val': val, 'tp': tp,
                  'bl': [[m for m in b['members'] if m != 'OTROS'] for b in e['blocs'] if b['lead'] != 'OTROS'],
-                 'cc': e.get('cc', [])}
+                 'cc': e.get('cc', []), 'gs': _grupos(e, d['S'])}
     S = d['S']
     return {'cab': cab, 'P': P, 'N': N, 'E': E, 'S': S, 'ln': np.array([s[5] or 0 for s in S], float),
             'unit': {'m': np.array([s[1] for s in S]), 'dl': np.array([s[2] for s in S]), 'df': np.array([s[3] for s in S])}}
@@ -114,15 +153,26 @@ def unidades(st, T):
     return np.zeros(st['N'], int) if k is None else st['unit'][k]
 
 
-def bloques_unidad(st, sh, w, T, bl):
-    """Participación de cada bloque por unidad, ponderando secciones por w."""
+def bloques_unidad(st, sh, w, T, bl, ek=None, pred=False):
+    """Participación de cada bloque por unidad, ponderando secciones por w. Con ek, los bloques de cada unidad
+    respetan las coaliciones parciales de esa elección (bl_lugar). pred=True: los aliados cuentan al ETR."""
     P = st['P']; ix = {p: j for j, p in enumerate(P)}; U = unidades(st, T)
     ok = ~np.isnan(sh[:, 0]) & (w > 0)
     out = {}
     for u in np.unique(U[ok]):
         m = ok & (U == u); ww = w[m]; s = (sh[m] * ww[:, None]).sum(0) / ww.sum()
-        out[int(u)] = [sum(s[ix[p]] for p in b if p in ix) for b in bl]
+        blu = bl_lugar(st['E'][ek], np.where(U == u)[0]) if ek else bl
+        v = []
+        for b in blu:
+            xs = [s[ix[p]] for p in b if p in ix]
+            v.append((max(xs) + ETR * (sum(xs) - max(xs))) if pred and len(xs) > 1 else sum(xs))
+        out[int(u)] = v
     return out
+
+
+def blu_de(st, ek, T):
+    U = unidades(st, T)
+    return {int(u): bl_lugar(st['E'][ek], np.where(U == u)[0]) for u in np.unique(U)}
 
 
 def estatal(st, sh, w, bl):
@@ -137,9 +187,9 @@ def ganador_previo(st, T, Y):
     if not prev:
         return {}
     e = st['E'][max(prev, key=lambda k: st['E'][k]['y'])]
-    R = bloques_unidad(st, e['sh'], np.nan_to_num(e['val']), T, e['bl'])
-    P = st['P']; ix = {p: j for j, p in enumerate(P)}
-    return {u: max(e['bl'][max(range(len(v)), key=lambda j: v[j])], key=lambda p: -MAIN_ORD.get(p, 99)) for u, v in R.items() if v and not any(math.isnan(x) for x in v)}
+    pk = max(prev, key=lambda k: st['E'][k]['y'])
+    R = bloques_unidad(st, e['sh'], np.nan_to_num(e['val']), T, e['bl'], ek=pk); B = blu_de(st, pk, T)
+    return {u: max(B[u][max(range(len(v)), key=lambda j: v[j])], key=lambda p: -MAIN_ORD.get(p, 99)) for u, v in R.items() if v and not any(math.isnan(x) for x in v)}
 
 
 MAIN_ORD = {p: -i for i, p in enumerate(['MORENA', 'PAN', 'PRI', 'MC', 'PVEM', 'PT', 'PRD'])}
@@ -155,15 +205,23 @@ def evaluar(st, ek, prm, encuesta=None, rng=None, inc=0.0):
         return []
     w_pred = st['ln'] * turnout(st, Y)
     w_true = np.nan_to_num(e['val'])
-    P = bloques_unidad(st, pr, w_pred, T, e['bl'])
-    R = bloques_unidad(st, e['sh'], w_true, T, e['bl'])
+    P = bloques_unidad(st, pr, w_pred, T, e['bl'], ek=ek, pred=True)
+    R = bloques_unidad(st, e['sh'], w_true, T, e['bl'], ek=ek)
+    BU = blu_de(st, ek, T)
     if inc and T in ('AYU', 'GOB'):
         gp = ganador_previo(st, T, Y)
-        P = {u: [v + (inc / 100 if gp.get(u) in e['bl'][j] else 0) for j, v in enumerate(p)] for u, p in P.items()}
+        P = {u: [v + (inc / 100 if gp.get(u) in BU[u][j] else 0) for j, v in enumerate(p)] for u, p in P.items()}
     if encuesta is not None:
+        # la encuesta corrige el nivel estatal de cada bloque; la corrección se reparte entre sus partidos según su peso
         pe = estatal(st, pr, w_pred, e['bl']); re_ = estatal(st, e['sh'], w_true, e['bl'])
         enc = [x + (rng.normal(0, encuesta / 100) if encuesta else 0) for x in re_]
-        P = {u: [v + (enc[j] - pe[j]) for j, v in enumerate(p)] for u, p in P.items()}
+        sp = estatal(st, pr, w_pred, [[p] for p in st['P']]); adj = {}
+        for j, b in enumerate(e['bl']):
+            tot = sum(sp[st['P'].index(p)] for p in b if p in st['P']) or 1
+            for p in b:
+                if p in st['P']:
+                    adj[p] = (enc[j] - pe[j]) * sp[st['P'].index(p)] / tot
+        P = {u: [v + sum(adj.get(p, 0) for p in BU[u][j]) for j, v in enumerate(p)] for u, p in P.items()}
     out = []
     for u, p in P.items():
         if u not in R or any(math.isnan(x) for x in p):
@@ -182,8 +240,8 @@ def ingenuo(st, ek):
     if not prev:
         return []
     pk = max(prev, key=lambda k: st['E'][k]['y']); sh = st['E'][pk]['sh']
-    P = bloques_unidad(st, sh, st['ln'] * turnout(st, Y), T, e['bl'])
-    R = bloques_unidad(st, e['sh'], np.nan_to_num(e['val']), T, e['bl'])
+    P = bloques_unidad(st, sh, st['ln'] * turnout(st, Y), T, e['bl'], ek=ek)
+    R = bloques_unidad(st, e['sh'], np.nan_to_num(e['val']), T, e['bl'], ek=ek)
     out = []
     for u, p in P.items():
         if u not in R or any(math.isnan(x) for x in p):
@@ -329,10 +387,11 @@ def main():
                 e = st['E'][ek]; T = e['t']; pr = base_proy(st, Y, T, *prmY[st['cab']][Y])
                 if pr is None: continue
                 w = st['ln'] * turnout(st, Y)
-                P = bloques_unidad(st, pr, w, T, e['bl']); R = bloques_unidad(st, e['sh'], np.nan_to_num(e['val']), T, e['bl'])
+                P = bloques_unidad(st, pr, w, T, e['bl'], ek=ek, pred=True); R = bloques_unidad(st, e['sh'], np.nan_to_num(e['val']), T, e['bl'], ek=ek)
                 us = [u for u in P if u in R and not any(math.isnan(x) for x in P[u])]
                 if not us or T not in sig: continue
-                S_ = np.array([P[u] for u in us]) * 100; A = np.array([R[u] for u in us]); nb = S_.shape[1]
+                nb = max(len(P[u]) for u in us)  # cada unidad puede tener distinto número de bloques: se rellena
+                S_ = np.array([P[u] + [-1.0] * (nb - len(P[u])) for u in us]) * 100; A = np.array([R[u] + [-1.0] * (nb - len(R[u])) for u in us])
                 cbs = rng2.normal(0, sig[T]['comun'] / math.sqrt(2), (1500, 1, nb)); loc = rng2.normal(0, sig[T]['local'] / math.sqrt(2), (1500, len(us), nb))
                 fav = S_.argmax(1); pf = ((S_[None] + cbs + loc).argmax(2) == fav[None]).mean(0); okv = A.argmax(1) == fav
                 for p_, o_ in zip(pf, okv):

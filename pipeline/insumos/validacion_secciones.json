@@ -2,57 +2,52 @@
  "metodo": "etiquetas calculadas con elecciones 2018-2021 y comparadas con 2024 (32 estados)",
  "duro": {
   "PAN": {
-   "n": 5575,
+   "n": 6077,
    "gano": 67,
    "sostuvo": 68
   },
   "MORENA": {
-   "n": 21147,
+   "n": 22904,
    "gano": 94,
    "sostuvo": 93
   },
   "PRI": {
-   "n": 2961,
-   "gano": 34,
-   "sostuvo": 36
+   "n": 2784,
+   "gano": 35,
+   "sostuvo": 38
   },
   "PVEM": {
-   "n": 116,
+   "n": 105,
    "gano": 89,
-   "sostuvo": 46
+   "sostuvo": 43
   },
   "PT": {
-   "n": 63,
-   "gano": 71,
-   "sostuvo": 54
-  },
-  "MC": {
-   "n": 130,
-   "gano": 47,
-   "sostuvo": 30
+   "n": 53,
+   "gano": 73,
+   "sostuvo": 55
   }
  },
  "sw": {
   "switcher": 75,
   "resto": 41,
-  "n": 23655
+  "n": 25590
  },
  "sit": {
   "dif": {
    "gano": 11,
-   "n": 191065
+   "n": 206836
   },
   "seg": {
    "gano": 80,
-   "n": 99414
+   "n": 107755
   },
   "cui": {
-   "gano": 56,
-   "n": 33015
+   "gano": 57,
+   "n": 35709
   },
   "mov": {
    "gano": 38,
-   "n": 35108
+   "n": 37861
   }
  }
 }

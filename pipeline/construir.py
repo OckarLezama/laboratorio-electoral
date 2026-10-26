@@ -106,6 +106,7 @@ def _hk(k):
     k=unicodedata.normalize('NFD',k.strip()).encode('ascii','ignore').decode().upper()
     return 'SECCION' if k in ('SECCIONES','SECCIN') else k
 RAW={}
+DROPS={}; MUNR={}  # votos de secciones que ya no existen en el mapa vigente y su municipio (de los archivos federales)
 def _lee(f,t,y,kind):
     _t=open(f,encoding='utf-8-sig',errors='ignore').read(); _d='\t' if _t.split('\n',1)[0].count('\t')>_t.split('\n',1)[0].count(',') else ','
     rows=[{_hk(k):v for k,v in r.items()} for r in csv.DictReader(io.StringIO(_t),delimiter=_d)]
@@ -117,8 +118,13 @@ def _lee(f,t,y,kind):
     for r in rows:
         try: s=int(float(r['SECCION']))
         except: continue
-        if s<=0 or s not in idx: continue
-        x=sec.setdefault(s,[{},0.0,0.0]); v=x[0]
+        if s<=0: continue
+        if s not in idx:  # sección dada de baja en la cartografía vigente: se guarda aparte y se reasigna después
+            try: MUNR.setdefault(s,int(float(r.get('ID_MUNICIPIO') or 0))) if f.split('/')[-1].startswith('FED_') else None
+            except ValueError: pass
+            x=DROPS.setdefault(id(sec),{}).setdefault(s,[{},0.0,0.0]); v=x[0]
+        else:
+            x=sec.setdefault(s,[{},0.0,0.0]); v=x[0]
         for c in cols:
             if c in ind: continue
             n=num(r[c])
@@ -128,6 +134,7 @@ def _lee(f,t,y,kind):
         iv=sorted((num(r[c]) for c in ind),reverse=True)
         if iv and iv[0]: v['IND']=v.get('IND',0)+iv[0]; v['OTROS']=v.get('OTROS',0)+sum(iv[1:])
         x[1]+=num(r.get('TOTAL_VOTOS')); x[2]+=num(r.get('LISTA_NOMINAL'))
+        if s not in idx: continue
         o=own.setdefault(s,[0.0]*7)
         for j,p in enumerate(MAIN): o[j]+=num(r.get(p))
         if t=='DIPL' and y==LDY:
@@ -156,6 +163,33 @@ for f in files:
         sec,own,used=_lee(f,'AYU',y,'local')
         RAW[ek][3].update(sec); RAW[ek][4].extend(used); OWN[ek].update(own)
         print('  extraordinaria',ek,len(sec),'secciones')
+# ---------- secciones dadas de baja ----------
+# Los resultados de años pasados traen secciones que el INE dividió después (reseccionamiento): en el mapa vigente ya no
+# existen y sus votos se perdían (2-7 % según el estado). Se reparten entre las secciones de su mismo municipio que no
+# tienen resultados en esa elección (las que las sustituyeron), en proporción a su lista nominal actual; si no hay,
+# entre todas las secciones del municipio. Así los totales por municipio y distrito coinciden con el cómputo.
+LNP={}
+for r in csv.DictReader(open(U+'PADRON.csv',encoding='utf-8')):
+    try: LNP[int(float(r['SECCION']))]=LNP.get(int(float(r['SECCION'])),0)+int(float(r.get('LISTA NOMINAL') or 0))
+    except: pass
+SMUN={}
+for i_,r_ in S.iterrows(): SMUN.setdefault(int(r_.municipio),[]).append(int(r_.seccion))
+_rep=[0,0]
+for ek,(t,y,kind,sec,used) in RAW.items():
+    D_=DROPS.get(id(sec),{})
+    for s0,(v0,tv0,ln0) in D_.items():
+        m=MUNR.get(s0); _rep[1]+=tv0
+        if not m or m not in SMUN: continue
+        cand=[c for c in SMUN[m] if c not in sec] or SMUN[m]
+        W=sum(LNP.get(c,0) for c in cand) or len(cand)
+        for c in cand:
+            w=(LNP.get(c,0) or (0 if W!=len(cand) else 1))/W
+            if not w: continue
+            x=sec.setdefault(c,[{},0.0,0.0])
+            for p_,n_ in v0.items(): x[0][p_]=x[0].get(p_,0)+n_*w
+            x[1]+=tv0*w; x[2]+=ln0*w
+        _rep[0]+=tv0
+if _rep[1]: print(f'  secciones dadas de baja: {_rep[0]:,.0f} de {_rep[1]:,.0f} votos reasignados a su municipio')
 # partidos no nacionales relevantes: >=2.5% estatal en alguna elección o 1er lugar individual en >=5 secciones
 SCR={}
 for ek,(t,y,kind,sec,used) in RAW.items():

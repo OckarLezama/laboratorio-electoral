@@ -131,7 +131,7 @@ function eWin27(ii){const g=eAgg(ii); if(!g.V) return null; const bl=eGenBl().ma
   return {bl,lead:bl[0].lead,m:100*(bl[0].v-(bl[1]?bl[1].v:0))/g.V,mv:Math.round(bl[0].v-(bl[1]?bl[1].v:0)),a:100*bl[0].v/g.V,b:bl[1]?100*bl[1].v/g.V:0,g};}
 /* resultado anterior del mismo cargo (solo referencia) */
 function eHist(ii,A){const ek=eRef(),T=totals(ek,ii); if(!T.val) return null; if(!A){const w=winner(ek,ii); return w?`${esc(w.bl[0].name)} ganó por ${w.m.toFixed(1)} puntos`:null;}
-  const mine=A.reduce((t,q)=>t+(T.tot[q]||0),0); let rv=0; D.E[ek].blocs.forEach(b=>{const rem=b.members.filter(m=>m!=='OTROS'&&!A.includes(m)); const v=rem.reduce((t,m)=>t+(T.tot[m]||0),0); if(v>rv) rv=v;});
+  const mine=A.reduce((t,q)=>t+(T.tot[q]||0),0); let rv=0; T.bl.forEach(b=>{const rem=b.members.filter(m=>m!=='OTROS'&&!A.includes(m)); const v=rem.reduce((t,m)=>t+(T.tot[m]||0),0); if(v>rv) rv=v;});
   const m=100*(mine-rv)/T.val; return mine?`${A.length>1?'sumando sus votos, ':''}${esc(eSide(A))} ${m>=0?'habría ganado':'habría perdido'} por ${Math.abs(m).toFixed(1)} puntos`:`${esc(eSide(A))} no compitió`;}
 const q67=a=>{a=a.filter(x=>x!=null).sort((x,y)=>x-y); return a.length?a[Math.floor(2*a.length/3)]:Infinity;};
 /* qué tanto acertaron las etiquetas por sección: calculadas con 2018–2021 y comparadas con 2024 (pipeline/val_secciones.py) */

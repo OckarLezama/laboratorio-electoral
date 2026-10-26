@@ -51,12 +51,15 @@ function gBullet(W,{mine,riv,meta,lbl,rl,c,rc}){const mx=Math.max(mine,riv,meta)
 const gStack=(parts)=>`<div class="sl-stk">${parts.filter(p=>p.v>0).map(p=>`<i style="flex:${p.v};background:${p.c}" title="${esc(p.l)}"></i>`).join('')}</div><div class="sl-stl">${parts.map(p=>`<span><i style="background:${p.c}"></i>${esc(p.l)} <b>${fmt(p.v)}</b></span>`).join('')}</div>`;
 /* ---------- datos ---------- */
 function slData(){const ii=scope().length?scope():ALL,ref=st.elec||lastOf(BASE.split('_')[0])||Object.keys(D.E).pop(),T=totals(ref,ii),P=st.party||null;
-  const blocOf=(ek,p)=>D.E[ek].blocs.find(b=>b.members.includes(p)),els=Object.keys(D.E).filter(ek=>totals(ek,ii).val).sort((a,b)=>D.E[a].year-D.E[b].year||a.localeCompare(b));
+  const blocOf=(ek,p)=>totals(ek,ii).bl.find(b=>b.members.includes(p)),els=Object.keys(D.E).filter(ek=>totals(ek,ii).val).sort((a,b)=>D.E[a].year-D.E[b].year||a.localeCompare(b));
   const won=ek=>{const c={}; ii.forEach(i=>{const w=winner(ek,[i]); if(w) c[w.lead]=(c[w.lead]||0)+1;}); return c;};
   return {ii,ref,T,P,blocOf,els,won,pv:prevOf(ref)};}
 /* margen por sección del partido (o de su coalición) contra la mejor fuerza rival */
-function slMargins(ref,ii,PB){const out=[]; ii.forEach(i=>{const r=row(ref,i); if(!r||!r.val) return; const mine=PB.members.reduce((a,m)=>a+(m==='OTROS'?0:(r.v[m]||0)),0); let rv=0;
-  D.E[ref].blocs.forEach(b=>{if(b===PB) return; const v=b.members.reduce((a,m)=>a+(m==='OTROS'?0:(r.v[m]||0)),0); if(v>rv) rv=v;}); out.push({i,mine,rv,mg:100*(mine-rv)/r.val,tp:r.ln?100*r.t/r.ln:0,ln:S[i].ln||0});}); return out;}
+function slMargins(ref,ii,PB){const out=[]; ii.forEach(i=>{const r=row(ref,i); if(!r||!r.val) return;
+  /* bloques de esa sección: donde la coalición no fue, cada partido cuenta aparte */
+  const sb=totals(ref,[i]).bl,my=sb.find(b=>b.members.includes(PB.lead))||sb.find(b=>b.members.some(m=>PB.members.includes(m)));
+  const sum=b=>b.members.reduce((a,m)=>a+(m==='OTROS'?0:(r.v[m]||0)),0),mine=my?sum(my):0; let rv=0;
+  sb.forEach(b=>{if(b===my) return; const v=sum(b); if(v>rv) rv=v;}); out.push({i,mine,rv,mg:100*(mine-rv)/r.val,tp:r.ln?100*r.t/r.ln:0,ln:S[i].ln||0});}); return out;}
 /* serie de proyección 2027 (cargo consultado) para un partido o su coalición */
 function slPJ(T27,ii,p,coal){if(!T27||typeof pjParties!=='function') return null; const pp=pjParties(T27,ii); if(!pp) return null;
   const b=pjBlocs(T27).find(ms=>ms.includes(p)); if(!b) return null; if(!coal&&b[0]!==p) return null;

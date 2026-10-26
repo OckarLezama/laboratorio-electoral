@@ -263,6 +263,8 @@ def generar():
             elif r['amb'] != 'jud':
                 P[pid[k]] = nombre(r['nombre'])  # se muestra como aparece en su registro más reciente
             cl = cargo(r['cargo'], (r['lista'] or '').strip(), r['amb'])
+            if cl == 'Presidencia municipal' and _n(r.get('dem') or '') not in ('', _n(r.get('mun') or '')):
+                cl = 'Junta municipal'  # presidencias de juntas municipales (Campeche): vienen con su demarcación
             if r['amb'] == 'jud' and r['esp']:
                 cl = 'Cargo judicial · ' + r['esp'].strip().lower()
             if cl not in cid:
