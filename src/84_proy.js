@@ -101,6 +101,7 @@ const PJREC=1/3;
    de más a menos y se suman hasta cubrir los votantes que habría que convencer. "Ha cambiado de ganador": la sección
    cambió de partido ganador en al menos 2 cargos entre las dos últimas elecciones; ahí la gente sí cambia su voto.
    Probado con los 32 estados: de los votos no duros que cada partido tuvo en 2021, en 2024 se fue 3 de cada 10. */
+function pjSoft(i,RV){const x=eP()[i]; if(!x||!x.V) return null; const ln=x.ln||S[i].ln||0,DU=V2.duro||{}; if(!ln) return null; const rv=sv(x.pv,RV); let du=0,ok=false; RV.forEach(m=>{const t=DU[m]&&DU[m][i]; if(t!=null){du+=t/100*ln; ok=true;}}); return ok?Math.max(0,rv-Math.min(du,rv)):null;}
 function pjQuita(ii,RV,need){const P=eP(),DU=V2.duro||{},out=[]; let tot=0;
   ii.forEach(i=>{const x=P[i]; if(!x||!x.V) return; const ln=x.ln||S[i].ln||0; if(!ln) return; const rv=sv(x.pv,RV); let du=0,ok=false;
     RV.forEach(m=>{const t=DU[m]&&DU[m][i]; if(t!=null){du+=t/100*ln; ok=true;}}); if(!ok) return; const soft=rv-Math.min(du,rv); if(soft<1) return;

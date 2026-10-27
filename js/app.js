@@ -1349,6 +1349,7 @@ const PJREC=1/3;
    de más a menos y se suman hasta cubrir los votantes que habría que convencer. "Ha cambiado de ganador": la sección
    cambió de partido ganador en al menos 2 cargos entre las dos últimas elecciones; ahí la gente sí cambia su voto.
    Probado con los 32 estados: de los votos no duros que cada partido tuvo en 2021, en 2024 se fue 3 de cada 10. */
+function pjSoft(i,RV){const x=eP()[i]; if(!x||!x.V) return null; const ln=x.ln||S[i].ln||0,DU=V2.duro||{}; if(!ln) return null; const rv=sv(x.pv,RV); let du=0,ok=false; RV.forEach(m=>{const t=DU[m]&&DU[m][i]; if(t!=null){du+=t/100*ln; ok=true;}}); return ok?Math.max(0,rv-Math.min(du,rv)):null;}
 function pjQuita(ii,RV,need){const P=eP(),DU=V2.duro||{},out=[]; let tot=0;
   ii.forEach(i=>{const x=P[i]; if(!x||!x.V) return; const ln=x.ln||S[i].ln||0; if(!ln) return; const rv=sv(x.pv,RV); let du=0,ok=false;
     RV.forEach(m=>{const t=DU[m]&&DU[m][i]; if(t!=null){du+=t/100*ln; ok=true;}}); if(!ok) return; const soft=rv-Math.min(du,rv); if(soft<1) return;
@@ -1876,10 +1877,11 @@ if($('rMe')) $('rMe').onclick=metOpen;
 document.addEventListener('click',e=>{if(e.target.closest('[data-met]')){e.preventDefault(); metOpen();}});
 /* --- descarga de secciones (se abre en Excel) --- */
 function secCSV(){if(typeof eSecs!=='function') return; const E=eSecs(),ii=eSelII(),A=eAlly(),acc={seg:'Conservar',cui:'Defender',mov:'Disputar · movilizar',con:'Disputar · convencer',dif:'Contener'};
-  const q=x=>{x=x==null?'':String(x); return /[",\n]/.test(x)?'"'+x.replace(/"/g,'""')+'"':x;},rows=[A?['Sección','Municipio','Distrito local','Distrito federal','Acción','Diferencia proyectada (puntos)','Votos que le faltarían','Votos posibles (su mejor votación desde 2018 menos lo de hoy)','Cómo conseguirlos','Voto duro','Cambia de partido']:['Sección','Municipio','Distrito local','Distrito federal','Situación','Va adelante','Diferencia (puntos)']];
+  const q=x=>{x=x==null?'':String(x); return /[",\n]/.test(x)?'"'+x.replace(/"/g,'""')+'"':x;},rows=[A?['Sección','Municipio','Distrito local','Distrito federal','Acción','Diferencia proyectada (puntos)','Votos que le faltarían','Votos posibles (su mejor votación desde 2018 menos lo de hoy)','Cómo conseguirlos','Rival','Votos del rival que no son duros','Voto duro','Cambia de partido']:['Sección','Municipio','Distrito local','Distrito federal','Situación','Va adelante','Diferencia (puntos)']];
   const RP={}; if(A&&typeof pjRuta==='function') pjRuta(ii,A,0).rows.forEach(r=>RP[r.i]=r); /* mismo cálculo que la tarjeta */
+  const RVM={}; if(A) Object.values(E.CT||{}).forEach(c=>{if(c.d&&c.d.riv) c.ii.forEach(i=>RVM[i]=c.d.riv.members);}); /* rival más fuerte de su distrito o municipio */
   ii.map(i=>E.by[i]).filter(Boolean).sort((a,b)=>A?((a.act==='mov'||a.act==='con'?0:1)-(b.act==='mov'||b.act==='con'?0:1))||(a.rv-a.mine)-(b.rv-b.mine):a.mg-b.mg).forEach(x=>{const s=S[x.i];
-    if(A){const fal=x.rv>x.mine?Math.round(x.rv-x.mine)+1:'',r=RP[x.i]; rows.push([s.s,MUN[s.m],s.dl,s.df,acc[x.act]||'',x.mg.toFixed(1),fal,r?Math.round(r.pot):'',r?(r.tipo==='mov'?'Movilizar':'Recuperar'):'',x.duro?'Sí':'',x.sw?'Sí':'']);}
+    if(A){const fal=x.rv>x.mine?Math.round(x.rv-x.mine)+1:'',r=RP[x.i]; rows.push([s.s,MUN[s.m],s.dl,s.df,acc[x.act]||'',x.mg.toFixed(1),fal,r?Math.round(r.pot):'',r?(r.tipo==='mov'?'Movilizar':'Recuperar'):'',x.rvN||'',RVM[x.i]?Math.round(pjSoft(x.i,RVM[x.i])||0):'',x.duro?'Sí':'',x.sw?'Sí':'']);}
     else rows.push([s.s,MUN[s.m],s.dl,s.df,(ECAT[x.cat]||[''])[0],NM[x.lead]||x.lead,x.mg.toFixed(1)]);});
   const where=st.es.u!=null&&eLv()!=='est'?eName(eLv(),st.es.u).replace(/[^\wÁÉÍÓÚÑáéíóúñ]+/g,'_'):EST,b=new Blob(['﻿'+rows.map(r=>r.map(q).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'}),u=URL.createObjectURL(b),l=document.createElement('a');
   l.href=u; l.download=`secciones_${(eObjN()||'').replace(/\s+/g,'_')}_${where}${A?'_'+eSide(A).replace(/\W+/g,''):''}.csv`; document.body.appendChild(l); l.click(); l.remove(); setTimeout(()=>URL.revokeObjectURL(u),2000);}
