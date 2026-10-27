@@ -93,6 +93,14 @@ function pjCard(ctx,ii0,inner){const T=pjType(); if(!T) return ''; const ii=ii0|
    votaron por el partido y hoy irían con otro. Si ni recuperando todo alcanza, el resto tendría que quitárselo al rival. */
 const PJTE=Object.keys(D.E).filter(k=>+D.E[k].year>=2018);
 function pjTecho(i,A){let best=-1; PJTE.forEach(ek=>{const r=row(ek,i); if(!r||!r.ln) return; let v=0; A.forEach(m=>v+=r.v[m]||0); if(v/r.ln>best) best=v/r.ln;}); return best;}
+/* Cuánto de esos votos se recupera de verdad: probado con los 32 estados, calculando lo recuperable con datos hasta 2021
+   y viendo lo que cada partido ganó en 2024 (diputaciones locales, ayuntamientos y federales): se recuperó 1 de cada 3. */
+const PJREC=1/3;
+function pjVer(RU,G,me,rv,p){const n=RU.n,sec=n===1?'una sección':n+' secciones',pp=p!=null?` Hoy tendría ${pjPct(p)} de probabilidad de ganar.`:'';
+  if(!RU.rows.length) return `<b>No tiene votos propios que recuperar:</b> en todas las secciones ya tendría al menos su mejor votación. Los <b>${fmt(G)}</b> votos que le faltan tendrían que salir de votantes de ${rv} que cambien a ${me} (unos ${fmt(Math.round(G/2))}: cada uno le quita un voto a ${rv} y le suma uno a ${me}) o de una alianza.${pp}`;
+  if(RU.tot*PJREC>=G) return `<b>Le alcanzaría.</b> Con ${sec} juntaría los <b>${fmt(G)}</b> votos que le faltan, y le sobra margen: aun recuperando solo 1 de cada 3 de estos votos, como suele pasar, le alcanzaría.${pp}`;
+  if(RU.alcanza) return `<b>Le alcanzaría solo si recupera casi todo.</b> Con ${sec} juntaría los <b>${fmt(G)}</b> votos que le faltan, pero normalmente se recupera 1 de cada 3 de estos votos: es difícil.${pp}`;
+  const rest=G-RU.tot; return `<b>No le alcanzaría con sus votos de antes.</b> Recuperando todo en las ${RU.rows.length} secciones juntaría como máximo <b>${fmt(Math.round(RU.tot))}</b> de los <b>${fmt(G)}</b> que le faltan. Para el resto tendría que convencer a unos <b>${fmt(Math.round(rest/2))}</b> votantes de ${rv} de cambiar su voto (cada uno le quita un voto a ${rv} y le suma uno a ${me}) o ir en alianza.${p!=null&&p<.15?` <b>Con los datos de hoy, es muy poco probable que lo logre</b> (${pjPct(p)} de probabilidad de ganar).`:pp}`;}
 function pjRuta(ii,A,G){const P=eP(),out=[]; let tot=0;
   ii.forEach(i=>{const x=P[i]; if(!x||!x.V) return; const ln=x.ln||S[i].ln||0; if(!ln) return; const mine=sv(x.pv,A),mx=(V2.maxT[i]||x.tp)/100*ln;
     const tb=pjTecho(i,A); if(tb<0) return; const te=Math.min(tb*ln,mx);
@@ -137,13 +145,10 @@ function pjDetalle(ii,tab){const T=pjType(); if(!T) return; const p=st.party,R=p
         mt=`<div class="pjnow">Hoy tendría unos <b>${fmt(Math.round(es/100)*100)}</b> votos; ${esc(d.rvN)}, unos <b>${fmt(Math.round((d.riv?d.riv.votes:0)/100)*100)}</b>.</div>${row('Para ganar',mn,'un voto más que '+esc(d.rvN))}${row('Para 70 % de probabilidad',sg,'una ventaja más segura')}`;}
       const secN=i=>String(S[i].s),munN=i=>MUN[S[i].m]||'',G=d?Math.round(d.riv?d.riv.votes:0)+1-Math.round(d.mine):0,RU=A&&d?pjRuta(ii,A,G):null;
       let dn='';
-      if(RU&&G>0&&RU.rows.length){const k=RU.alcanza?RU.n:RU.rows.length,rows=RU.rows.slice(0,Math.max(k,1));
-        dn=`<h4>¿Dónde conseguirlos?</h4><p class="pjsub">Votos que ${me} ya tuvo en cada sección en su mejor elección y hoy no tendría, de más a menos.</p>
-        <p class="pjn" style="margin:4px 0 8px">${RU.alcanza?`Con ${RU.n===1?'<b>una sección</b>':`estas <b>${RU.n} secciones</b>`} juntaría los <b>${fmt(G)}</b> votos que le faltan para ganar.`:`Aun recuperando su mejor votación en las <b>${RU.rows.length} secciones</b> juntaría unos <b>${fmt(Math.round(RU.tot))}</b> de los <b>${fmt(G)}</b> que le faltan. El resto, unos <b>${fmt(Math.round(G-RU.tot))}</b>, tendría que quitárselos a ${esc(d.rvN)} (cada votante que cambia cuenta doble: unos ${fmt(Math.round((G-RU.tot)/2))} electores) o sumar aliados.`}</p>
-        
-        ${pjTbl(['Sección','Municipio','Qué hacer','Votos','Suma'],rows.map(x=>[secN(x.i),esc(munN(x.i)),x.tipo==='mov'?'Movilizar':'Recuperar',fmt(Math.round(x.pot)),fmt(Math.round(x.acc))]),6)}
-<p class="pjsub">Movilizar: hoy votaría menos gente que en su mejor elección. Recuperar: electores que ya votaron por ${me} y hoy irían con otro.</p>`;}
-      else if(RU&&G>0){dn=`<h4>¿Dónde conseguirlos?</h4><p class="pjn">En todas las secciones ya tendría al menos su mejor votación desde 2018: no hay votos propios que recuperar. Los <b>${fmt(G)}</b> que le faltan tendría que quitárselos a ${esc(d.rvN)} (unos ${fmt(Math.round(G/2))} electores que cambien de partido) o sumar aliados.</p>`;}
+      if(RU&&G>0){const rows=RU.rows.slice(0,Math.max(RU.alcanza?RU.n:RU.rows.length,1)),rv=esc(d.rvN);
+        dn=`<h4>¿Dónde conseguirlos?</h4><div class="pjver">${pjVer(RU,G,me,rv,u.p)}</div>${RU.rows.length?`
+        <p class="pjsub">Secciones donde ${me} ya sacó más votos que los que tendría hoy, de más a menos. <b>Movilizar</b>: que vuelvan a votar quienes ya votaron por ${me}; hoy votaría menos gente que antes. <b>Recuperar</b>: convencer otra vez a quienes votaron por ${me} y hoy votarían por otro.</p>
+        ${pjTbl(['Sección','Municipio','Qué hacer','Votos posibles','Acumulado'],rows.map(x=>[secN(x.i),esc(munN(x.i)),x.tipo==='mov'?'Movilizar':'Recuperar',fmt(Math.round(x.pot)),fmt(Math.round(x.acc))]),6)}`:''}`;}
       else if(G<=0){const pot=E?ii.map(i=>E.by[i]).filter(x=>x&&x.mine>x.rv&&x.mg<10).sort((a,b)=>a.mg-b.mg):[];
         dn=pot.length?`<h4>¿Dónde cuidarlos?</h4><p class="pjsub">Ya tendría los votos para ganar. Secciones donde ganaría por menos de 10 puntos: que no se volteen.</p>${pjTbl(['Sección','Municipio','Ventaja'],pot.map(x=>[secN(x.i),esc(munN(x.i)),fmt(Math.round(x.mine-x.rv))+' votos']),6)}`:'';}
       Rt=`<h4>¿Qué le falta?</h4>${mt}${dn}`;}

@@ -309,7 +309,7 @@ mode=lambda d:{k:(lambda c:MN.get(nrm(c)) or next((v for kk,v in MN.items() if k
 
 # ---------- métricas ----------
 LOC=sorted([e for e in OWN],key=lambda e:E[e]['year'])
-CONS={'MORENA':2018}
+CONS={p:2018 for p in MAIN}  # una sola regla para todos: desde 2018 (validado contra 2024; antes solo Morena)
 lnS=[x[5] for x in SEC]; munS=[x[1] for x in SEC]
 V={'duro':{},'techo':{}}
 # voto duro = mínimo del voto marcado solo para el partido. Una elección sin esa información para el partido (candidatura

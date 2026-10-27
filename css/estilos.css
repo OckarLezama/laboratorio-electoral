@@ -1646,3 +1646,6 @@ body.exview .rail #rEx{background:rgba(255,255,255,.08)}
 .ex-st{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin;padding-bottom:2px}.ex-st button{flex:0 0 auto}
 .ex-act .presb{font-size:12.5px;gap:7px;width:auto;padding:0 14px}
 @media (max-width:860px){.ex-ps{flex-wrap:nowrap;overflow-x:auto;max-width:100%}.ex-ps button{flex:0 0 auto}.ex-act{width:100%}.ex-act .presb{flex:1;justify-content:center}}
+.pjver{background:#F2F5F5;border-radius:10px;padding:10px 12px;margin:4px 0 10px;font-size:12.5px;line-height:1.5;color:#4E5656}
+.pjver b{color:#1C2121}
+.pjtw{margin-bottom:8px}
