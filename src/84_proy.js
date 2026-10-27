@@ -86,6 +86,20 @@ function pjCard(ctx,ii0,inner){const T=pjType(); if(!T) return ''; const ii=ii0|
   return `<div class="${inner?'pjc pjin':'cd pjc'}" style="--pc:${col}">${hd2}<span class="pjtag">${pjTag(T)}</span>${body}
    <button class="pjdet" data-pjdet="${inner?'in':'card'}">Abrir proyección completa ›</button>${ctx?ctx.ft('INE 2015–2024; proyección propia probada contra 2021 y 2024'):''}</div>`;}
 /* tabla con las primeras k filas y un botón para ver todas */
+/* ¿Dónde conseguir los votos que faltan? Votos recuperables por sección = su mejor votación en esa sección desde 2018 en
+   cualquier elección (votos del partido, o de sus aliados juntos en la misma elección, entre la lista nominal de entonces,
+   aplicado a la lista de hoy y sin pasar de la participación más alta) menos lo que tendría en 2027. Se ordenan de más a menos y se suman hasta cubrir lo que falta.
+   Movilizar: la mayor parte viene de que hoy vota menos gente que en su mejor elección; recuperar: de electores que ya
+   votaron por el partido y hoy irían con otro. Si ni recuperando todo alcanza, el resto tendría que quitárselo al rival. */
+const PJTE=Object.keys(D.E).filter(k=>+D.E[k].year>=2018);
+function pjTecho(i,A){let best=-1; PJTE.forEach(ek=>{const r=row(ek,i); if(!r||!r.ln) return; let v=0; A.forEach(m=>v+=r.v[m]||0); if(v/r.ln>best) best=v/r.ln;}); return best;}
+function pjRuta(ii,A,G){const P=eP(),out=[]; let tot=0;
+  ii.forEach(i=>{const x=P[i]; if(!x||!x.V) return; const ln=x.ln||S[i].ln||0; if(!ln) return; const mine=sv(x.pv,A),mx=(V2.maxT[i]||x.tp)/100*ln;
+    const tb=pjTecho(i,A); if(tb<0) return; const te=Math.min(tb*ln,mx);
+    const pot=te-mine; if(pot<1) return; const mov=Math.max(0,((V2.maxT[i]||0)-x.tp)/100*ln)*Math.min(1,mine/(x.V||1));
+    out.push({i,pot,tipo:mov>=pot*.5?'mov':'rec'}); tot+=pot;});
+  out.sort((a,b)=>b.pot-a.pot); let acc=0,n=0; out.forEach(r=>{acc+=r.pot; r.acc=acc; if(G>0&&acc-r.pot<G) n++;});
+  return {rows:out,tot,n:G>0?n:0,alcanza:G<=0||tot>=G};}
 function pjTbl(h,rows,k,lbl){k=k||5; const tr=(r,i)=>`<tr${i>=k?' class="x"':''}>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`; return `<div class="pjtw"><table class="cgtb"><thead><tr>${h.map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody>${rows.map(tr).join('')}</tbody></table>${rows.length>k?`<button class="pjmore" data-more="1" data-n="${rows.length}" data-l="${lbl||'secciones'}">Ver las ${rows.length} ${lbl||'secciones'}</button>`:''}</div>`;}
 /* ventana de detalle de la proyección: responde ¿cuántos gana?, ¿dónde se decide? y ¿qué necesita? */
 const pjShort=(T,k)=>pjName(T,k).split(' · ')[0].replace(/^Distrito local /,'DL ').replace(/^Distrito federal /,'DF ');
@@ -121,11 +135,18 @@ function pjDetalle(ii,tab){const T=pjType(); if(!T) return; const p=st.party,R=p
       let mt='';
       if(d){const mn=Math.round(d.riv?d.riv.votes:0)+1,sg=Math.round(eSegOf(d))+1,es=Math.round(d.mine),row=(t,v,sb)=>`<div class="pjgo"><div><b>${t}</b><small>${sb}</small></div><div><b>${fmt(v)}</b><em class="${es>=v?'ok':'no'}">${es>=v?'ya los tendría':'le faltarían '+fmt(v-es)}</em></div></div>`;
         mt=`<div class="pjnow">Hoy tendría unos <b>${fmt(Math.round(es/100)*100)}</b> votos; ${esc(d.rvN)}, unos <b>${fmt(Math.round((d.riv?d.riv.votes:0)/100)*100)}</b>.</div>${row('Para ganar',mn,'un voto más que '+esc(d.rvN))}${row('Para 70 % de probabilidad',sg,'una ventaja más segura')}`;}
-      const xs=E?ii.map(i=>E.by[i]).filter(x=>x&&x.rv>x.mine&&x.mg>-10).sort((a,b)=>(a.rv-a.mine)-(b.rv-b.mine)):[],secN=i=>String(S[i].s),munN=i=>MUN[S[i].m]||'';
-      const pot=E?ii.map(i=>E.by[i]).filter(x=>x&&x.mine>x.rv&&(V2.maxT[x.i]||0)>x.tp).map(x=>({i:x.i,v:((V2.maxT[x.i]||0)-x.tp)/100*x.ln*(x.mine/x.V)})).filter(x=>x.v>=1).sort((a,b)=>b.v-a.v):[];
-      Rt=`<h4>¿Qué le falta?</h4>${mt}
-       ${xs.length?`<h4>¿Dónde conseguirlos?</h4><p class="pjsub">Secciones que perdería por poco: las más fáciles de voltear.</p>${pjTbl(['Sección','Municipio','Votos que le faltarían'],xs.map(x=>[secN(x.i),esc(munN(x.i)),fmt(Math.round(x.rv-x.mine)+1)]),6)}`:''}
-       ${pot.length?`<p class="pjsub" style="margin-top:14px">Y donde ${me} ganaría pero votó menos gente que en su mejor elección:</p>${pjTbl(['Sección','Municipio','Votos al alcance'],pot.map(x=>[secN(x.i),esc(munN(x.i)),'hasta '+fmt(Math.round(x.v))]),5)}`:''}`;}
+      const secN=i=>String(S[i].s),munN=i=>MUN[S[i].m]||'',G=d?Math.round(d.riv?d.riv.votes:0)+1-Math.round(d.mine):0,RU=A&&d?pjRuta(ii,A,G):null;
+      let dn='';
+      if(RU&&G>0&&RU.rows.length){const k=RU.alcanza?RU.n:RU.rows.length,rows=RU.rows.slice(0,Math.max(k,1));
+        dn=`<h4>¿Dónde conseguirlos?</h4><p class="pjsub">Votos que ${me} ya tuvo en cada sección en su mejor elección y hoy no tendría, de más a menos.</p>
+        <p class="pjn" style="margin:4px 0 8px">${RU.alcanza?`Con ${RU.n===1?'<b>una sección</b>':`estas <b>${RU.n} secciones</b>`} juntaría los <b>${fmt(G)}</b> votos que le faltan para ganar.`:`Aun recuperando su mejor votación en las <b>${RU.rows.length} secciones</b> juntaría unos <b>${fmt(Math.round(RU.tot))}</b> de los <b>${fmt(G)}</b> que le faltan. El resto, unos <b>${fmt(Math.round(G-RU.tot))}</b>, tendría que quitárselos a ${esc(d.rvN)} (cada votante que cambia cuenta doble: unos ${fmt(Math.round((G-RU.tot)/2))} electores) o sumar aliados.`}</p>
+        
+        ${pjTbl(['Sección','Municipio','Qué hacer','Votos','Suma'],rows.map(x=>[secN(x.i),esc(munN(x.i)),x.tipo==='mov'?'Movilizar':'Recuperar',fmt(Math.round(x.pot)),fmt(Math.round(x.acc))]),6)}
+<p class="pjsub">Movilizar: hoy votaría menos gente que en su mejor elección. Recuperar: electores que ya votaron por ${me} y hoy irían con otro.</p>`;}
+      else if(RU&&G>0){dn=`<h4>¿Dónde conseguirlos?</h4><p class="pjn">En todas las secciones ya tendría al menos su mejor votación desde 2018: no hay votos propios que recuperar. Los <b>${fmt(G)}</b> que le faltan tendría que quitárselos a ${esc(d.rvN)} (unos ${fmt(Math.round(G/2))} electores que cambien de partido) o sumar aliados.</p>`;}
+      else if(G<=0){const pot=E?ii.map(i=>E.by[i]).filter(x=>x&&x.mine>x.rv&&x.mg<10).sort((a,b)=>a.mg-b.mg):[];
+        dn=pot.length?`<h4>¿Dónde cuidarlos?</h4><p class="pjsub">Ya tendría los votos para ganar. Secciones donde ganaría por menos de 10 puntos: que no se volteen.</p>${pjTbl(['Sección','Municipio','Ventaja'],pot.map(x=>[secN(x.i),esc(munN(x.i)),fmt(Math.round(x.mine-x.rv))+' votos']),6)}`:'';}
+      Rt=`<h4>¿Qué le falta?</h4>${mt}${dn}`;}
     else Rt=`<h4>Para ver metas</h4><p class="pjn">Elige un partido en la Estrategia para ver cuántos votos le faltan y dónde conseguirlos.</p>`;}
   let W=$('pjw'); if(!W){W=document.createElement('div'); W.id='pjw'; W.className='actw pjw'; W.setAttribute('role','dialog'); document.body.appendChild(W);
     W.addEventListener('click',e=>{const tpb=e.target.closest('[data-pjtp]'); if(tpb){st.pjTp=+tpb.dataset.pjtp||0; pjDetalle(W._ii,'d'); return;} if(e.target.closest('[data-secdl]')){secCSV(); return;} const mo=e.target.closest('[data-more]'); if(mo){const w=mo.closest('.pjtw'),on=w.classList.toggle('all'); mo.textContent=on?'Ver menos':`Ver ${mo.dataset.l==='distritos locales'||mo.dataset.l==='distritos federales'||mo.dataset.l==='ayuntamientos'||mo.dataset.l==='municipios'?'los':'las'} ${mo.dataset.n} ${mo.dataset.l}`; return;} const dl=e.target.closest('[data-dl]'); if(dl&&dl.dataset.dl&&!dl.disabled){pjGoDL(dl.dataset.dl,dl.dataset.lv); return;} const tb=e.target.closest('[data-pjtab]'); if(tb){pjDetalle(W._ii,tb.dataset.pjtab); return;} if(e.target===W||e.target.closest('#pjx')){W.classList.remove('on'); document.body.classList.remove('actm');}});
