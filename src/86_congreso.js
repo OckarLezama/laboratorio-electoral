@@ -81,7 +81,8 @@ function congHTML(){if(st.es.obj!=='DIPL'||!RPN().rp) return ''; const B=congBas
 function congTab(){const B=congBase(); if(!B) return ['','']; const {p,NT,half,blk,bn,tb,ord,x,rt}=B,mx=Math.max(half,...ord.map(q=>x.out[q].t)),cw=Math.max(6,Math.min(15,Math.floor(400/(mx+1))-3)),cwm=Math.max(4,Math.min(15,Math.floor(240/(mx+1))-3));
   const rows=ord.map(q=>{const o=x.out[q],c=C[q]||'#9AA3A3'; return `<div class="r ${blk.includes(q)?'on':''}"><span>${esc(NM[q]||q)}</span><div class="cells">${Array.from({length:o.mr},(_,i)=>`<i style="background:${c};--i:${i}" data-tip="<b>${esc(NM[q]||q)}</b>distrito de mayoría"></i>`).join('')}${Array.from({length:o.rp},(_,i)=>`<i class="o" style="--c:${c};--i:${o.mr+i}" data-tip="<b>${esc(NM[q]||q)}</b>plurinominal"></i>`).join('')}</div><b>${o.t}</b></div>`;}).join('');
   const L=`<h4>Cómo quedaría el congreso (${NT})</h4><div class="cgp" style="--cw:${cw}px;--cwm:${cwm}px"><s class="mk" style="left:calc(var(--nc) + 10px + ${half-1} * (var(--k) + 3px) - 1px)"><b>Mayoría · ${half}</b></s>${rows}</div>
-   <div class="cgk"><span><i></i>ganó el distrito</span><span data-tip="<b>Plurinominal</b>Diputación que se reparte según el porcentaje de votos de cada partido, no por ganar un distrito." class="cgi"><i class="o"></i>plurinominal ⓘ</span></div>`;
+   <div class="cgk"><span><i></i>ganó el distrito</span><span data-tip="<b>Plurinominal</b>Diputación que se reparte según el porcentaje de votos de cada partido, no por ganar un distrito." class="cgi"><i class="o"></i>plurinominal ⓘ</span></div>
+   <table class="cgtb cgsum"><thead><tr><th>Partido</th><th>Distritos</th><th>Plurinominales</th><th>Total</th></tr></thead><tbody>${ord.map(q=>{const o=x.out[q]; return `<tr class="${blk.includes(q)?'on':''}"><td><i style="background:${C[q]||'#9AA3A3'}"></i>${esc(NM[q]||q)}</td><td>${o.mr}</td><td>${o.rp}</td><td><b>${o.t}</b></td></tr>`;}).join('')}</tbody></table>`;
   let goal='';
   if(rt&&!rt.keep&&rt.s!=null){const nd=rt.donde.length,pl=rt.plan,qn=esc(NM[pl?pl.q:blk[0]]||bn);
     const E=typeof eSecs==='function'?eSecs():null,secN=i=>String(S[i].s),munN=i=>MUN[S[i].m]||'';
@@ -93,26 +94,25 @@ function congTab(){const B=congBase(); if(!B) return ['','']; const {p,NT,half,b
     let s2='';
     if(pl&&pl.d>0){const need=pl.votos,sd=((MODELO.sigma||{}).DIPL||{}).comun/Math.SQRT2||8,r=(pl.a-pl.de)/sd,
         fz=r<=.5?['ok','Alcanzable','es menos de lo que suele moverse la votación de una elección a otra']:r<=1?['mid','Posible, pero exigente','pide crecer más de lo habitual']:r<=1.8?['dn','Difícil','en elecciones pasadas la votación pocas veces se movió tanto']:['dn','Muy difícil','según las elecciones pasadas, sería un cambio poco común'];
-      const pot=E?E.L.filter(x=>x.mine>x.rv&&(V2.maxT[x.i]||0)>x.tp).map(x=>({i:x.i,v:((V2.maxT[x.i]||0)-x.tp)/100*x.ln*(x.mine/x.V)})).filter(x=>x.v>=1).sort((a,b)=>b.v-a.v):[];
-      let acc=0,ns=0; for(const x of pot){if(acc>=need) break; acc+=x.v; ns++;} const tp=pot;
+      const RU=typeof pjRuta==='function'&&typeof eAlly==='function'&&eAlly()?pjRuta(ALL,eAlly(),need):null,tp=RU?RU.rows.slice(0,Math.max(1,RU.holg?RU.nr:RU.alcanza?RU.n:RU.rows.length)):[]; /* mismo cálculo que "¿Dónde conseguirlos?" */
       s2=`<div class="cgs"><i>${nd?2:1}</i><div class="cgb"><b>Sumar unos ${congVotos(need)} votos en todo el estado</b><span class="cgf ${fz[0]}">${fz[1]}</span>
         <p>Pasaría de ${pl.de.toFixed(1)} % a ${pl.a.toFixed(1)} % de la votación (+${(pl.a-pl.de).toFixed(1)} puntos): ${fz[2]}.</p><details class="cgwhy"><summary>¿Por qué votos en todo el estado?</summary><p>La ley no le da a un partido más diputaciones que su porcentaje de votos más 8 puntos. Con ${pl.de.toFixed(1)} % su tope sería ${pl.cap!=null?pl.cap:tb}: aunque ganara otro distrito, no podría pasar de ahí sin subir su votación en el estado.</p></details>
-        ${tp.length?`<p class="cgq">¿Dónde buscarlos? En secciones donde ${qn} iría adelante pero votó menos gente que en su mejor elección:</p>
-        ${pjTbl(['Sección','Municipio','Votos al alcance'],tp.map(x=>[secN(x.i),esc(munN(x.i)),'hasta '+fmt(Math.round(x.v))]),5)}
-        <p class="cgq">Es el máximo: supone que vuelve a votar tanta gente como en su mejor elección. ${acc>=need?`En el mejor caso, ${ns===1?'con la primera':'con las primeras '+ns} alcanzaría.`:`Todas juntas darían unos ${congVotos(acc)}; el resto tendría que venir de convencer a votantes de otros partidos.`}</p>`:''}</div></div>`;}
+        ${tp.length?`<p class="cgq">¿Dónde buscarlos? Secciones donde ${qn} ya sacó más votos que los que tendría hoy, de más a menos:</p>
+        ${pjTbl(['Sección','Municipio','Qué hacer','Votos posibles','Acumulado'],tp.map(x=>[secN(x.i),esc(munN(x.i)),x.tipo==='mov'?'Movilizar':'Recuperar',fmt(Math.round(x.pot)),fmt(Math.round(x.acc))]),5)}
+        <p class="cgq">${RU.holg?`Aun recuperando solo 1 de cada 3 de estos votos, como suele pasar, los juntaría en ${RU.nr===1?'una sección':RU.nr+' secciones'}.`:RU.alcanza?`Le alcanzaría solo recuperando casi todo en ${RU.n===1?'una sección':RU.n+' secciones'}; normalmente se recupera 1 de cada 3: es difícil.`:`Recuperando todo juntaría unos ${congVotos(RU.tot)}; el resto tendría que venir de convencer a votantes de otros partidos.`}</p>`:''}</div></div>`;}
     goal=`<div class="cgplan">${s1}${s2}<div class="cgr"><span>Resultado</span><b>${rt.mr} distritos + ${rt.rp} plurinominales = ${half}</b></div></div>`;}
-  else if(rt&&rt.keep) goal=`<div class="cgg"><b>${tb} de ${NT}</b><p>${esc(bn)} tendría mayoría</p><p class="s">${congNeed(B)}</p></div>`;
+  else if(rt&&rt.keep) goal=`<div class="cgg"><b>${tb} de ${NT}</b><p>${esc(bn)}${tb>=half?' tendría mayoría':`: le ${half-tb===1?'faltaría 1':'faltarían '+(half-tb)} para la mayoría`}</p><p class="s">${congNeed(B)}</p></div>`;
   else if(rt) goal=`<div class="cgg"><p>Ni con 15 puntos más en todo el estado llegaría a ${half}.</p></div>`;
   let extra=''; if(p){const n=congNext(p,x),nm=esc(NM[p]||p); if(n){
     if(n.umb) extra=`${nm} no llega al ${Math.round(100*RPR.umbral)} % para tener plurinominales${n.d!=null?`: le faltan unos ${congVotos(n.votos)} votos`:''}.`;
     else if(n.lim==='max') extra=`${nm} ya tiene el máximo de ${RPR.max} diputaciones que permite la ley.`;
-    else if(n.lim==='tope'&&n.o.mr>=n.cap) extra=`${nm} gana más distritos de los que su votación permitiría (${n.cap}); por eso no recibe plurinominales.`;
+    else if(n.lim==='tope'&&n.o.mr>=n.cap) extra=`${nm} gana más distritos de los que su votación permitiría (${n.cap}); por eso no recibiría más plurinominales.`;
     else if(n.lim==='tope') extra=`Con ${(100*n.sh).toFixed(1)} % de los votos, la ley le permite a ${nm} máximo ${n.cap} diputaciones: más distritos sin más votos no le suman.`;
     else if(n.d!=null) extra=`Una plurinominal más para ${nm}: unos ${congVotos(n.votos)} votos.`;}}
   const ley=M0.rpr&&M0.rpr.fuente?`<div class="cgl" data-tip="${esc(`<b>Regla de ${EST}</b>${M0.rpr.resumen||''}<br><br>${M0.rpr.fuente}`)}"><span class="lt">Ley</span>${esc((M0.rpr.fuente||'').split(';')[0])} · ${esc(/^Reproduce/.test(M0.rpr.validacion||'')?'reproduce el reparto real':/^Difiere/.test(M0.rpr.validacion||'')?(M0.rpr.validacion.match(/en \d+ curul(es)?/)||['difiere'])[0].replace('en','difiere en')+' del reparto real':'sin comprobar contra el reparto real')}</div>`
     :`<div class="cgl">Regla general (umbral 3 %, tope de 8 puntos, art. 116 de la Constitución federal); falta verificar la ley de ${esc(EST)}.</div>`;
   const showX=extra&&!(rt&&rt.plan&&rt.plan.d>0&&/tope|permite/.test(extra));
-  return [L,`<h4>${rt&&rt.keep?'La mayoría':`Qué necesita ${esc(bn)} para la mayoría (${half})`}</h4>${goal}${showX?`<p class="cgx">${extra}</p>`:''}${ley}`];}
+  return [L,`<h4>${rt&&rt.keep&&tb>=half?'La mayoría':`Qué necesita ${esc(bn)} para la mayoría (${half})`}</h4>${goal}${showX?`<p class="cgx">${extra}</p>`:''}${ley}`];}
 /* probabilidad de mayoría: se simulan 600 elecciones con el error medido del modelo (un cambio común en todo el estado
    para cada bloque y uno local por distrito, igual que la tarjeta de proyección); en cada una se reparten mayoría y
    plurinominales con la regla del estado */

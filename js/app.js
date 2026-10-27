@@ -1406,20 +1406,21 @@ function pjDetalle(ii,tab){const T=pjType(); if(!T) return; const p=st.party,R=p
       let mt='';
       if(d){const mn=Math.round(d.riv?d.riv.votes:0)+1,sg=Math.round(eSegOf(d))+1,es=Math.round(d.mine),row=(t,v,sb)=>`<div class="pjgo"><div><b>${t}</b><small>${sb}</small></div><div><b>${fmt(v)}</b><em class="${es>=v?'ok':'no'}">${es>=v?'ya los tendría':'le faltarían '+fmt(v-es)}</em></div></div>`;
         mt=`<div class="pjnow">Hoy tendría unos <b>${fmt(Math.round(es/100)*100)}</b> votos; ${esc(d.rvN)}, unos <b>${fmt(Math.round((d.riv?d.riv.votes:0)/100)*100)}</b>.</div>${row('Para ganar',mn,'un voto más que '+esc(d.rvN))}${row('Para 70 % de probabilidad',sg,'una ventaja más segura')}`;}
+      const oneM=new Set(ii.map(i=>S[i].m)).size===1,T5=(h,rows,k)=>oneM?pjTbl(h.filter((_,j)=>j!==1),rows.map(r=>r.filter((_,j)=>j!==1)),k):pjTbl(h,rows,k); /* un solo municipio: la columna Municipio sobra */
       const secN=i=>String(S[i].s),munN=i=>MUN[S[i].m]||'',G=d?Math.round(d.riv?d.riv.votes:0)+1-Math.round(d.mine):0,RU=A&&d?pjRuta(ii,A,G):null;
       let dn='';
       if(RU&&G>0){const rows=RU.rows.slice(0,Math.max(RU.holg?RU.nr:RU.alcanza?RU.n:RU.rows.length,1)),rv=esc(d.rvN);
         dn=`<h4>¿Dónde conseguirlos?</h4><div class="pjver">${pjVer(RU,G,me,rv,u.p)}</div>${RU.rows.length?`
         <p class="pjsub">Secciones donde ${me} ya sacó más votos que los que tendría hoy, de más a menos. <b>Movilizar</b>: que vuelvan a votar quienes ya votaron por ${me}; hoy votaría menos gente que antes. <b>Recuperar</b>: convencer otra vez a quienes votaron por ${me} y hoy votarían por otro.</p>
-        ${pjTbl(['Sección','Municipio','Qué hacer','Votos posibles','Acumulado'],rows.map(x=>[secN(x.i),esc(munN(x.i)),x.tipo==='mov'?'Movilizar':'Recuperar',fmt(Math.round(x.pot)),fmt(Math.round(x.acc))]),6)}`:''}`;
+        ${T5(['Sección','Municipio','Qué hacer','Votos posibles','Acumulado'],rows.map(x=>[secN(x.i),esc(munN(x.i)),x.tipo==='mov'?'Movilizar':'Recuperar',fmt(Math.round(x.pot)),fmt(Math.round(x.acc))]),6)}`:''}`;
         const rest=Math.round(G-(RU.rows.length?RU.tot*PJREC:0)); if(rest>0&&d.riv){ /* lo que faltaría si recupera 1 de cada 3 de sus votos de antes */const need=Math.ceil(rest/2),Q=pjQuita(ii,d.riv.members,need);
           if(Q.rows.length){const qr=Q.rows.slice(0,Math.max(Q.alcanza||Q.posible?Q.n:Q.rows.length,1));
             dn+=`<h4 style="margin-top:16px">¿Dónde quitarle votos a ${rv}?</h4><div class="pjver">${Q.alcanza?`<b>Sería posible.</b> En ${Q.n===1?'una sección':`estas ${Q.n} secciones`} ${rv} tendría unos <b>${fmt(Math.round(Q.rows[Q.n-1].acc))}</b> votos de gente que no siempre vota por ${rv}. Si ${me} convence a 1 de cada 3, como suele moverse este voto, juntaría los <b>${fmt(need)}</b> votantes que necesita.`:Q.posible?`<b>Solo convenciendo a casi todos.</b> ${rv} tendría unos <b>${fmt(Math.round(Q.tot))}</b> votos de gente que no siempre vota por ${rv} y ${me} necesitaría <b>${fmt(need)}</b>; normalmente se mueve 1 de cada 3. Es muy difícil sin alianza.`:`<b>No hay suficientes.</b> Aun sumando todas las secciones, ${rv} tendría unos <b>${fmt(Math.round(Q.tot))}</b> votos de gente que no siempre vota por ${rv}, y ${me} necesitaría convencer a <b>${fmt(need)}</b>. Sin alianza no le alcanzaría.`}</div>
             <p class="pjsub">Secciones donde ${rv} tendría más votos por encima de su voto duro (lo mínimo que ha sacado ahí), de más a menos. <b>Cambia de ganador</b>: la sección ha cambiado de partido ganador entre elecciones; ahí la gente sí cambia su voto.</p>
-            ${pjTbl(['Sección','Municipio','Cambia de ganador','Votos que no son duros','Acumulado'],qr.map(x=>[secN(x.i),esc(munN(x.i)),x.sw?'Sí':'',fmt(Math.round(x.soft)),fmt(Math.round(x.acc))]),6)}`;}
+            ${T5(['Sección','Municipio','Cambia de ganador','Votos que no son duros','Acumulado'],qr.map(x=>[secN(x.i),esc(munN(x.i)),x.sw?'Sí':'',fmt(Math.round(x.soft)),fmt(Math.round(x.acc))]),6)}`;}
           else dn+=`<h4 style="margin-top:16px">¿Dónde quitarle votos a ${rv}?</h4><div class="pjver"><b>No hay de dónde.</b> En todas las secciones ${rv} tendría solo su voto duro, el que siempre tiene. Sin alianza no le alcanzaría.</div>`;}}
       else if(G<=0){const pot=E?ii.map(i=>E.by[i]).filter(x=>x&&x.mine>x.rv&&x.mg<10).sort((a,b)=>a.mg-b.mg):[];
-        dn=pot.length?`<h4>¿Dónde cuidarlos?</h4><p class="pjsub">Ya tendría los votos para ganar. Secciones donde ganaría por menos de 10 puntos: que no se volteen.</p>${pjTbl(['Sección','Municipio','Ventaja'],pot.map(x=>[secN(x.i),esc(munN(x.i)),fmt(Math.round(x.mine-x.rv))+' votos']),6)}`:'';}
+        dn=pot.length?`<h4>¿Dónde cuidarlos?</h4><p class="pjsub">Ya tendría los votos para ganar. Secciones donde ganaría por menos de 10 puntos: que no se volteen.</p>${T5(['Sección','Municipio','Ventaja'],pot.map(x=>[secN(x.i),esc(munN(x.i)),fmt(Math.round(x.mine-x.rv))+' votos']),6)}`:'';}
       Rt=`<h4>¿Qué le falta?</h4>${mt}${dn}`;}
     else Rt=`<h4>Para ver metas</h4><p class="pjn">Elige un partido en la Estrategia para ver cuántos votos le faltan y dónde conseguirlos.</p>`;}
   let W=$('pjw'); if(!W){W=document.createElement('div'); W.id='pjw'; W.className='actw pjw'; W.setAttribute('role','dialog'); document.body.appendChild(W);
@@ -1561,7 +1562,8 @@ function congHTML(){if(st.es.obj!=='DIPL'||!RPN().rp) return ''; const B=congBas
 function congTab(){const B=congBase(); if(!B) return ['','']; const {p,NT,half,blk,bn,tb,ord,x,rt}=B,mx=Math.max(half,...ord.map(q=>x.out[q].t)),cw=Math.max(6,Math.min(15,Math.floor(400/(mx+1))-3)),cwm=Math.max(4,Math.min(15,Math.floor(240/(mx+1))-3));
   const rows=ord.map(q=>{const o=x.out[q],c=C[q]||'#9AA3A3'; return `<div class="r ${blk.includes(q)?'on':''}"><span>${esc(NM[q]||q)}</span><div class="cells">${Array.from({length:o.mr},(_,i)=>`<i style="background:${c};--i:${i}" data-tip="<b>${esc(NM[q]||q)}</b>distrito de mayoría"></i>`).join('')}${Array.from({length:o.rp},(_,i)=>`<i class="o" style="--c:${c};--i:${o.mr+i}" data-tip="<b>${esc(NM[q]||q)}</b>plurinominal"></i>`).join('')}</div><b>${o.t}</b></div>`;}).join('');
   const L=`<h4>Cómo quedaría el congreso (${NT})</h4><div class="cgp" style="--cw:${cw}px;--cwm:${cwm}px"><s class="mk" style="left:calc(var(--nc) + 10px + ${half-1} * (var(--k) + 3px) - 1px)"><b>Mayoría · ${half}</b></s>${rows}</div>
-   <div class="cgk"><span><i></i>ganó el distrito</span><span data-tip="<b>Plurinominal</b>Diputación que se reparte según el porcentaje de votos de cada partido, no por ganar un distrito." class="cgi"><i class="o"></i>plurinominal ⓘ</span></div>`;
+   <div class="cgk"><span><i></i>ganó el distrito</span><span data-tip="<b>Plurinominal</b>Diputación que se reparte según el porcentaje de votos de cada partido, no por ganar un distrito." class="cgi"><i class="o"></i>plurinominal ⓘ</span></div>
+   <table class="cgtb cgsum"><thead><tr><th>Partido</th><th>Distritos</th><th>Plurinominales</th><th>Total</th></tr></thead><tbody>${ord.map(q=>{const o=x.out[q]; return `<tr class="${blk.includes(q)?'on':''}"><td><i style="background:${C[q]||'#9AA3A3'}"></i>${esc(NM[q]||q)}</td><td>${o.mr}</td><td>${o.rp}</td><td><b>${o.t}</b></td></tr>`;}).join('')}</tbody></table>`;
   let goal='';
   if(rt&&!rt.keep&&rt.s!=null){const nd=rt.donde.length,pl=rt.plan,qn=esc(NM[pl?pl.q:blk[0]]||bn);
     const E=typeof eSecs==='function'?eSecs():null,secN=i=>String(S[i].s),munN=i=>MUN[S[i].m]||'';
@@ -1573,26 +1575,25 @@ function congTab(){const B=congBase(); if(!B) return ['','']; const {p,NT,half,b
     let s2='';
     if(pl&&pl.d>0){const need=pl.votos,sd=((MODELO.sigma||{}).DIPL||{}).comun/Math.SQRT2||8,r=(pl.a-pl.de)/sd,
         fz=r<=.5?['ok','Alcanzable','es menos de lo que suele moverse la votación de una elección a otra']:r<=1?['mid','Posible, pero exigente','pide crecer más de lo habitual']:r<=1.8?['dn','Difícil','en elecciones pasadas la votación pocas veces se movió tanto']:['dn','Muy difícil','según las elecciones pasadas, sería un cambio poco común'];
-      const pot=E?E.L.filter(x=>x.mine>x.rv&&(V2.maxT[x.i]||0)>x.tp).map(x=>({i:x.i,v:((V2.maxT[x.i]||0)-x.tp)/100*x.ln*(x.mine/x.V)})).filter(x=>x.v>=1).sort((a,b)=>b.v-a.v):[];
-      let acc=0,ns=0; for(const x of pot){if(acc>=need) break; acc+=x.v; ns++;} const tp=pot;
+      const RU=typeof pjRuta==='function'&&typeof eAlly==='function'&&eAlly()?pjRuta(ALL,eAlly(),need):null,tp=RU?RU.rows.slice(0,Math.max(1,RU.holg?RU.nr:RU.alcanza?RU.n:RU.rows.length)):[]; /* mismo cálculo que "¿Dónde conseguirlos?" */
       s2=`<div class="cgs"><i>${nd?2:1}</i><div class="cgb"><b>Sumar unos ${congVotos(need)} votos en todo el estado</b><span class="cgf ${fz[0]}">${fz[1]}</span>
         <p>Pasaría de ${pl.de.toFixed(1)} % a ${pl.a.toFixed(1)} % de la votación (+${(pl.a-pl.de).toFixed(1)} puntos): ${fz[2]}.</p><details class="cgwhy"><summary>¿Por qué votos en todo el estado?</summary><p>La ley no le da a un partido más diputaciones que su porcentaje de votos más 8 puntos. Con ${pl.de.toFixed(1)} % su tope sería ${pl.cap!=null?pl.cap:tb}: aunque ganara otro distrito, no podría pasar de ahí sin subir su votación en el estado.</p></details>
-        ${tp.length?`<p class="cgq">¿Dónde buscarlos? En secciones donde ${qn} iría adelante pero votó menos gente que en su mejor elección:</p>
-        ${pjTbl(['Sección','Municipio','Votos al alcance'],tp.map(x=>[secN(x.i),esc(munN(x.i)),'hasta '+fmt(Math.round(x.v))]),5)}
-        <p class="cgq">Es el máximo: supone que vuelve a votar tanta gente como en su mejor elección. ${acc>=need?`En el mejor caso, ${ns===1?'con la primera':'con las primeras '+ns} alcanzaría.`:`Todas juntas darían unos ${congVotos(acc)}; el resto tendría que venir de convencer a votantes de otros partidos.`}</p>`:''}</div></div>`;}
+        ${tp.length?`<p class="cgq">¿Dónde buscarlos? Secciones donde ${qn} ya sacó más votos que los que tendría hoy, de más a menos:</p>
+        ${pjTbl(['Sección','Municipio','Qué hacer','Votos posibles','Acumulado'],tp.map(x=>[secN(x.i),esc(munN(x.i)),x.tipo==='mov'?'Movilizar':'Recuperar',fmt(Math.round(x.pot)),fmt(Math.round(x.acc))]),5)}
+        <p class="cgq">${RU.holg?`Aun recuperando solo 1 de cada 3 de estos votos, como suele pasar, los juntaría en ${RU.nr===1?'una sección':RU.nr+' secciones'}.`:RU.alcanza?`Le alcanzaría solo recuperando casi todo en ${RU.n===1?'una sección':RU.n+' secciones'}; normalmente se recupera 1 de cada 3: es difícil.`:`Recuperando todo juntaría unos ${congVotos(RU.tot)}; el resto tendría que venir de convencer a votantes de otros partidos.`}</p>`:''}</div></div>`;}
     goal=`<div class="cgplan">${s1}${s2}<div class="cgr"><span>Resultado</span><b>${rt.mr} distritos + ${rt.rp} plurinominales = ${half}</b></div></div>`;}
-  else if(rt&&rt.keep) goal=`<div class="cgg"><b>${tb} de ${NT}</b><p>${esc(bn)} tendría mayoría</p><p class="s">${congNeed(B)}</p></div>`;
+  else if(rt&&rt.keep) goal=`<div class="cgg"><b>${tb} de ${NT}</b><p>${esc(bn)}${tb>=half?' tendría mayoría':`: le ${half-tb===1?'faltaría 1':'faltarían '+(half-tb)} para la mayoría`}</p><p class="s">${congNeed(B)}</p></div>`;
   else if(rt) goal=`<div class="cgg"><p>Ni con 15 puntos más en todo el estado llegaría a ${half}.</p></div>`;
   let extra=''; if(p){const n=congNext(p,x),nm=esc(NM[p]||p); if(n){
     if(n.umb) extra=`${nm} no llega al ${Math.round(100*RPR.umbral)} % para tener plurinominales${n.d!=null?`: le faltan unos ${congVotos(n.votos)} votos`:''}.`;
     else if(n.lim==='max') extra=`${nm} ya tiene el máximo de ${RPR.max} diputaciones que permite la ley.`;
-    else if(n.lim==='tope'&&n.o.mr>=n.cap) extra=`${nm} gana más distritos de los que su votación permitiría (${n.cap}); por eso no recibe plurinominales.`;
+    else if(n.lim==='tope'&&n.o.mr>=n.cap) extra=`${nm} gana más distritos de los que su votación permitiría (${n.cap}); por eso no recibiría más plurinominales.`;
     else if(n.lim==='tope') extra=`Con ${(100*n.sh).toFixed(1)} % de los votos, la ley le permite a ${nm} máximo ${n.cap} diputaciones: más distritos sin más votos no le suman.`;
     else if(n.d!=null) extra=`Una plurinominal más para ${nm}: unos ${congVotos(n.votos)} votos.`;}}
   const ley=M0.rpr&&M0.rpr.fuente?`<div class="cgl" data-tip="${esc(`<b>Regla de ${EST}</b>${M0.rpr.resumen||''}<br><br>${M0.rpr.fuente}`)}"><span class="lt">Ley</span>${esc((M0.rpr.fuente||'').split(';')[0])} · ${esc(/^Reproduce/.test(M0.rpr.validacion||'')?'reproduce el reparto real':/^Difiere/.test(M0.rpr.validacion||'')?(M0.rpr.validacion.match(/en \d+ curul(es)?/)||['difiere'])[0].replace('en','difiere en')+' del reparto real':'sin comprobar contra el reparto real')}</div>`
     :`<div class="cgl">Regla general (umbral 3 %, tope de 8 puntos, art. 116 de la Constitución federal); falta verificar la ley de ${esc(EST)}.</div>`;
   const showX=extra&&!(rt&&rt.plan&&rt.plan.d>0&&/tope|permite/.test(extra));
-  return [L,`<h4>${rt&&rt.keep?'La mayoría':`Qué necesita ${esc(bn)} para la mayoría (${half})`}</h4>${goal}${showX?`<p class="cgx">${extra}</p>`:''}${ley}`];}
+  return [L,`<h4>${rt&&rt.keep&&tb>=half?'La mayoría':`Qué necesita ${esc(bn)} para la mayoría (${half})`}</h4>${goal}${showX?`<p class="cgx">${extra}</p>`:''}${ley}`];}
 /* probabilidad de mayoría: se simulan 600 elecciones con el error medido del modelo (un cambio común en todo el estado
    para cada bloque y uno local por distrito, igual que la tarjeta de proyección); en cada una se reparten mayoría y
    plurinominales con la regla del estado */
@@ -1987,7 +1988,7 @@ function exData(){const p=exParty(),TS=EOBJ.map(o=>o[0]);
 /* textos por cargo */
 function exTx(c){const h=c.hoy||{},pn=exPN(EXD.p);
   const hoy=c.T==='GOB'?(h.gov?`Hoy gobierna ${h.who===pn?pn:h.who}`:`Hoy gobierna ${h.who}`):c.T==='DIPL'?(h.seats!=null?`Hoy ${h.seats} de ${h.NT}${h.ally?' con aliados':''}`:`Hoy ganó ${h.n} de ${h.of} distritos`):`Hoy ${h.n} de ${h.of}`;
-  const sola=c.T==='GOB'?(c.m>=0?`iría adelante por ${c.m.toFixed(0)} pts`:`iría atrás por ${Math.abs(c.m).toFixed(0)} pts`):c.T==='DIPL'&&c.seats!=null?`unas ${c.seats} de ${c.NT}; mayoría con ${c.hm}`:`adelante en ${c.lead} de ${c.n}; mayoría con ${c.half}`;
+  const sola=c.T==='GOB'?(c.m>=0?`iría adelante por ${c.m.toFixed(0)} pts`:`iría atrás por ${Math.abs(c.m).toFixed(0)} pts`):c.T==='DIPL'&&c.seats!=null?`unas ${c.seats} de ${c.NT} (${(()=>{const B=c.B,o=B?B.x.out:{},bl=B?B.blk:[],mr=bl.reduce((t,m)=>t+((o[m]||{}).mr||0),0),rp=bl.reduce((t,m)=>t+((o[m]||{}).rp||0),0); return `${mr} distritos y ${rp} ${rp===1?'plurinominal':'plurinominales'}`;})()}); mayoría con ${c.hm}`:`adelante en ${c.lead} de ${c.n}; mayoría con ${c.half}`;
   const what=c.T==='GOB'?'gana':c.T==='DIPL'?'tiene mayoría':'gana la mayoría';
   const tr=c.own?(()=>{const d=c.share-c.own.v; return Math.abs(d)<1?`igual que ${c.own.yr}`:`${d>0?'▲':'▼'} ${Math.abs(d).toFixed(0)} ${Math.abs(d).toFixed(0)==='1'?'pt':'pts'} vs ${c.own.yr}`;})():'';
   const [pl,pk]=exPill(c.p);

@@ -63,7 +63,7 @@ function exData(){const p=exParty(),TS=EOBJ.map(o=>o[0]);
 /* textos por cargo */
 function exTx(c){const h=c.hoy||{},pn=exPN(EXD.p);
   const hoy=c.T==='GOB'?(h.gov?`Hoy gobierna ${h.who===pn?pn:h.who}`:`Hoy gobierna ${h.who}`):c.T==='DIPL'?(h.seats!=null?`Hoy ${h.seats} de ${h.NT}${h.ally?' con aliados':''}`:`Hoy ganó ${h.n} de ${h.of} distritos`):`Hoy ${h.n} de ${h.of}`;
-  const sola=c.T==='GOB'?(c.m>=0?`iría adelante por ${c.m.toFixed(0)} pts`:`iría atrás por ${Math.abs(c.m).toFixed(0)} pts`):c.T==='DIPL'&&c.seats!=null?`unas ${c.seats} de ${c.NT}; mayoría con ${c.hm}`:`adelante en ${c.lead} de ${c.n}; mayoría con ${c.half}`;
+  const sola=c.T==='GOB'?(c.m>=0?`iría adelante por ${c.m.toFixed(0)} pts`:`iría atrás por ${Math.abs(c.m).toFixed(0)} pts`):c.T==='DIPL'&&c.seats!=null?`unas ${c.seats} de ${c.NT} (${(()=>{const B=c.B,o=B?B.x.out:{},bl=B?B.blk:[],mr=bl.reduce((t,m)=>t+((o[m]||{}).mr||0),0),rp=bl.reduce((t,m)=>t+((o[m]||{}).rp||0),0); return `${mr} distritos y ${rp} ${rp===1?'plurinominal':'plurinominales'}`;})()}); mayoría con ${c.hm}`:`adelante en ${c.lead} de ${c.n}; mayoría con ${c.half}`;
   const what=c.T==='GOB'?'gana':c.T==='DIPL'?'tiene mayoría':'gana la mayoría';
   const tr=c.own?(()=>{const d=c.share-c.own.v; return Math.abs(d)<1?`igual que ${c.own.yr}`:`${d>0?'▲':'▼'} ${Math.abs(d).toFixed(0)} ${Math.abs(d).toFixed(0)==='1'?'pt':'pts'} vs ${c.own.yr}`;})():'';
   const [pl,pk]=exPill(c.p);
