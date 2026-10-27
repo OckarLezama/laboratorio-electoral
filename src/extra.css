@@ -925,4 +925,3 @@ body.exview .rail #rEx{background:rgba(255,255,255,.08)}
 .cgsum{margin-top:12px}.cgsum td:first-child i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:7px}
 .cgsum th:not(:first-child),.cgsum td:not(:first-child){text-align:right}.cgsum tr.on td{color:var(--strong);font-weight:600}
 @media (max-width:520px){.pjw .cgtb th,.pjw .cgtb td{padding-left:4px;padding-right:4px;font-size:11.5px}}
-.cghm{display:block;width:100%;max-width:440px;height:auto;margin:4px auto 0}
