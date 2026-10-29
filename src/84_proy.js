@@ -109,12 +109,12 @@ function pjQuita(ii,RV,need){const P=eP(),DU=V2.duro||{},out=[]; let tot=0;
   out.sort((a,b)=>b.soft-a.soft); let acc=0,n=0,n1=0; out.forEach(r=>{acc+=r.soft; r.acc=acc; if((acc-r.soft)*PJREC<need) n++; if(acc-r.soft<need) n1++;});
   /* n: secciones para juntarlos convenciendo a 1 de cada 3 (lo que suele moverse: en 2024 cambió de partido 3 de cada 10 de estos votos) */
   return {rows:out,tot,n:tot*PJREC>=need?n:n1,alcanza:tot*PJREC>=need,posible:tot>=need};}
-function pjVer(RU,G,me,rv,p){const n=RU.n,sec=n===1?'una sección':n+' secciones',pp=p!=null?` Hoy tendría ${pjPct(p)} de probabilidad de ganar.`:'';
+function pjVer(RU,G,me,rv,p){const n=RU.n,sec=n===1?'una sección':fmt(n)+' secciones',pp=p!=null?` Hoy tendría ${pjPct(p)} de probabilidad de ganar.`:'';
   if(!RU.rows.length) return `<b>No tiene votos propios que recuperar:</b> en todas las secciones ya tendría al menos su mejor votación. Los <b>${fmt(G)}</b> votos que le faltan tendrían que salir de votantes de ${rv} que cambien a ${me} (unos ${fmt(Math.round(G/2))}: cada uno resta un voto a ${rv} y suma uno a ${me}) o de una alianza.${pp}`;
-  if(RU.holg){const m=RU.nr===1?'una sección':RU.nr+' secciones'; return `<b>Le alcanzaría.</b> Aun recuperando solo 1 de cada 3 de estos votos, como suele pasar, juntaría los <b>${fmt(G)}</b> que le faltan en ${m}.${pp}`;}
+  if(RU.holg){const m=RU.nr===1?'una sección':fmt(RU.nr)+' secciones'; return `<b>Le alcanzaría.</b> Aun recuperando solo 1 de cada 3 de estos votos, como suele pasar, juntaría los <b>${fmt(G)}</b> que le faltan en ${m}.${pp}`;}
   const real=Math.round(RU.tot*PJREC),fal=G-real;
   if(RU.alcanza) return `<b>Le alcanzaría solo si recupera casi todo.</b> Con ${sec} juntaría los <b>${fmt(G)}</b> votos que le faltan, pero normalmente se recupera 1 de cada 3 de estos votos (unos ${fmt(real)}). El resto, unos <b>${fmt(fal)}</b>, tendría que disputárselos a ${rv}: abajo, dónde.${pp}`;
-  return `<b>No le alcanzaría con sus votos de antes.</b> Recuperando todo en las ${RU.rows.length} secciones juntaría como máximo <b>${fmt(Math.round(RU.tot))}</b> de los <b>${fmt(G)}</b> que le faltan, y normalmente se recupera 1 de cada 3 (unos ${fmt(real)}). El resto, unos <b>${fmt(fal)}</b>, tendría que salir de convencer a unos <b>${fmt(Math.ceil(fal/2))}</b> votantes de ${rv} (cada uno resta un voto a ${rv} y suma uno a ${me}) o de una alianza: abajo, dónde.${p!=null&&p<.15?` <b>Con los datos de hoy, es muy poco probable que lo logre</b> (${pjPct(p)} de probabilidad de ganar).`:pp}`;}
+  return `<b>No le alcanzaría con sus votos de antes.</b> Recuperando todo en las ${fmt(RU.rows.length)} secciones juntaría como máximo <b>${fmt(Math.round(RU.tot))}</b> de los <b>${fmt(G)}</b> que le faltan, y normalmente se recupera 1 de cada 3 (unos ${fmt(real)}). El resto, unos <b>${fmt(fal)}</b>, tendría que salir de convencer a unos <b>${fmt(Math.ceil(fal/2))}</b> votantes de ${rv} (cada uno resta un voto a ${rv} y suma uno a ${me}) o de una alianza: abajo, dónde.${p!=null&&p<.15?` <b>Con los datos de hoy, es muy poco probable que lo logre</b> (${pjPct(p)} de probabilidad de ganar).`:pp}`;}
 function pjRuta(ii,A,G){const P=eP(),out=[]; let tot=0;
   ii.forEach(i=>{const x=P[i]; if(!x||!x.V) return; const ln=x.ln||S[i].ln||0; if(!ln) return; const mine=sv(x.pv,A),mx=(V2.maxT[i]||x.tp)/100*ln;
     const tb=pjTecho(i,A); if(tb<0) return; const te=Math.min(tb*ln,mx);
@@ -123,19 +123,19 @@ function pjRuta(ii,A,G){const P=eP(),out=[]; let tot=0;
   out.sort((a,b)=>b.pot-a.pot); let acc=0,n=0,nr=0; out.forEach(r=>{acc+=r.pot; r.acc=acc; if(G>0&&acc-r.pot<G) n++; if(G>0&&(acc-r.pot)*PJREC<G) nr++;});
   /* n: secciones si recupera todo; nr: si recupera 1 de cada 3, como suele pasar */
   const holg=G>0&&tot*PJREC>=G; return {rows:out,tot,n:G>0?n:0,nr:holg?nr:0,holg,alcanza:G<=0||tot>=G};}
-/* desglose del resultado proyectado del cargo dentro del territorio: en qué municipios y distritos ganaría o perdería
-   (misma proyección y mismo rival que arriba: el más fuerte en cada lugar) */
-function pjDesglose(T,ii,A,me){const own=PJT[T],lv=[['mun',ALC?'Alcaldías':'Municipios'],['dl','Distritos locales'],['df','Distritos federales']].filter(([l])=>l!==own);
-  const o0=st.es.obj; st.es.obj=T; let H='';
-  try{const tabs=[]; lv.forEach(([l,n])=>{const G={}; ii.forEach(i=>{const k=l==='mun'?S[i].m:l==='dl'?S[i].dl:S[i].df; (G[k]||(G[k]=[])).push(i);}); const ks=Object.keys(G); if(ks.length<2) return;
-      const R=ks.map(k=>{const d=eDuel27(G[k],A); return d?{k,mg:d.mg,gap:d.gap,rv:d.rvN}:null;}).filter(Boolean).sort((a,b)=>a.mg-b.mg); if(!R.length) return;
-      const w=R.filter(x=>x.mg>=0).length,nm=k=>l==='mun'?MUN[k]:l==='dl'?'DL '+k+(CABDL[k]?' · '+CABDL[k]:''):'DF '+k+(CABDF[k]?' · '+CABDF[k]:'');
-      tabs.push({l,n,w,t:R.length,tbl:pjTbl(['Lugar','Resultado','Votos'],R.map(x=>[esc(nm(x.k)),x.mg>=0?`<span class="w">ganaría por ${Math.abs(x.mg).toFixed(1)} pts</span>`:`<span class="l">perdería ante ${esc(x.rv)} por ${Math.abs(x.mg).toFixed(1)} pts</span>`,x.mg>=0?'ventaja de '+fmt(-x.gap):'le faltarían '+fmt(x.gap)]),6,n.toLowerCase())});});
-    if(tabs.length) H=`<h4 style="margin-top:18px">¿Dónde ganaría y dónde perdería?</h4><p class="pjsub">${me} contra el rival más fuerte en cada lugar, con la proyección de ${PJN[T][0]}. Primero donde perdería.</p>
-      <div class="pj-tabs pjlvt">${tabs.map((t,j)=>`<button data-pjlv="${t.l}" class="${j?'':'on'}">${t.n} · ${t.w} de ${t.t}</button>`).join('')}</div>${tabs.map((t,j)=>`<div class="pjlvp" data-lvp="${t.l}"${j?' hidden':''}>${t.tbl}</div>`).join('')}`;}
+/* gubernatura: de dónde salen los votos. Por municipio, votos del partido (o su alianza) menos los del rival más fuerte
+   en el estado, con la misma proyección de la tarjeta. La suma de todos es la diferencia estatal: muestra dónde se gana y
+   dónde se pierde la elección (no hace falta ganar cada municipio). Solo para gubernatura. */
+function pjDesglose(T,ii,A,me){if(T!=='GOB') return ''; const o0=st.es.obj; st.es.obj=T; let H='';
+  try{const D=eDuel27(ii,A); if(!D||!D.riv) return ''; const RV=D.riv.members,rv=esc(D.rvN),P=eP(),G={};
+    ii.forEach(i=>{const x=P[i]; if(!x||!x.V) return; const g=G[S[i].m]||(G[S[i].m]={V:0,n:0}); g.V+=x.V; g.n+=sv(x.pv,A)-sv(x.pv,RV);});
+    const R=Object.entries(G).map(([m,g])=>({m,V:g.V,n:g.n})).sort((a,b)=>Math.abs(b.n)-Math.abs(a.n)),VT=R.reduce((a,x)=>a+x.V,0)||1,tot=R.reduce((a,x)=>a+x.n,0);
+    if(R.length<2) return ''; const sg=v=>(v>=0?'+':'−')+fmt(Math.abs(Math.round(v/10)*10));
+    H=`<h4 style="margin-top:18px">De dónde salen los votos para gobernador</h4><p class="pjsub">Cuántos votos le aportaría (+) o le restaría (−) cada ${ALC?'alcaldía':'municipio'} a ${me} frente a ${rv}, de mayor a menor peso. Sumados dan la diferencia en el estado: <b>${sg(tot)}</b>.</p>
+      <div class="pjlvp">${pjTbl([ALC?'Alcaldía':'Municipio','% del voto','Frente a '+rv],R.map(x=>[esc(MUN[x.m]||x.m),pct(100*x.V/VT,0),`<span class="${x.n>=0?'w':'l'}">${sg(x.n)}</span>`]),8,ALC?'alcaldías':'municipios')}</div>`;}
   finally{st.es.obj=o0;}
   return H;}
-function pjTbl(h,rows,k,lbl){k=k||5; const tr=(r,i)=>`<tr${i>=k?' class="x"':''}>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`; return `<div class="pjtw"><table class="cgtb"><thead><tr>${h.map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody>${rows.map(tr).join('')}</tbody></table>${rows.length>k?`<button class="pjmore" data-more="1" data-n="${rows.length}" data-l="${lbl||'secciones'}">Ver las ${rows.length} ${lbl||'secciones'}</button>`:''}</div>`;}
+function pjTbl(h,rows,k,lbl){k=k||5; const tr=(r,i)=>`<tr${i>=k?' class="x"':''}>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`; return `<div class="pjtw"><table class="cgtb"><thead><tr>${h.map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody>${rows.map(tr).join('')}</tbody></table>${rows.length>k?`<button class="pjmore" data-more="1" data-n="${rows.length}" data-l="${lbl||'secciones'}">Ver ${/^(municipios|distritos|ayuntamientos)/.test(lbl||'')?'los':'las'} ${rows.length} ${lbl||'secciones'}</button>`:''}</div>`;}
 /* ventana de detalle de la proyección: responde ¿cuántos gana?, ¿dónde se decide? y ¿qué necesita? */
 const pjShort=(T,k)=>pjName(T,k).split(' · ')[0].replace(/^Distrito local /,'DL ').replace(/^Distrito federal /,'DF ');
 function pjStrip(R,col,party){const NN=PJN[R.T],U=R.U.slice();
