@@ -16,11 +16,11 @@ Es el motor de análisis: resultados por sección desde 2015, proyección 2027 y
 - Si Ockar dice "En el Laboratorio Electoral: …", el cambio va **solo en este repo**.
 - Si una petición es de otro producto, decirlo antes de tocar algo.
 
-## Antes de cualquier cambio: confirmar primero
+## Al empezar a trabajar: corroborar que es el proyecto correcto
 
-1. **Cambio visual** (pantalla, gráfica, texto, acomodo): mostrar primero una **imagen** de cómo quedaría (captura del cambio aplicado en local o maqueta) y esperar su "sí". No publicar antes.
-2. **Cambio sin parte visual** (datos, cálculo, modelo): mostrar primero el antes y el después con números de un caso real (por ejemplo, Campeche) y esperar su "sí".
-3. No rediseñar lo que ya funciona sin que lo pida.
+Cuando Ockar diga "vamos a trabajar con el Laboratorio Electoral" (o con este proyecto), lo primero es enviarle una **captura de pantalla** de la página publicada (https://ockarlezama.github.io/laboratorio-electoral/) para que confirme que es el correcto. No se cambia nada hasta que confirme.
+
+No rediseñar lo que ya funciona sin preguntarle primero.
 
 ## Cómo pasa un cambio de aquí a la Plataforma
 
