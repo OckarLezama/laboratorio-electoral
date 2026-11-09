@@ -133,6 +133,7 @@
     const valido = (o, k) => o?.[k] !== undefined && o?.[k] !== null && o?.[k] !== '' && Number.isFinite(Number(o[k]));
     for (const e of lista || []) {
       const v = {}; for (const k of Object.keys(e.v || {})) if (k !== 'NS' && /^[A-Z0-9+]+$/.test(k) && valido(e.v, k)) v[k] = Number(e.v[k]);
+      for (const k of Object.keys(e.v || {})) if (k.startsWith('L:') && valido(e.v, k)) v.OTROS = (v.OTROS || 0) + Number(e.v[k]); // partido escrito a mano: cuenta como Otros
       for (const ps of coal[e.cargo] || []) { const k = ps.join('+'); if (k in v || !ps.some(p => p in v)) continue; v[k] = ps.reduce((a, p) => a + (v[p] || 0), 0); ps.forEach(p => delete v[p]); }
       const s = Object.values(v).reduce((a, b) => a + b, 0); if (!s || !e.cargo || !e.fecha) continue;
       for (const p in v) v[p] = 100 * v[p] / s;
