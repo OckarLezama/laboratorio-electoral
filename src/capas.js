@@ -127,6 +127,8 @@
     const H = hoy ? new Date(hoy) : new Date(), grupos = {};
     // coaliciones ("MORENA+PT+PVEM"): si una encuesta del mismo cargo preguntó por coalición, las que preguntaron
     // por partido se suman a esa coalición para poder promediarlas juntas
+    const norm = k => k.includes('+') ? k.split('+').sort().join('+') : k; // MORENA+PT+PVEM = PT+MORENA+PVEM
+    lista = (lista || []).map(e => ({ ...e, v: Object.fromEntries(Object.entries(e.v || {}).map(([k, x]) => [norm(k), x])) }));
     const coal = {}; for (const e of lista || []) for (const k of Object.keys(e.v || {})) if (k.includes('+')) { const ps = k.split('+'); (coal[e.cargo] = coal[e.cargo] || []).some(g => g.join('+') === ps.join('+')) || coal[e.cargo].push(ps); }
     const valido = (o, k) => o?.[k] !== undefined && o?.[k] !== null && o?.[k] !== '' && Number.isFinite(Number(o[k]));
     for (const e of lista || []) {
