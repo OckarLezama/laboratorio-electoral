@@ -65,7 +65,7 @@ async function LAB_DATOS(cab, avance) {
   // capas publicadas en la Plataforma Electoral (lista nominal nueva…): si no hay o fallan, se usan los datos base
   try {
     const ent = window.LabCapas && LabCapas.ENT[cab];
-    if (ent) { const q = await fetch(LAB_CAPAS_URL + '/rest/v1/lab_capas?select=tipo,corte,datos&activo=eq.true&tipo=eq.padron&ent=eq.' + ent, { headers: { apikey: LAB_CAPAS_LLAVE, Authorization: 'Bearer ' + LAB_CAPAS_LLAVE } });
+    if (ent) { const q = await fetch(LAB_CAPAS_URL + '/rest/v1/lab_capas?select=tipo,corte,datos&activo=eq.true&tipo=in.(padron,carto)&ent=eq.' + ent, { headers: { apikey: LAB_CAPAS_LLAVE, Authorization: 'Bearer ' + LAB_CAPAS_LLAVE } });
       if (q.ok) { const cs = await q.json(); if (cs.length) LabCapas.aplicaCapas(D, cs); } }
   } catch (x) { console.warn('capas no disponibles', x); }
   return D;
