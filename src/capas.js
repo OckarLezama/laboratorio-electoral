@@ -130,7 +130,7 @@
     const coal = {}; for (const e of lista || []) for (const k of Object.keys(e.v || {})) if (k.includes('+')) { const ps = k.split('+'); (coal[e.cargo] = coal[e.cargo] || []).some(g => g.join('+') === ps.join('+')) || coal[e.cargo].push(ps); }
     const valido = (o, k) => o?.[k] !== undefined && o?.[k] !== null && o?.[k] !== '' && Number.isFinite(Number(o[k]));
     for (const e of lista || []) {
-      const v = {}; for (const k of Object.keys(e.v || {})) if (k !== 'NS' && (PARTIDOS_ENC.includes(k) || k.includes('+')) && valido(e.v, k)) v[k] = Number(e.v[k]);
+      const v = {}; for (const k of Object.keys(e.v || {})) if (k !== 'NS' && /^[A-Z0-9+]+$/.test(k) && valido(e.v, k)) v[k] = Number(e.v[k]);
       for (const ps of coal[e.cargo] || []) { const k = ps.join('+'); if (k in v || !ps.some(p => p in v)) continue; v[k] = ps.reduce((a, p) => a + (v[p] || 0), 0); ps.forEach(p => delete v[p]); }
       const s = Object.values(v).reduce((a, b) => a + b, 0); if (!s || !e.cargo || !e.fecha) continue;
       for (const p in v) v[p] = 100 * v[p] / s;
