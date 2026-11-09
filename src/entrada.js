@@ -61,8 +61,16 @@ async function LAB_DATOS(cab, avance) {
   const key = await crypto.subtle.importKey('raw', _b64(s.k[cab]), 'AES-GCM', false, ['decrypt']);
   const gz = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: u.slice(4, 16) }, key, u.slice(16));
   const txt = await new Response(new Blob([gz]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
-  return JSON.parse(txt);
+  const D = JSON.parse(txt);
+  // capas publicadas en la Plataforma Electoral (lista nominal nueva…): si no hay o fallan, se usan los datos base
+  try {
+    const ent = window.LabCapas && LabCapas.ENT[cab];
+    if (ent) { const q = await fetch(LAB_CAPAS_URL + '/rest/v1/lab_capas?select=tipo,corte,datos&activo=eq.true&tipo=eq.padron&ent=eq.' + ent, { headers: { apikey: LAB_CAPAS_LLAVE, Authorization: 'Bearer ' + LAB_CAPAS_LLAVE } });
+      if (q.ok) { const cs = await q.json(); if (cs.length) LabCapas.aplicaCapas(D, cs); } }
+  } catch (x) { console.warn('capas no disponibles', x); }
+  return D;
 }
+const LAB_CAPAS_URL = 'https://gnsdufbodnigypenyxvs.supabase.co', LAB_CAPAS_LLAVE = 'sb_publishable_P-4InD2H1-EKDR7Nen4_iA_CSTni7lH';
 /* niveles 3, 4 y 5: se recortan los datos a su distrito o municipio antes de abrir el análisis */
 function LAB_RECORTE(D, s) {
   const col = { 3: 3, 4: 2, 5: 1 }[s.n]; if (!col || !s.a || !s.a.length) return D;

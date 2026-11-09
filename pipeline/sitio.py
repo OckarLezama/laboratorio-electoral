@@ -69,7 +69,8 @@ def sitio():
 
     # 3) código: módulos de src/ en orden numérico dentro de APP(DATA), más el cargador
     (REPO / 'js').mkdir(exist_ok=True)
-    entrada = (SRC / 'entrada.js').read_text(encoding='utf-8')
+    # capas (lista nominal nueva, etc.): mismo archivo que usa la Plataforma Electoral (public/lab-capas.js)
+    entrada = (SRC / 'capas.js').read_text(encoding='utf-8') + '\n' + (SRC / 'entrada.js').read_text(encoding='utf-8')
     ent_css = json.dumps((SRC / 'entrada.css').read_text(encoding='utf-8'), ensure_ascii=False)
     mods = '\n'.join(open(f, encoding='utf-8').read() for f in sorted(glob.glob(str(SRC / '[0-9]*.js'))))
     js = f"""/* Laboratorio Político · generado por pipeline/sitio.py desde src/. No editar aquí. */
