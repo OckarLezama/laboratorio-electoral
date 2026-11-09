@@ -932,7 +932,9 @@ function eP(t0){const o=t0||st.es.obj,pk=o+'|'+JSON.stringify(st.es.poll[o]||nul
     const a6=tpAv(c6,i),al=tpAv(rec,i),tp=100*(PR.tp==='ciclo'?(a6??al):PR.tp==='ultima'?(al??a6):(a6!=null&&al!=null?(a6+al)/2:(a6??al)))||EXPT[i]||50;
     const rr=row(L,i),vr=rr&&rr.t?rr.val/rr.t:.96,ln=S[i].ln||(rr?rr.ln:0),V=ln*tp/100*vr,pv={}; for(const q in P) pv[q]=V*P[q]; out[i]={V,pv,ln,tp};});
   const poll=st.es.poll[o]; if(poll&&poll.v){const T={}; let V=0; out.forEach(x=>{if(!x) return; V+=x.V; for(const q in x.pv) T[q]=(T[q]||0)+x.pv[q];}); const g={}; let rest=0,restP=0;
-    for(const q in T){const sh=100*T[q]/V; if(poll.v[q]!=null&&poll.v[q]!==''){g[q]=sh>.05?+poll.v[q]/sh:0;} else {rest+=sh;}} const used=Object.values(poll.v).filter(v=>v!==''&&v!=null).reduce((a,b)=>a+ +b,0); restP=Math.max(0,100-used);
+    /* coalición en la encuesta ("MORENA+PT+PVEM"): un solo factor para sus partidos, que conservan su proporción */
+    for(const k in poll.v){if(!k.includes('+')||poll.v[k]==null||poll.v[k]==='') continue; const ms=k.split('+').filter(q=>q in T),sh=ms.reduce((a,q)=>a+100*T[q]/V,0); ms.forEach(q=>{g[q]=sh>.05?+poll.v[k]/sh:0;});}
+    for(const q in T){if(g[q]!=null) continue; const sh=100*T[q]/V; if(poll.v[q]!=null&&poll.v[q]!==''){g[q]=sh>.05?+poll.v[q]/sh:0;} else {rest+=sh;}} const used=Object.values(poll.v).filter(v=>v!==''&&v!=null).reduce((a,b)=>a+ +b,0); restP=Math.max(0,100-used);
     for(const q in T) if(g[q]==null) g[q]=rest>0?restP/rest:1;
     out.forEach(x=>{if(!x) return; let t=0; for(const q in x.pv){x.pv[q]*=g[q]; t+=x.pv[q];} if(t>0) for(const q in x.pv) x.pv[q]*=x.V/t;});}
   return EPJ[pk]=out;}
@@ -2265,8 +2267,13 @@ const ENT_CSS="\n:host{--teal:#4CC1BA;--teal2:#2FA59D;--teal3:#1C7F79;--tealxl:#
   const PARTIDOS_ENC = ['MORENA', 'PAN', 'PRI', 'PVEM', 'PT', 'MC', 'OTROS'];
   function promedioEncuestas(lista, hoy) {
     const H = hoy ? new Date(hoy) : new Date(), grupos = {};
+    // coaliciones ("MORENA+PT+PVEM"): si una encuesta del mismo cargo preguntó por coalición, las que preguntaron
+    // por partido se suman a esa coalición para poder promediarlas juntas
+    const coal = {}; for (const e of lista || []) for (const k of Object.keys(e.v || {})) if (k.includes('+')) { const ps = k.split('+'); (coal[e.cargo] = coal[e.cargo] || []).some(g => g.join('+') === ps.join('+')) || coal[e.cargo].push(ps); }
+    const valido = (o, k) => o?.[k] !== undefined && o?.[k] !== null && o?.[k] !== '' && Number.isFinite(Number(o[k]));
     for (const e of lista || []) {
-      const v = {}; for (const p of PARTIDOS_ENC) { const x = Number(e.v?.[p]); if (e.v?.[p] !== undefined && e.v?.[p] !== null && e.v?.[p] !== '' && Number.isFinite(x)) v[p] = x; }
+      const v = {}; for (const k of Object.keys(e.v || {})) if (k !== 'NS' && (PARTIDOS_ENC.includes(k) || k.includes('+')) && valido(e.v, k)) v[k] = Number(e.v[k]);
+      for (const ps of coal[e.cargo] || []) { const k = ps.join('+'); if (k in v || !ps.some(p => p in v)) continue; v[k] = ps.reduce((a, p) => a + (v[p] || 0), 0); ps.forEach(p => delete v[p]); }
       const s = Object.values(v).reduce((a, b) => a + b, 0); if (!s || !e.cargo || !e.fecha) continue;
       for (const p in v) v[p] = 100 * v[p] / s;
       const dias = Math.max(0, Math.floor((H - new Date(e.fecha + 'T12:00:00')) / 864e5)), m = Number(e.muestra) || 800;
@@ -2275,7 +2282,7 @@ const ENT_CSS="\n:host{--teal:#4CC1BA;--teal2:#2FA59D;--teal3:#1C7F79;--tealxl:#
     const out = {};
     for (const [c, L] of Object.entries(grupos)) {
       const W = L.reduce((a, x) => a + x.w, 0) || 1, prom = {};
-      for (const p of PARTIDOS_ENC) if (L.some(x => p in x.v)) prom[p] = Math.round(L.reduce((a, x) => a + x.w * (x.v[p] || 0), 0) / W * 10) / 10;
+      for (const p of new Set(L.flatMap(x => Object.keys(x.v)))) prom[p] = Math.round(L.reduce((a, x) => a + x.w * (x.v[p] || 0), 0) / W * 10) / 10;
       delete prom.OTROS;
       out[c] = { v: prom, moe: Math.round(L.reduce((a, x) => a + x.w * x.moe, 0) / W * 10) / 10, n: L.length, ult: L.map(x => x.fecha).sort().pop(), lista: L.map(x => ({ casa: x.casa, fecha: x.fecha, n: x.n, moe: x.moe, peso: Math.round(100 * x.w / W) })) };
     }

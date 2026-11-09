@@ -125,8 +125,13 @@
   const PARTIDOS_ENC = ['MORENA', 'PAN', 'PRI', 'PVEM', 'PT', 'MC', 'OTROS'];
   function promedioEncuestas(lista, hoy) {
     const H = hoy ? new Date(hoy) : new Date(), grupos = {};
+    // coaliciones ("MORENA+PT+PVEM"): si una encuesta del mismo cargo preguntó por coalición, las que preguntaron
+    // por partido se suman a esa coalición para poder promediarlas juntas
+    const coal = {}; for (const e of lista || []) for (const k of Object.keys(e.v || {})) if (k.includes('+')) { const ps = k.split('+'); (coal[e.cargo] = coal[e.cargo] || []).some(g => g.join('+') === ps.join('+')) || coal[e.cargo].push(ps); }
+    const valido = (o, k) => o?.[k] !== undefined && o?.[k] !== null && o?.[k] !== '' && Number.isFinite(Number(o[k]));
     for (const e of lista || []) {
-      const v = {}; for (const p of PARTIDOS_ENC) { const x = Number(e.v?.[p]); if (e.v?.[p] !== undefined && e.v?.[p] !== null && e.v?.[p] !== '' && Number.isFinite(x)) v[p] = x; }
+      const v = {}; for (const k of Object.keys(e.v || {})) if (k !== 'NS' && (PARTIDOS_ENC.includes(k) || k.includes('+')) && valido(e.v, k)) v[k] = Number(e.v[k]);
+      for (const ps of coal[e.cargo] || []) { const k = ps.join('+'); if (k in v || !ps.some(p => p in v)) continue; v[k] = ps.reduce((a, p) => a + (v[p] || 0), 0); ps.forEach(p => delete v[p]); }
       const s = Object.values(v).reduce((a, b) => a + b, 0); if (!s || !e.cargo || !e.fecha) continue;
       for (const p in v) v[p] = 100 * v[p] / s;
       const dias = Math.max(0, Math.floor((H - new Date(e.fecha + 'T12:00:00')) / 864e5)), m = Number(e.muestra) || 800;
@@ -135,7 +140,7 @@
     const out = {};
     for (const [c, L] of Object.entries(grupos)) {
       const W = L.reduce((a, x) => a + x.w, 0) || 1, prom = {};
-      for (const p of PARTIDOS_ENC) if (L.some(x => p in x.v)) prom[p] = Math.round(L.reduce((a, x) => a + x.w * (x.v[p] || 0), 0) / W * 10) / 10;
+      for (const p of new Set(L.flatMap(x => Object.keys(x.v)))) prom[p] = Math.round(L.reduce((a, x) => a + x.w * (x.v[p] || 0), 0) / W * 10) / 10;
       delete prom.OTROS;
       out[c] = { v: prom, moe: Math.round(L.reduce((a, x) => a + x.w * x.moe, 0) / W * 10) / 10, n: L.length, ult: L.map(x => x.fecha).sort().pop(), lista: L.map(x => ({ casa: x.casa, fecha: x.fecha, n: x.n, moe: x.moe, peso: Math.round(100 * x.w / W) })) };
     }

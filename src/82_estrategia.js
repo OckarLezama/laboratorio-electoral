@@ -93,7 +93,9 @@ function eP(t0){const o=t0||st.es.obj,pk=o+'|'+JSON.stringify(st.es.poll[o]||nul
     const a6=tpAv(c6,i),al=tpAv(rec,i),tp=100*(PR.tp==='ciclo'?(a6??al):PR.tp==='ultima'?(al??a6):(a6!=null&&al!=null?(a6+al)/2:(a6??al)))||EXPT[i]||50;
     const rr=row(L,i),vr=rr&&rr.t?rr.val/rr.t:.96,ln=S[i].ln||(rr?rr.ln:0),V=ln*tp/100*vr,pv={}; for(const q in P) pv[q]=V*P[q]; out[i]={V,pv,ln,tp};});
   const poll=st.es.poll[o]; if(poll&&poll.v){const T={}; let V=0; out.forEach(x=>{if(!x) return; V+=x.V; for(const q in x.pv) T[q]=(T[q]||0)+x.pv[q];}); const g={}; let rest=0,restP=0;
-    for(const q in T){const sh=100*T[q]/V; if(poll.v[q]!=null&&poll.v[q]!==''){g[q]=sh>.05?+poll.v[q]/sh:0;} else {rest+=sh;}} const used=Object.values(poll.v).filter(v=>v!==''&&v!=null).reduce((a,b)=>a+ +b,0); restP=Math.max(0,100-used);
+    /* coalición en la encuesta ("MORENA+PT+PVEM"): un solo factor para sus partidos, que conservan su proporción */
+    for(const k in poll.v){if(!k.includes('+')||poll.v[k]==null||poll.v[k]==='') continue; const ms=k.split('+').filter(q=>q in T),sh=ms.reduce((a,q)=>a+100*T[q]/V,0); ms.forEach(q=>{g[q]=sh>.05?+poll.v[k]/sh:0;});}
+    for(const q in T){if(g[q]!=null) continue; const sh=100*T[q]/V; if(poll.v[q]!=null&&poll.v[q]!==''){g[q]=sh>.05?+poll.v[q]/sh:0;} else {rest+=sh;}} const used=Object.values(poll.v).filter(v=>v!==''&&v!=null).reduce((a,b)=>a+ +b,0); restP=Math.max(0,100-used);
     for(const q in T) if(g[q]==null) g[q]=rest>0?restP/rest:1;
     out.forEach(x=>{if(!x) return; let t=0; for(const q in x.pv){x.pv[q]*=g[q]; t+=x.pv[q];} if(t>0) for(const q in x.pv) x.pv[q]*=x.V/t;});}
   return EPJ[pk]=out;}
