@@ -2172,7 +2172,7 @@ const ENT_CSS="\n:host{--teal:#4CC1BA;--teal2:#2FA59D;--teal3:#1C7F79;--tealxl:#
       if (y) { y.v = y.v.map((x, j) => x + v[j]); y.n++; } // misma sección repetida: se suma
       else E.set(s, { v, m: cM >= 0 ? num(f[cM]) : 0, df: cD >= 0 ? num(f[cD]) : 0, n: 1 });
     }
-    if (malas) avisos.push(`${malas} filas sin entidad o sin sección se ignoraron.`);
+    if (malas > 200) avisos.push(`${malas} filas sin entidad o sin sección se ignoraron.`); // las notas y totales del INE al final del archivo son normales
     return { estados, avisos };
   }
 
