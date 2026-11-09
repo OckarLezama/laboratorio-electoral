@@ -32,6 +32,11 @@ Un cambio en el Laboratorio **no llega solo** a la Plataforma. Solo se pasa si O
    - Las llaves están en la tabla `lab_llaves` de Supabase.
 3. Subir `public/lab/*.bin` y aumentar la versión (`?v=`) en la Plataforma.
 
+## Capas (datos nuevos sin rehacer el proceso)
+
+- La lista nominal nueva se sube en la Plataforma ("Datos del Laboratorio") y este sitio la aplica sola al abrir un estado (`src/capas.js`, igual a `public/lab-capas.js` de la Plataforma).
+- Si se corre `pipeline/sitio.py` sin los datos privados, reescribe `data/*.json` vacíos: no subir esos cambios (`git checkout -- data/`).
+
 ## Reglas de este repo
 
 - `index.html`, `css/estilos.css` y `js/app.js` se generan con `pipeline/sitio.py`. Se edita `src/`, no esos archivos.
