@@ -2259,9 +2259,32 @@ const ENT_CSS="\n:host{--teal:#4CC1BA;--teal2:#2FA59D;--teal3:#1C7F79;--tealxl:#
     return { tipo: 'carto', corte, cambia, nuevas: salida, bajas, res };
   }
 
+  /* Promedio de encuestas por cargo, igual que el Laboratorio Electoral (pipeline/escenarios.py):
+     porcentajes por partido reescalados a 100; peso = muestra (hasta 3,000) / 1,000 × mitad cada 30 días;
+     "Otros" no se usa (se reparte entre el resto al ajustar). Devuelve { <cargo>: {v, moe, n, ult, lista} }. */
+  const PARTIDOS_ENC = ['MORENA', 'PAN', 'PRI', 'PVEM', 'PT', 'MC', 'OTROS'];
+  function promedioEncuestas(lista, hoy) {
+    const H = hoy ? new Date(hoy) : new Date(), grupos = {};
+    for (const e of lista || []) {
+      const v = {}; for (const p of PARTIDOS_ENC) { const x = Number(e.v?.[p]); if (e.v?.[p] !== undefined && e.v?.[p] !== null && e.v?.[p] !== '' && Number.isFinite(x)) v[p] = x; }
+      const s = Object.values(v).reduce((a, b) => a + b, 0); if (!s || !e.cargo || !e.fecha) continue;
+      for (const p in v) v[p] = 100 * v[p] / s;
+      const dias = Math.max(0, Math.floor((H - new Date(e.fecha + 'T12:00:00')) / 864e5)), m = Number(e.muestra) || 800;
+      (grupos[e.cargo] = grupos[e.cargo] || []).push({ casa: e.casa || '', fecha: e.fecha, n: m, moe: Number(e.moe) || 3.5, v, w: Math.min(m, 3000) / 1000 * Math.pow(.5, dias / 30) });
+    }
+    const out = {};
+    for (const [c, L] of Object.entries(grupos)) {
+      const W = L.reduce((a, x) => a + x.w, 0) || 1, prom = {};
+      for (const p of PARTIDOS_ENC) if (L.some(x => p in x.v)) prom[p] = Math.round(L.reduce((a, x) => a + x.w * (x.v[p] || 0), 0) / W * 10) / 10;
+      delete prom.OTROS;
+      out[c] = { v: prom, moe: Math.round(L.reduce((a, x) => a + x.w * x.moe, 0) / W * 10) / 10, n: L.length, ult: L.map(x => x.fecha).sort().pop(), lista: L.map(x => ({ casa: x.casa, fecha: x.fecha, n: x.n, moe: x.moe, peso: Math.round(100 * x.w / W) })) };
+    }
+    return out;
+  }
+
   /* Aplica las capas a los datos ya descifrados. Nunca lanza error: si una capa no cuadra, se omite y se avisa. */
   function aplicaCapas(D, capas) {
-    const hechas = [], orden = { carto: 0, padron: 1 }, pos = new Map(D.S.map((r, i) => [r[0], i])), origen = new Map();
+    const hechas = [], orden = { carto: 0, padron: 1, encuestas: 2 }, pos = new Map(D.S.map((r, i) => [r[0], i])), origen = new Map();
     for (const c of [...(capas || [])].sort((a, b) => (orden[a.tipo] ?? 9) - (orden[b.tipo] ?? 9))) {
       try {
         if (c.tipo === 'carto' && (c.datos?.cambia || c.datos?.nuevas)) {
@@ -2273,6 +2296,11 @@ const ENT_CSS="\n:host{--teal:#4CC1BA;--teal2:#2FA59D;--teal3:#1C7F79;--tealxl:#
           D.paths = P; D.meta = D.meta || {}; D.meta.secNuevas = Object.fromEntries([...porOrigen].map(([o, xs]) => [o, xs.map(x => x[0])]));
           if (D.meta.fuentes) D.meta.fuentes.carto = 'INE, DERFE, Base Geográfica Digital, ' + (d.corte || c.corte || '');
           hechas.push({ tipo: 'carto', corte: d.corte || c.corte, secciones: k });
+        }
+        if (c.tipo === 'encuestas' && Array.isArray(c.datos?.lista) && c.datos.lista.length) { // reemplaza, por cargo, las encuestas que trae el archivo del Laboratorio
+          const pr = promedioEncuestas(c.datos.lista); if (!Object.keys(pr).length) continue;
+          D.meta = D.meta || {}; D.meta.esc = D.meta.esc || { al: {}, enc: {} }; D.meta.esc.enc = Object.assign({}, D.meta.esc.enc || {}, pr);
+          hechas.push({ tipo: 'encuestas', cargos: Object.keys(pr), encuestas: c.datos.lista.length });
         }
         if (c.tipo === 'padron' && c.datos?.s?.length) {
           const d = c.datos; let k = 0, p = d.p, n = d.n;
@@ -2294,7 +2322,7 @@ const ENT_CSS="\n:host{--teal:#4CC1BA;--teal2:#2FA59D;--teal3:#1C7F79;--tealxl:#
 
   // clave del INE de cada estado (la misma que usa el archivo del padrón)
   const ENT = { ags: 1, bc: 2, bcs: 3, camp: 4, coah: 5, col: 6, chis: 7, chih: 8, cdmx: 9, dgo: 10, gto: 11, gro: 12, hgo: 13, jal: 14, mex: 15, mich: 16, mor: 17, nay: 18, nl: 19, oax: 20, pue: 21, qro: 22, qroo: 23, slp: 24, sin: 25, son: 26, tab: 27, tam: 28, tlax: 29, ver: 30, yuc: 31, zac: 32 };
-  const api = { leePadron, capaPadron, capaCarto, aplicaCapas, ENT };
+  const api = { leePadron, capaPadron, capaCarto, promedioEncuestas, aplicaCapas, ENT, PARTIDOS_ENC };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else raiz.LabCapas = api;
 })(typeof window !== 'undefined' ? window : globalThis);
 
@@ -2366,7 +2394,10 @@ async function LAB_DATOS(cab, avance) {
   try {
     const ent = window.LabCapas && LabCapas.ENT[cab];
     if (ent) { const q = await fetch(LAB_CAPAS_URL + '/rest/v1/lab_capas?select=tipo,corte,datos&activo=eq.true&tipo=in.(padron,carto)&ent=eq.' + ent, { headers: { apikey: LAB_CAPAS_LLAVE, Authorization: 'Bearer ' + LAB_CAPAS_LLAVE } });
-      if (q.ok) { const cs = await q.json(); if (cs.length) LabCapas.aplicaCapas(D, cs); } }
+      const q2 = await fetch(LAB_CAPAS_URL + '/rest/v1/lab_encuestas?select=cargo,casa,fecha,muestra,moe,v&activa=eq.true&ent=eq.' + ent, { headers: { apikey: LAB_CAPAS_LLAVE, Authorization: 'Bearer ' + LAB_CAPAS_LLAVE } });
+      const cs = q.ok ? await q.json() : [], en = q2.ok ? await q2.json() : [];
+      if (en.length) cs.push({ tipo: 'encuestas', datos: { lista: en } });
+      if (cs.length) LabCapas.aplicaCapas(D, cs); }
   } catch (x) { console.warn('capas no disponibles', x); }
   return D;
 }

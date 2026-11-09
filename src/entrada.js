@@ -66,7 +66,10 @@ async function LAB_DATOS(cab, avance) {
   try {
     const ent = window.LabCapas && LabCapas.ENT[cab];
     if (ent) { const q = await fetch(LAB_CAPAS_URL + '/rest/v1/lab_capas?select=tipo,corte,datos&activo=eq.true&tipo=in.(padron,carto)&ent=eq.' + ent, { headers: { apikey: LAB_CAPAS_LLAVE, Authorization: 'Bearer ' + LAB_CAPAS_LLAVE } });
-      if (q.ok) { const cs = await q.json(); if (cs.length) LabCapas.aplicaCapas(D, cs); } }
+      const q2 = await fetch(LAB_CAPAS_URL + '/rest/v1/lab_encuestas?select=cargo,casa,fecha,muestra,moe,v&activa=eq.true&ent=eq.' + ent, { headers: { apikey: LAB_CAPAS_LLAVE, Authorization: 'Bearer ' + LAB_CAPAS_LLAVE } });
+      const cs = q.ok ? await q.json() : [], en = q2.ok ? await q2.json() : [];
+      if (en.length) cs.push({ tipo: 'encuestas', datos: { lista: en } });
+      if (cs.length) LabCapas.aplicaCapas(D, cs); }
   } catch (x) { console.warn('capas no disponibles', x); }
   return D;
 }
