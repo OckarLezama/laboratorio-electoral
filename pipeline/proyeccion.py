@@ -3,7 +3,8 @@
 Método
 1. Votación por sección: mezcla de la última elección del mismo cargo y del promedio de las elecciones
    del año más reciente, con o sin oscilación proporcional estatal (la última elección del mismo cargo
-   se ajusta al cambio que cada partido tuvo en todo el estado). Se prueban 10 combinaciones y se elige UNA para todo el país (con los 32 estados juntos).
+   se ajusta al cambio que cada partido tuvo en todo el estado). Se prueban 10 combinaciones y se elige UNA para todo el país (con los 32 estados juntos);
+   si para un cargo otra combinación baja su error al menos 1 punto, ese cargo usa la suya (meta.proy.at / swt).
 2. Prueba contra el pasado: cada combinación "pronostica" las elecciones de 2021 y 2024 (después del cambio
    de 2018 en el sistema de partidos) usando solo
    datos anteriores, y se compara contra el resultado real (error en la diferencia entre 1.º y 2.º lugar
@@ -181,22 +182,22 @@ def errores_grid(d, P, S, E):
     """Errores de cada combinación (a, sw) en este estado, para elegir una sola combinación nacional."""
     objs = objetivos(E); res = {}
     for a, sw in GRID:
-        est, uni = [], []
+        est, uni, pt = [], [], {}
         for ek, L, Ry in objs:
             R, Rks = reciente(E, Ry); pr = predice(E, L, R, Rks, a, sw); act = E[ek]
-            est += errores(S, act, pr, 'est')[0]
+            e = errores(S, act, pr, 'est')[0]; est += e; pt.setdefault(act['t'], []).extend(e)
             if NIV[act['t']] != 'est':
-                uni += errores(S, act, pr, NIV[act['t']])[0]
-        res[(a, sw)] = (est, uni)
+                u = errores(S, act, pr, NIV[act['t']])[0]; uni += u; pt[act['t']].extend(u)
+        res[(a, sw)] = (est, uni, pt)
     return res
 
 
-def prueba(d, P, S, E, best):
-    """Errores y participación del estado con la combinación nacional `best`."""
-    objs = objetivos(E)
+def prueba(d, P, S, E, best, bt=None):
+    """Errores y participación del estado con la combinación nacional `best` (o la de su cargo, `bt`)."""
+    objs = objetivos(E); bt = bt or {}
     est, tipos = [], {}
     for ek, L, Ry in objs:
-        R, Rks = reciente(E, Ry); pr = predice(E, L, R, Rks, *best); act = E[ek]; t = act['t']; niv = NIV[t]
+        R, Rks = reciente(E, Ry); t0 = E[ek]['t']; pr = predice(E, L, R, Rks, *bt.get(t0, best)); act = E[ek]; t = act['t']; niv = NIV[t]
         est += errores(S, act, pr, 'est')[0]
         if niv != 'est':
             T = tipos.setdefault(t, {'e': [], 'h': [], 'ee': [], 'eh': []})
@@ -220,7 +221,7 @@ def prueba(d, P, S, E, best):
             if a6 is not None and al is not None:
                 tpr['prom'].append(abs((a6 + al) / 2 - t))
     tsel = min((k for k in tpr if tpr[k]), key=lambda k: stt.mean(tpr[k]))
-    return {'a': best[0], 'sw': best[1], 'objs': [o[0] for o in objs], 'est': resumen(est),
+    return {'a': best[0], 'sw': best[1], 'at': {t: v[0] for t, v in bt.items()}, 'swt': {t: v[1] for t, v in bt.items()}, 'objs': [o[0] for o in objs], 'est': resumen(est),
             'tipos': {t: {'hist': resumen(v['e'], v['h']), 'enc': resumen(v['ee'], v['eh'])} for t, v in tipos.items()},
             'tp': tsel, 'tp_err': round(100 * stt.mean(tpr[tsel]), 1)}
 
@@ -309,17 +310,28 @@ def main():
     todos, tr = {}, []
     # Una sola combinación (a, sw) para todo el país: probada con los 32 estados juntos predice mejor que elegir una
     # por estado (con pocos municipios o distritos, elegir por estado se ajusta al azar de esas pocas elecciones).
-    grid = {g: ([], []) for g in GRID}; cargados = {}
+    grid = {g: ([], []) for g in GRID}; gt = {}; cargados = {}
     for c in cabs:
         d, P, S, E = carga(c); cargados[c] = (d, P, S, E)
-        for g, (es, un) in errores_grid(d, P, S, E).items():
+        for g, (es, un, pt) in errores_grid(d, P, S, E).items():
             grid[g][0].extend(es); grid[g][1].extend(un)
+            for t, v in pt.items():
+                gt.setdefault(t, {}).setdefault(g, []).extend(v)
         tr += [(c,) + t for t in transferencias(P, E)]
     best = min(GRID, key=lambda g: (stt.mean(grid[g][0]) if grid[g][0] else 0) + (stt.mean(grid[g][1]) if grid[g][1] else 0))
     print('combinación nacional', best)
+    # Por cargo (2026): se prueba la mejor combinación de cada cargo con los 32 estados; solo se usa si baja el error
+    # de ese cargo al menos 1 punto frente a la nacional (si no, la diferencia es ruido y se queda la nacional).
+    bt = {}
+    for t, G in gt.items():
+        g = min(G, key=lambda x: stt.mean(G[x])); mn, mb = stt.mean(G[g]), stt.mean(G[best])
+        print('cargo', t, 'nacional', round(mb, 2), 'mejor', g, round(mn, 2), 'casos', len(G[g]))
+        if g != best and mn <= mb - 1.0:
+            bt[t] = g
+    print('por cargo', bt)
     for c in cabs:
         d, P, S, E = cargados[c]
-        todos[c] = (d, prueba(d, P, S, E, best))
+        todos[c] = (d, prueba(d, P, S, E, best, bt))
     mv = []
     for c in cabs:
         mv += regla_mov(c)

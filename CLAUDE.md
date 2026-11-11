@@ -48,5 +48,6 @@ Un cambio en el Laboratorio **no llega solo** a la Plataforma. Solo se pasa si O
   - Disputar: de −10 a 0.
   - Contener: −10 o menos.
 - Las metas no se definen aquí; van en la parte de campaña de la Plataforma.
-- Debilidad conocida: el modelo da 75 % de peso al promedio del último año, con el arrastre presidencial de 2024, y subestima partidos locales fuertes. Recalibrar por cargo solo con permiso.
+- Recalibración por cargo (10-nov-2026, con permiso de Ockar): misma prueba contra el pasado (2021 y 2024 con datos anteriores, 32 estados), pero cada cargo puede usar su propia combinación si baja su error al menos 1 punto frente a la nacional (`meta.proy.at` / `swt`; la plataforma y el sitio usan `at[cargo] ?? a`). Resultado: Gubernatura pasa a 100 % el año más reciente (error en la diferencia 1.º–2.º de 20.1 a 16.5 puntos); los demás cargos se quedan con la nacional (25 % última del cargo, 75 % año reciente) porque ninguna otra los mejora. Se probó también "desinflar el arrastre presidencial" (mezclar el año presidencial con el de 3 años antes): no mejoró en ningún cargo, así que no se usa.
+- Debilidad que sigue: subestima partidos locales fuertes y, en Gubernatura, el error medio es alto (~16 puntos): las encuestas lo corrigen. El sitio del Laboratorio necesita volver a cifrar sus datos (`pipeline/lab.py acceso`, en la computadora de Ockar, con privado/claves.json) para mostrar la recalibración.
 - Responder en español, claro y sin tecnicismos.
