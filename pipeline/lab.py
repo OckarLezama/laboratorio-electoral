@@ -2,6 +2,8 @@
 
   python pipeline/lab.py preparar chis      paso 1: extrae insumos de las bases crudas
   python pipeline/lab.py construir chis     paso 2: genera privado/chis.json (datos completos, solo en tu computadora)
+                                            y le pone las coaliciones por municipio y distrito (pipeline/lugares.py)
+  python pipeline/lab.py lugares chis       solo las coaliciones por lugar sobre privado/chis.json (ya va dentro de construir)
   python pipeline/lab.py capas chis         paso 2b: genera las bases adicionales de pipeline/capas.json
   python pipeline/lab.py proyeccion         paso 2c: calibra la proyección 2027 con todos los estados
   python pipeline/lab.py referencias        paso 2d: revocación 2022, consulta 2021 y afiliados por partido (meta.ref)
@@ -48,15 +50,21 @@ def main(a):
         for e in ESTADOS:
             print(f'{e["clave"]:6} {e["ent"]:2}  {e["nombre"]}')
         return
-    if cmd in ('preparar', 'construir', 'capas', 'todo') and not est:
+    if cmd in ('preparar', 'construir', 'lugares', 'capas', 'todo') and not est:
         raise SystemExit('Indica al menos un estado, por ejemplo: python pipeline/lab.py todo chis')
     if cmd in ('preparar', 'todo'):
         from preparar import preparar
         for e in est:
             preparar(e)
-    if cmd in ('construir', 'todo'):
+    if cmd in ('construir', 'todo', 'lugares'):
+        from lugares import lugares
         for e in est:
-            construir(e)
+            if cmd != 'lugares':
+                construir(e)
+            print(f'[lugares] Coaliciones por municipio y distrito de {e["nombre"]}')
+            lugares(e)
+        if cmd == 'lugares':
+            return
     if cmd in ('capas', 'todo'):
         from capas import capas
         for e in est:
@@ -109,7 +117,7 @@ def main(a):
             raise SystemExit('Falló el resumen nacional.')
         from sitio import sitio
         sitio()
-    if cmd not in ('preparar', 'construir', 'capas', 'todo', 'sitio', 'proyeccion', 'nacional', 'zonas', 'panorama', 'acceso', 'referencias', 'ganadores'):
+    if cmd not in ('preparar', 'construir', 'lugares', 'capas', 'todo', 'sitio', 'proyeccion', 'nacional', 'zonas', 'panorama', 'acceso', 'referencias', 'ganadores'):
         raise SystemExit(f'Comando no reconocido: {cmd}. Usa: preparar, construir, capas, proyeccion, sitio, nacional, zonas, todo o estados.')
 
 

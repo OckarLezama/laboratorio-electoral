@@ -107,9 +107,24 @@ def _hk(k):
     return 'SECCION' if k in ('SECCIONES','SECCIN') else k
 RAW={}
 DROPS={}; MUNR={}  # votos de secciones que ya no existen en el mapa vigente y su municipio (de los archivos federales)
+def _filas(_t,_d):
+    # Si el INE repite el nombre de una columna (SLP 2018, MOR/OAX/PUE 2018, BCS 2015), se suman sus votos.
+    # Antes (csv.DictReader) se quedaba la última, casi siempre vacía, y se perdían votos.
+    rd=csv.reader(io.StringIO(_t),delimiter=_d); h=[_hk(x) for x in next(rd,[])]; out=[]
+    for row in rd:
+        if not row: continue
+        r={}
+        for k,c in enumerate(h):
+            v=row[k] if k<len(row) else ''
+            if c not in r or str(r[c]).strip()=='': r[c]=v
+            elif str(v).strip()!='':
+                try: a=float(r[c]); b=float(v); r[c]=str(int(a+b)) if a+b==int(a+b) else str(a+b)
+                except ValueError: pass
+        out.append(r)
+    return out
 def _lee(f,t,y,kind):
     _t=open(f,encoding='utf-8-sig',errors='ignore').read(); _d='\t' if _t.split('\n',1)[0].count('\t')>_t.split('\n',1)[0].count(',') else ','
-    rows=[{_hk(k):v for k,v in r.items()} for r in csv.DictReader(io.StringIO(_t),delimiter=_d)]
+    rows=_filas(_t,_d)
     cols=[c for c in rows[0].keys() if c and not NONVOTE.match(c.strip())]
     ind=[c for c in cols if c.startswith('CAND_IND')]
     combos=[c for c in cols if '_' in c and c not in ind]
