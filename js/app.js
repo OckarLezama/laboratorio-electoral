@@ -46,9 +46,16 @@ function SXI(ek){if(ek in SXC) return SXC[ek]; const e=D.E[ek]; if(!e.sx&&!e.so)
   (e.sx||[]).forEach(([gs,ii])=>ii.forEach(i=>{a[i]=(a[i]||[]).concat(gs.map(g=>g.join('+')));}));
   if(e.so) ALL.forEach(i=>{const x=e.so[S[i].df]; if(x) a[i]=[...new Set((a[i]||[]).concat(x))];});
   return SXC[ek]=a;}
+const BXA={};
+function BXL(ek,idx){const e=D.E[ek]; if(!e.bx||!idx.length) return null; let a=BXA[ek]; if(!a){a=BXA[ek]=new Int32Array(e.r.length).fill(-1); e.bx.forEach(([,ii],k)=>ii.forEach(i=>a[i]=k));}
+  let k=null; for(const i of idx){if(!e.r[i]) continue; if(k===null) k=a[i]; else if(k!==a[i]) return null;} return k===null||k<0?null:e.bx[k][0];}
 function totals(ek,idx){const tot={}; let val=0,t=0,ln=0; idx.forEach(i=>{const r=row(ek,i); if(!r) return; t+=r.t; ln+=r.ln; val+=r.val; for(const p in r.v) tot[p]=(tot[p]||0)+r.v[p];});
   /* distritos donde un partido de la coalición fue con candidatura propia (E.so): si todo el territorio consultado
      cae en esos distritos, ese partido cuenta aparte de sus aliados */
+  /* cómo compitió cada lugar (E.bx, 18-nov-2026): si todo el territorio es un mismo municipio o distrito, sus partidos
+     van como compitieron ahí según las candidaturas registradas del INE (manda sobre E.sx) */
+  const bx=BXL(ek,idx); if(bx){const bl=bx.filter(m=>m[0]!=='OTROS').map(m=>{const parts=m.filter(x=>x!=='OTROS').map(x=>({p:x,v:tot[x]||0})).sort((a,c)=>c.v-a.v); return {lead:parts[0].p,members:m,name:parts.length>3?parts.slice(0,3).map(x=>NM[x.p]).join('-')+' y '+(parts.length-3)+' más':parts.map(x=>NM[x.p]).join('-'),c:C[parts[0].p],votes:parts.reduce((a,x)=>a+x.v,0),parts};}).sort((a,b)=>b.votes-a.votes);
+    bl.forEach(b=>b.pct=val?100*b.votes/val:0); return {bl,val,t,ln,tot,turn:ln?100*t/ln:null};}
   let BL=D.E[ek].blocs; const sxi=SXI(ek); if(sxi&&idx.length){let sp=null; for(const i of idx){const x=sxi[i]||[]; sp=sp?sp.filter(p=>x.includes(p)):x.slice(); if(!sp.length) break;}
     if(sp&&sp.length){const G=sp.map(k=>k.split('+')),lead=ms=>ms.slice().sort((a,c)=>(tot[c]||0)-(tot[a]||0))[0]; BL=[];
       D.E[ek].blocs.forEach(b=>{let keep=b.members.slice(); G.forEach(g=>{const o=keep.filter(m=>g.includes(m)); if(o.length&&o.length<keep.length){keep=keep.filter(m=>!o.includes(m)); BL.push({lead:lead(o),members:o});}});
