@@ -32,7 +32,13 @@ def generar():
                     if r:
                         for j, p in enumerate(P):
                             v[p] += r[j]
-                bl = sorted(((sum(v[x] for x in b['members']), b['lead']) for b in e['blocs']), reverse=True)
+                blocs = [(b['members'], b['lead']) for b in e['blocs']]
+                if e.get('bx'):  # cómo compitió este municipio (coaliciones parciales, 18-nov-2026)
+                    a = {i: k for k, (_, ii) in enumerate(e['bx']) for i in ii}; ks = {a.get(i, -1) for i in idx if e['r'][i]}
+                    if len(ks) == 1 and min(ks) >= 0:
+                        base = {frozenset(b['members']): b['lead'] for b in e['blocs']}
+                        blocs = [(m, base.get(frozenset(m)) or max(m, key=lambda p: v[p])) for m in e['bx'][ks.pop()][0]]
+                bl = sorted(((sum(v[x] for x in m), l) for m, l in blocs), reverse=True)
                 if bl and bl[0][0] > 0:
                     T = sum(x for x, _ in bl)
                     w = [bl[0][1], int(ek.split('_')[1]), round(100 * (bl[0][0] - bl[1][0]) / T, 1) if len(bl) > 1 else None]
