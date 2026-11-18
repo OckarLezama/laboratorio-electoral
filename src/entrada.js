@@ -62,6 +62,10 @@ async function LAB_DATOS(cab, avance) {
   const gz = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: u.slice(4, 16) }, key, u.slice(16));
   const txt = await new Response(new Blob([gz]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
   const D = JSON.parse(txt);
+  // cómo compitió cada municipio y distrito (coaliciones parciales, 18-nov-2026): archivo aparte, solo si coincide con estas secciones
+  try { const b = await fetch('data/bx/' + cab + '.json?v=20261118', { cache: 'no-cache' }); if (b.ok) { const X = await b.json();
+    if (X.n === D.S.length && X.s0 === (D.S[0].s ?? D.S[0][0]) && X.s1 === (D.S[D.S.length - 1].s ?? D.S[D.S.length - 1][0])) for (const ek in X.E) if (D.E[ek]) D.E[ek].bx = X.E[ek];
+    else console.warn('bx: no coincide con las secciones', cab); } } catch (x) { console.warn('bx no disponible', x); }
   // capas publicadas en la Plataforma Electoral (lista nominal nueva…): si no hay o fallan, se usan los datos base
   try {
     const ent = window.LabCapas && LabCapas.ENT[cab];
