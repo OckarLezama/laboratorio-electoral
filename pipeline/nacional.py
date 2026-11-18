@@ -100,6 +100,24 @@ def ganador(bl, v):
     return r[0][1], 100 * r[0][0] / val, 100 * (r[0][0] - (r[1][0] if len(r) > 1 else 0)) / val
 
 
+def ganadores_cand(f, bl):
+    """distrito ('f<estado>_<distrito>') → partido que encabeza la candidatura con más votos en el archivo de candidaturas"""
+    lead = {p: l for l, ms in bl for p in ms}; out = {}
+    t = open(f, encoding='utf-8-sig', errors='ignore').read()
+    for r in csv.DictReader(t.splitlines()):
+        try:
+            k = 'f%d_%d' % (int(num(r.get('ID_ESTADO'))), int(num(r.get('ID_DISTRITO_FEDERAL') or r.get('ID_DISTRITO'))))
+        except (TypeError, ValueError):
+            continue
+        c = {x.strip().upper(): num(v) for x, v in r.items() if x and v not in ('', None) and not NONVOTE.match(x.strip().upper())}
+        if not c or not any(c.values()):
+            continue
+        w = max(c, key=lambda x: c[x])
+        ps = ['IND'] if w.startswith('CAND_IND') else [ALIAS.get(p, p) for p in re.sub(r'^C_(COMUN_)?', '', w.replace('NVA_ALIANZA', 'NA')).split('_') if p and not p.isdigit()]
+        out[k] = ps[0] if len(ps) == 1 else lead.get(ps[0], ps[0])  # partido solo: él; coalición: quien la encabeza
+    return out
+
+
 def mapa_secciones():
     """(estado, sección) → (distrito federal, municipio) del Marco Geográfico Seccional vigente."""
     f = PIPE / 'insumos' / 'secciones_mgs.csv.gz'
@@ -203,9 +221,12 @@ def main():
                 if t == 'DIPF' and int(y) == max(int(os.path.basename(x)) for x in glob.glob(str(ruta('federal') / cargo / '*')) if os.path.basename(x).isdigit()):
                     secs[k] = n
             df = {}
+            # ganador de cada distrito: por la candidatura registrada (archivo *_DISCAND del INE), no por la coalición
+            # nacional: en 2015 y 2021 hubo coaliciones parciales (18-nov-2026)
+            cand = glob.glob(d + '/*NAL_DISCAND.csv'); WC = ganadores_cand(cand[0], bl) if t == 'DIPF' and cand else {}
             for k, (tt, ln, vv, n) in agg.items():
                 if k[0] == 'f' and not k.endswith('_0'):
-                    w = ganador(bl, vv)[0]
+                    w = WC.get(k) or ganador(bl, vv)[0]
                     e = k[1:].split('_')[0]
                     df.setdefault('e0', {}); df.setdefault('e' + e, {})
                     df['e0'][w] = df['e0'].get(w, 0) + 1; df['e' + e][w] = df['e' + e].get(w, 0) + 1

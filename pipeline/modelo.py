@@ -46,8 +46,25 @@ def _grupos(e, S):
     return g
 
 
+def bx_de(e, N, conv):
+    """E.bx (18-nov-2026, candidaturas registradas del INE por municipio y distrito): (índice por sección, bloques)."""
+    if not e.get('bx'):
+        return None, None
+    a = [-1] * N
+    for k, (_, ii) in enumerate(e['bx']):
+        for i in ii:
+            a[i] = k
+    return a, [conv(bl) for bl, _ in e['bx']]
+
+
 def bl_lugar(e, ii):
-    """Bloques de una unidad: la coalición estatal, separando los grupos que en todas sus secciones fueron aparte."""
+    """Bloques de una unidad: si todas sus secciones compitieron igual según las candidaturas registradas (E.bx), esos;
+    si no, la coalición estatal, separando los grupos que en todas sus secciones fueron aparte (E.sx)."""
+    bxi = e.get('bxi')
+    if bxi is not None:
+        ks = {bxi[i] for i in ii}
+        if len(ks) == 1 and min(ks) >= 0:
+            return e['bxb'][ks.pop()]
     gs = e.get('gs')
     if not gs:
         return e['bl']
@@ -84,6 +101,7 @@ def cargar(cab):
         E[ek] = {'t': e['type'], 'y': int(e['year']), 'sh': sh, 'val': val, 'tp': tp,
                  'bl': [[m for m in b['members'] if m != 'OTROS'] for b in e['blocs'] if b['lead'] != 'OTROS'],
                  'cc': e.get('cc', []), 'gs': _grupos(e, d['S'])}
+        E[ek]['bxi'], E[ek]['bxb'] = bx_de(e, N, lambda bl: [[m for m in b if m != 'OTROS'] for b in bl if b and b[0] != 'OTROS'])
     S = d['S']
     return {'cab': cab, 'P': P, 'N': N, 'E': E, 'S': S, 'ln': np.array([s[5] or 0 for s in S], float),
             'unit': {'m': np.array([s[1] for s in S]), 'dl': np.array([s[2] for s in S]), 'df': np.array([s[3] for s in S])}}

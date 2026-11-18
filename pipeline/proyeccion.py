@@ -41,7 +41,7 @@ def q(v, p):
     return v[f] + (v[min(f + 1, len(v) - 1)] - v[f]) * (k - f)
 
 
-from modelo import _grupos, bl_lugar  # noqa: E402  (mismos bloques por lugar que el modelo)
+from modelo import _grupos, bl_lugar, bx_de  # noqa: E402  (mismos bloques por lugar que el modelo)
 
 
 def carga(c):
@@ -62,6 +62,7 @@ def carga(c):
         if not sh:
             continue          # elección sin votos por sección (p. ej. sin archivo): no sirve para calibrar
         E[ek] = {'t': e['type'], 'y': int(e['year']), 'sh': sh, 'tp': tp, 'val': val, 'bl': [[P.index(m) for m in b['members'] if m in P] for b in e['blocs']]}
+        E[ek]['bxi'], E[ek]['bxb'] = bx_de(e, len(S), lambda bl: [[P.index(m) for m in b if m in P] for b in bl])
         g = _grupos(e, S)  # coaliciones parciales (pipeline/coaliciones.py): grupos de partidos que fueron aparte por sección
         if g:
             E[ek]['gs'] = [{tuple(P.index(m) for m in x if m in P) for x in gi} for gi in g]
