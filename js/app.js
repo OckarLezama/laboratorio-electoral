@@ -1764,7 +1764,9 @@ function slScRun(T,ii,BL){if(typeof pjBase!=='function') return null; const B=pj
   const L=BL.map((ms,j)=>{const o=ms.slice().sort((a,b)=>(pt[b]||0)-(pt[a]||0)); return {ms:o,lead:o[0],v:100*tot[j]/W,w:won[j]};}).sort((a,b)=>b.v-a.v); return {L,n:U.length,won:L.map(b=>b.w)};}
 /* ---------- armado ---------- */
 async function slBuild(){const {ii,ref,T,P,blocOf,els,won,pv}=slData(),title=slTitle(),yr=D.E[ref].year,TYP=ref.split('_')[0],CARGO=TY[TYP]||'';
-  const T27=typeof PJT!=='undefined'&&PJT[TYP]&&typeof pjType==='function'&&pjOK()?TYP:null;
+  /* proyección 2027 solo de un cargo que sí se elige en 2027 en este estado; en el estado completo sin gubernatura en 2027, el congreso local */
+  const E27={GOB:!!CFG.gob2027,DIPL:!!CFG.cong2027,AYU:!!CFG.ayu2027,DIPF:true},TP0=slKind()==='est'&&TYP==='GOB'&&!E27.GOB?(E27.DIPL&&lastOf('DIPL')?'DIPL':null):TYP;
+  const T27=TP0&&typeof PJT!=='undefined'&&PJT[TP0]&&E27[TP0]&&typeof pjType==='function'&&pjOK()?TP0:null;
   const PB=P?blocOf(ref,P):null,PBT=PB?T.bl.find(b=>b.lead===PB.lead):null,AC=P?(C[P]||'#1C7F79'):'#1C7F79',party=!!(P&&PBT),W0=T.bl[0],W1=T.bl[1];
   const pName=party?(PBT.members.filter(m=>m!=='OTROS').length>1?`${slPN(P)} y aliados`:slPN(P)):'',N=[];
   const date=new Date().toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'}),tot=8;
@@ -1800,8 +1802,8 @@ async function slBuild(){const {ii,ref,T,P,blocOf,els,won,pv}=slData(),title=slT
     if(T0&&T0.bl[0]) pts.push(`En ${D.E[pv].year} ganó ${esc(T0.bl[0].name)} con ${pct(T0.bl[0].pct,1)}${T0.bl[0].lead===W0.lead?': la misma fuerza repite':': hubo alternancia'}.`);
     pts.push(`Encabezó <b>${fmt(W[W0.lead]||0)}</b> de ${fmt(nSecR)} secciones; <b>${fmt(c5)}</b> se definieron por menos de 5 puntos.`);
     pts.push(`Participación de <b>${pct(T.turn,1)}</b>; la esperada para la próxima elección es <b>${pct(expT,0)}</b>.`);}
-  const sameR=els.filter(ek=>ek.split('_')[0]===TYP).slice(-5),FOC=party?[P]:[W0.lead].concat(W1?[W1.lead]:[]),rS=FOC.map((p,k)=>({l:party&&PBT.members.length>1&&k===0?slPN(p)+'+':slPN(p),c:C[p]||'#1C7F79',hl:k===0,v:sameR.map(ek=>{const t=totals(ek,ii),b=t.bl.find(b=>b.members.includes(p)); return b?b.pct:null;}),pj:slPJ(T27,ii,p,true)}));
-  slide(head('Resumen ejecutivo',esc(eLabel(ref))+' · '+esc(title)),`<div class="sl-kr">${kp}</div><div class="sl-rs"><ul class="sl-pts">${pts.map(p=>`<li>${p}</li>`).join('')}</ul><div class="sl-rc"><h3>${esc(CARGO)}: trayectoria${T27?' y proyección 2027':''}</h3>${gLine(560,250,sameR.map(ek=>[String(D.E[ek].year)]),rS)}</div></div>`);
+  const sameR=els.filter(ek=>ek.split('_')[0]===TYP).slice(-5),FOC=party?[P]:[W0.lead].concat(W1?[W1.lead]:[]),rS=FOC.map((p,k)=>({l:party&&PBT.members.length>1&&k===0?slPN(p)+'+':slPN(p),c:C[p]||'#1C7F79',hl:k===0,v:sameR.map(ek=>{const t=totals(ek,ii),b=t.bl.find(b=>b.members.includes(p)); return b?b.pct:null;}),pj:T27===TYP?slPJ(T27,ii,p,true):null}));
+  slide(head('Resumen ejecutivo',esc(eLabel(ref))+' · '+esc(title)),`<div class="sl-kr">${kp}</div><div class="sl-rs"><ul class="sl-pts">${pts.map(p=>`<li>${p}</li>`).join('')}</ul><div class="sl-rc"><h3>${esc(CARGO)}: trayectoria${T27===TYP?' y proyección 2027':''}</h3>${gLine(560,250,sameR.map(ek=>[String(D.E[ek].year)]),rS)}</div></div>`);
   /* 3 · electorado */
   const agL=[0,0,0,0,0,0,0]; ii.forEach(i=>{const r=DM[i]; if(r) for(let j=0;j<7;j++) agL[j]+=(r[4+j]||0)+(r[11+j]||0);}); const agT=agL.reduce((a,b)=>a+b,0)||1,AGN=['18–24','25–29','30–39','40–49','50–59','60–64','65+'];
   const at=a=>{const L=[0,0,0,0,0,0,0],V=[0,0,0,0,0,0,0]; a.forEach(i=>{const r=V2.age[AGEY]&&V2.age[AGEY][i]; if(!r) return; for(let j=0;j<7;j++){L[j]+=r[j]; V[j]+=r[7+j];}}); return L.map((l,j)=>l?100*V[j]/l:0);},A1=at(ii),A0=at(ALL);
