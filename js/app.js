@@ -1852,15 +1852,15 @@ async function slBuild(){const {ii,ref,T,P,blocOf,els,won,pv}=slData(),title=slT
         <div><h3>${rt&&rt.keep?'La mayoría':`Qué necesitaría ${esc(bn)} para la mayoría`}</h3><ol class="sl-ol">${steps.map(t=>`<li>${t}</li>`).join('')}</ol>
         <p class="sl-note sm">${M0.rpr&&M0.rpr.fuente?`Regla de ${esc(EST)}: ${esc(M0.rpr.resumen||'')} ${esc(M0.rpr.fuente)}.`:'Regla general: umbral 3 % y tope de 8 puntos (art. 116 constitucional).'}</p></div></div>`);}}
     /* 8c · escenarios de coalición: la misma proyección (pjBase) con distintas alianzas; los aliados suman como en la Estrategia (sv: el que más aporta completo, aliados al 70 %) */
-    {const SC=slScenarios(T27,party?P:null),NN2=PJN[T27];
+    try{const SC=slScenarios(T27,party?P:null),NN2=PJN[T27];
       if(SC.length>1){const R=SC.map(x=>({x,r:slScRun(T27,ii,x.bl)})).filter(o=>o.r),multi2=R.length&&R[0].r.n>1,same=R.every(o=>o.r.L[0].lead===R[0].r.L[0].lead);
         const card=({x,r})=>{const top=r.L.slice(0,4),w0=top[0],w1=top[1],m=w1?w0.v-w1.v:w0.v,hl=ms=>party&&ms.includes(P);
           return `<div class="sl-scn"><h3>${esc(x.t)}<small>${esc(x.s)}</small></h3>${gHBar(360,top.map(b=>({l:pjBN(b.ms),v:b.v,c:C[b.lead]||'#9AA3A3',hl:party?hl(b.ms):b===w0,dim:party&&!hl(b.ms)})),{lw:130,rh:34})}
             <p class="sl-note"><b>${esc(pjBN(w0.ms))}</b> ${m<5?`iría adelante por <b>${m.toFixed(1)} pts</b>: casi empate`:`encabezaría por <b>${m.toFixed(1)} pts</b>`}${multi2?` · adelante en <b>${r.won[0]} de ${r.n}</b> ${esc(r.won[0]===1?NN2[0]:NN2[1])}${top[1]?`; ${esc(pjBN(top[1].ms))} en ${r.won[1]}`:''}`:''}.</p></div>`;};
         slide(head(`Escenarios de coalición 2027 · ${esc(TY[T27])}`,party?`${esc(slPN(P))}: solo, como fue en ${EBL.year} y con su mejor alianza posible · los rivales como fueron en ${EBL.year}`:`Quién encabezaría según cómo se alíen los partidos · % estimado de la votación válida`),
-          `<div class="sl-g3" style="grid-template-columns:repeat(${R.length},minmax(0,1fr))">${R.map(card).join('')}</div><p class="sl-note">${party?'':same?`En los tres escenarios encabezaría la misma fuerza: <b>la alianza no cambia quién va adelante</b>, cambia la distancia.`:`<b>La alianza decide:</b> según cómo se alíen, cambia quién iría adelante.`} Solo con resultados históricos, sin encuesta: mueve votos de partidos, no de candidatos.</p>`);}}
+          `<div class="sl-g3" style="grid-template-columns:repeat(${R.length},minmax(0,1fr))">${R.map(card).join('')}</div><p class="sl-note">${party?'':same?`En los tres escenarios encabezaría la misma fuerza: <b>la alianza no cambia quién va adelante</b>, cambia la distancia.`:`<b>La alianza decide:</b> según cómo se alíen, cambia quién iría adelante.`} Solo con resultados históricos, sin encuesta: mueve votos de partidos, no de candidatos.</p>`);}}catch(e){console.error(e);}
     /* 8d · dónde se decide: unidades (o secciones) con menos de 5 puntos entre 1.º y 2.º en la proyección */
-    if(!party){const B=pjBase(T27),BL=pjBlocs(T27),un=R27.n>1,rows=[];
+    if(!party) try{const B=pjBase(T27),BL=pjBlocs(T27),un=R27.n>1,rows=[];
       if(un){const BL2=R27.BL; R27.U.forEach(u=>{const o=u.e.map((y,j)=>[y,j]).sort((p,q)=>q[0]-p[0]),d=o[0][0]-(o[1]?o[1][0]:0); if(d<5) rows.push({k:u.k,a:BL2[o[0][1]],b:o[1]?BL2[o[1][1]]:null,d,ln:u.V});});}
       else ii.forEach(i=>{const x=B.pr[i]; if(!x) return; const v=BL.map(ms=>pjSh(x,ms)),o=v.map((y,j)=>[y,j]).sort((p,q)=>q[0]-p[0]),d=100*(o[0][0]-(o[1]?o[1][0]:0)); if(d<5) rows.push({n:'Sección '+S[i].s,c:CK?CV(i):'',a:BL[o[0][1]],b:o[1]?BL[o[1][1]]:null,d,ln:S[i].ln||0});});
       rows.sort((p,q)=>p.d-q.d||q.ln-p.ln); const tot=un?R27.n:ii.length;
@@ -1868,7 +1868,7 @@ async function slBuild(){const {ii,ref,T,P,blocOf,els,won,pv}=slData(),title=slT
         rows.length?`<div class="sl-kr k3">${K(fmt(rows.length),`${un?NN[1]:'secciones'} en juego`,'#F46883',`de ${fmt(tot)}`)}${un?K(fmt(R27.n),NN[1]+' en total'):K(fmt(rows.reduce((a,r)=>a+r.ln,0)),'electores en esas secciones')}${K(pct(100*rows.length/Math.max(1,tot),0),'del territorio')}</div>
         <table class="sl-t sl-tb"><thead><tr><th>${un?esc(NN[0][0].toUpperCase()+NN[0].slice(1)):'Sección'}</th>${!un&&CK?`<th>${CH}</th>`:''}<th>Iría adelante</th><th>Segundo</th><th class="r">Diferencia</th></tr></thead><tbody>${rows.slice(0,9).map(r=>`<tr><td><b>${esc(un?pjShort(T27,r.k):r.n)}</b></td>${!un&&CK?`<td>${esc(r.c)}</td>`:''}<td><i class="sl-d" style="background:${pjCol(r.a)}"></i>${esc(fitT(pjBN(r.a),24))}</td><td>${r.b?`<i class="sl-d" style="background:${pjCol(r.b)}"></i>${esc(fitT(pjBN(r.b),24))}`:'—'}</td><td class="r">${r.d.toFixed(1)} pts</td></tr>`).join('')}</tbody></table>
         <p class="sl-note">Aquí pocos votos cambian el resultado. ${un?'':'La diferencia es por sección; '}con la proyección de cada partido por separado salvo candidaturas comunes.</p>`
-        :`<p class="sl-note">Ningún ${un?esc(NN[0]):'sección'} quedaría a menos de 5 puntos entre 1.º y 2.º: la distancia es amplia en todo el territorio.</p>`);}
+        :`<p class="sl-note">Ningún ${un?esc(NN[0]):'sección'} quedaría a menos de 5 puntos entre 1.º y 2.º: la distancia es amplia en todo el territorio.</p>`);}catch(e){console.error(e);}
     /* 9 · qué tan bien estima */
     const ve=(MODELO.estados||{})[M0.cab]||{},CB=MODELO.calibracion||{},TT=['DIPL','DIPF','AYU','GOB'].filter(t=>ve[t]);
     slide(head('¿Qué tan precisa es la estimación?','Prueba: estimar 2021 con datos hasta 2018 y 2024 con datos hasta 2021'),`<div class="sl-g2"><div>
