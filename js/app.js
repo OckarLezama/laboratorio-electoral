@@ -1691,7 +1691,16 @@ function gBullet(W,{mine,riv,meta,lbl,rl,c,rc}){const mx=Math.max(mine,riv,meta)
     <text x="10" y="52" font-family="${SLF}" font-size="13" font-weight="800" fill="#fff">${esc(lbl)} ${fmt(mine)}</text></svg>`;}
 const gStack=(parts)=>`<div class="sl-stk">${parts.filter(p=>p.v>0).map(p=>`<i style="flex:${p.v};background:${p.c}" title="${esc(p.l)}"></i>`).join('')}</div><div class="sl-stl">${parts.map(p=>`<span><i style="background:${p.c}"></i>${esc(p.l)} <b>${fmt(p.v)}</b></span>`).join('')}</div>`;
 /* ---------- datos ---------- */
-function slData(){const ii=scope().length?scope():ALL,ref=st.elec||lastOf(BASE.split('_')[0])||Object.keys(D.E).pop(),T=totals(ref,ii),P=st.party||null;
+/* qué territorio se eligió: el estado, un municipio, un distrito local, un distrito federal o una mezcla (secciones, filtros, varios) */
+function slKind(){const f=st.f; if(st.terr) return 'mun'; if(f.sec.length||f.tipo.length||f.size.length||f.part.length||f.mg.length||f.cmp.length||f.age.length||f.win.length) return 'mix';
+  const a=f.mun.length,b=f.dl.length,c=f.df.length; if(!a&&!b&&!c) return 'est'; if(a===1&&!b&&!c) return 'mun'; if(b===1&&!a&&!c) return 'dl'; if(c===1&&!a&&!b) return 'df'; return 'mix';}
+/* cada territorio con su elección: estado → gubernatura, distrito federal → diputación federal, distrito local → diputación local, municipio → ayuntamiento.
+   Si la elección elegida en pantalla es de ese cargo se respeta su año; si no, la más reciente de ese cargo con votos en el territorio. */
+const SLNAT={est:'GOB',mun:'AYU',dl:'DIPL',df:'DIPF'};
+function slRef(ii){const t=SLNAT[slKind()],ok=ek=>ek&&D.E[ek]&&totals(ek,ii).val;
+  if(t){if(st.elec&&st.elec.split('_')[0]===t&&ok(st.elec)) return st.elec; const ys=YEARS.filter(y=>ok(t+'_'+y)); if(ys.length) return t+'_'+ys[ys.length-1];}
+  return st.elec||lastOf(BASE.split('_')[0])||Object.keys(D.E).pop();}
+function slData(){const ii=scope().length?scope():ALL,ref=slRef(ii),T=totals(ref,ii),P=st.party||null;
   const blocOf=(ek,p)=>totals(ek,ii).bl.find(b=>b.members.includes(p)),els=Object.keys(D.E).filter(ek=>totals(ek,ii).val).sort((a,b)=>D.E[a].year-D.E[b].year||a.localeCompare(b));
   const won=ek=>{const c={}; ii.forEach(i=>{const w=winner(ek,[i]); if(w) c[w.lead]=(c[w.lead]||0)+1;}); return c;};
   return {ii,ref,T,P,blocOf,els,won,pv:prevOf(ref)};}
@@ -1715,7 +1724,11 @@ async function slBuild(){const {ii,ref,T,P,blocOf,els,won,pv}=slData(),title=slT
   const foot=`<footer class="sl-f"><span>Laboratorio Político</span><span>Fuente: ${esc(SRC.res||'INE')}; ${esc(SRC.pad||'DERFE')}. Voto duro, participación esperada y metas: estimación propia.</span></footer>`;
   const K=(v,l,c,sub)=>`<div class="sl-k"><b${c?` style="color:${c}"`:''}>${v}</b><span>${l}</span>${sub?`<em>${sub}</em>`:''}</div>`;
   const slide=(h,body,cls='')=>{N.push(`<section class="sl ${cls}" style="--ac:${AC}">${h}<div class="sl-b">${body}</div>${foot}</section>`);};
-  const ln=lnOf(ii),dm=demo(ii),nm=new Set(ii.map(i=>S[i].m)).size,ndl=new Set(ii.map(i=>S[i].dl)).size,ndf=new Set(ii.map(i=>S[i].df)).size,W=won(ref),Wp=pv?won(pv):{},T0=pv?totals(pv,ii):null;
+  const KIND=slKind(),ln=lnOf(ii),dm=demo(ii),nm=new Set(ii.map(i=>S[i].m)).size,ndl=new Set(ii.map(i=>S[i].dl)).size,ndf=new Set(ii.map(i=>S[i].df)).size,
+    /* desglose: estado → municipios; distrito federal o local → los municipios que lo forman (si es uno solo, sus secciones);
+       municipio → sus distritos locales si son varios (ciudad grande), si no sus secciones. Los distritos locales no se mezclan en uno federal: sus límites no coinciden. */
+    UK=KIND==='est'?'m':KIND==='df'||KIND==='dl'?(nm>1?'m':null):KIND==='mun'?(ndl>1?'dl':null):(nm>1?'m':ndl>1?'dl':ndf>1?'df':null),
+    CK=UK==='m'||UK==='dl'?UK:KIND==='mix'?(nm>1?'m':'dl'):null,CH=CK==='m'?'Municipio':CK==='dl'?'Distrito local':'',CV=i=>CK==='m'?MUN[S[i].m]||'':CK==='dl'?'DL '+S[i].dl:'',W=won(ref),Wp=pv?won(pv):{},T0=pv?totals(pv,ii):null;
   const nSecR=Object.values(W).reduce((a,b)=>a+b,0)||1;
   /* 1 · portada */
   N.push(`<section class="sl sl-cover" style="--ac:${AC}"><div class="sl-cv"><span class="sl-dot"></span><small>${esc(EST)}${(()=>{const l=scopeLabel(); return st.terr||!l||l===EST||/^todo/i.test(l)||l===title?'':' · '+esc(l);})()}</small><h1>${esc(title)}</h1>
@@ -1746,7 +1759,7 @@ async function slBuild(){const {ii,ref,T,P,blocOf,els,won,pv}=slData(),title=slT
   const at=a=>{const L=[0,0,0,0,0,0,0],V=[0,0,0,0,0,0,0]; a.forEach(i=>{const r=V2.age[AGEY]&&V2.age[AGEY][i]; if(!r) return; for(let j=0;j<7;j++){L[j]+=r[j]; V[j]+=r[7+j];}}); return L.map((l,j)=>l?100*V[j]/l:0);},A1=at(ii),A0=at(ALL);
   let mapImg=''; try{const {s,H}=mapSVG(1400); mapImg=await rasterSVG(s,1400,H);}catch(e){}
   slide(head('Quién vota',`Lista nominal ${esc(CORTE)} · participación por edad en ${AGEY}`),`<div class="sl-g2"><div>
-    <div class="sl-kr k3">${K(fmt(ln),'lista nominal')}${K(fmt(nSec(ii)),'secciones')}${K(nm>1?fmt(nm):fmt(ndl),nm>1?'municipios':'distritos locales')}</div>
+    <div class="sl-kr k3">${K(fmt(ln),'lista nominal')}${K(fmt(nSec(ii)),'secciones')}${KIND==='mun'?(ndl>1?K(fmt(ndl),'distritos locales'):K('DL '+S[ii[0]].dl,'distrito local')):KIND==='mix'?K(nm>1?fmt(nm):fmt(ndl),nm>1?'municipios':'distritos locales'):K(fmt(nm),nm===1?'municipio':'municipios')}</div>
     <div class="sl-sx"><div style="flex:${dm.m};background:#F46883"><b>${pct(dm.mj,0)}</b> mujeres</div><div style="flex:${dm.h};background:#2FA59D"><b>${pct(100-dm.mj,0)}</b> hombres</div></div>
     <h3>Peso de cada edad en la lista nominal</h3>${gCols(560,130,agL.map((v,j)=>({v:100*v/agT,l:AGN[j],c:j<2?AC:'#C9D6D5'})))}
     <h3>Cuánto vota cada edad <small>barra: ${esc(fitT(title,24))} · línea: ${esc(EST)}</small></h3>${gCols(560,130,A1.map((v,j)=>({v,v2:A0[j],l:AGN[j],c:v>=A0[j]?'#2FA59D':'#9FD9D4'})),{max:100})}</div>
@@ -1757,22 +1770,27 @@ async function slBuild(){const {ii,ref,T,P,blocOf,els,won,pv}=slData(),title=slT
   slide(head(`Resultado ${esc(eLabel(ref))}`,party?`${esc(pName)} frente a las demás fuerzas`:'Porcentaje de la votación válida por coalición'),`<div class="sl-g2"><div><h3>Votación por coalición</h3>${gHBar(560,bars,{lw:190,rh:Math.min(54,Math.max(40,270/Math.max(1,bars.length)))})}
     <div class="sl-kr k3 sm">${K(pct(T.turn,1),'participación')}${K(fmt(T.t),'votos totales')}${K(fmt(nSecR),'secciones con resultado')}</div><h3>Secciones ganadas</h3>${gHBar(560,T.bl.filter(b=>W[b.lead]).slice(0,4).map(b=>({l:b.name,v:W[b.lead],c:b.c,hl:party?b===PBT:b===W0,dim:party&&b!==PBT})),{fv:v=>fmt(v),lw:190,rh:34})}</div>
     <div>${T0?`<h3>Cambio frente a ${esc(eLabel(pv))}</h3>${gSlope(560,420,String(D.E[pv].year),String(yr),slR)}`:`<h3>Secciones ganadas</h3>${gHBar(560,T.bl.filter(b=>W[b.lead]).map(b=>({l:b.name,v:W[b.lead],c:b.c,hl:party&&b===PBT,dim:party&&b!==PBT})),{fv:v=>fmt(v),lw:190})}`}</div></div>`);
+  /* 4b · estado completo: quién ganó ayuntamientos, distritos locales y federales (las cifras oficiales de la ficha del estado) */
+  if(KIND==='est'){const Q=((typeof AVAIL!=='undefined'?AVAIL:[]).find(x=>x.cab===M0.cab)||{}).q||{},LV=[['ayu','Ayuntamientos','municipios'],['dl','Distritos locales','distritos'],['df','Distritos federales','distritos']].filter(([k])=>Q[k]&&Q[k][1]);
+    if(LV.length){const col=q=>C[q]||'#9AA3A3',box=([k,t,u])=>{const [y,o]=Q[k],L=Object.entries(o).sort((a,b)=>b[1]-a[1]),n=L.reduce((a,x)=>a+x[1],0);
+        return `<div><h3>${t} <small>${y} · ${fmt(n)} ${u}</small></h3>${gHBar(360,L.slice(0,6).map(([q,v])=>({l:slPN(q),v,c:col(q),hl:party&&PBT.members.includes(q),dim:party&&!PBT.members.includes(q)})),{fv:v=>fmt(v),lw:110,rh:32})}</div>`;};
+      slide(head(`Cómo está repartido ${esc(EST)}`,'Quién ganó cada municipio y cada distrito en la última elección de cada cargo · partido que encabezó la candidatura ganadora'),`<div class="sl-g3">${LV.map(box).join('')}</div>`);}}
   /* 5 · territorio */
-  const UK=nm>1?'m':ndl>1?'dl':ndf>1?'df':null;
   const secTop=()=>{const L=ii.slice().sort((a,b)=>(S[b].ln||0)-(S[a].ln||0)).slice(0,9-Math.max(2,0)).map(i=>{const t=totals(ref,[i]),w=t.bl[0],pb=party?t.bl.find(b=>b.members.includes(P)):null; return {i,w,m:w&&t.bl[1]?w.pct-t.bl[1].pct:0,pp:pb?pb.pct:null,pm:pb?pb.pct-(t.bl.find(b=>b!==pb)||{pct:0}).pct:null};}).filter(x=>x.w);
-    return `<h3>Secciones con más electores</h3><table class="sl-t"><thead><tr><th>Sección</th><th>${nm>1?'Municipio':'Distrito local'}</th><th class="r">Electores</th><th>Ganó</th><th class="r">Margen</th>${party?`<th class="r">${esc(slPN(P))}</th><th class="r">Ventaja</th>`:''}</tr></thead><tbody>${L.slice(0,7).map(x=>`<tr><td><b>${S[x.i].s}</b></td><td>${esc(nm>1?MUN[S[x.i].m]||'':'DL '+S[x.i].dl)}</td><td class="r">${fmt(S[x.i].ln)}</td><td><i class="sl-d" style="background:${x.w.c}"></i>${esc(fitT(x.w.name,20))}</td><td class="r">${x.m.toFixed(1)} pts</td>${party?`<td class="r"><b style="color:${AC}">${x.pp!=null?pct(x.pp,1):'—'}</b></td><td class="r ${x.pm>=0?'up':'dn'}">${x.pm!=null?slSgn(x.pm):'—'}</td>`:''}</tr>`).join('')}</tbody></table>`;};
+    return `<h3>Secciones con más electores</h3><table class="sl-t"><thead><tr><th>Sección</th>${CK?`<th>${CH}</th>`:''}<th class="r">Electores</th><th>Ganó</th><th class="r">Margen</th>${party?`<th class="r">${esc(slPN(P))}</th><th class="r">Ventaja</th>`:''}</tr></thead><tbody>${L.slice(0,7).map(x=>`<tr><td><b>${S[x.i].s}</b></td>${CK?`<td>${esc(CV(x.i))}</td>`:''}<td class="r">${fmt(S[x.i].ln)}</td><td><i class="sl-d" style="background:${x.w.c}"></i>${esc(fitT(x.w.name,20))}</td><td class="r">${x.m.toFixed(1)} pts</td>${party?`<td class="r"><b style="color:${AC}">${x.pp!=null?pct(x.pp,1):'—'}</b></td><td class="r ${x.pm>=0?'up':'dn'}">${x.pm!=null?slSgn(x.pm):'—'}</td>`:''}</tr>`).join('')}</tbody></table>`;};
   if(UK){const UN=v=>UK==='m'?MUN[v]:(UK==='dl'?'Distrito local ':'Distrito federal ')+v,G={}; ii.forEach(i=>(G[S[i][UK]]=G[S[i][UK]]||[]).push(i));
     const U=Object.keys(G).map(u=>{const t=totals(ref,G[u]),w=t.bl[0],pb=party?t.bl.find(b=>b.members.includes(P)):null;
       return {n:UN(u),ln:lnOf(G[u]),w,m:w&&t.bl[1]?w.pct-t.bl[1].pct:0,pp:pb?pb.pct:null,pm:pb?pb.pct-(t.bl.find(b=>b!==pb)||{pct:0}).pct:null,sw:0};}).sort((a,b)=>b.ln-a.ln).slice(0,9);
     const lnT=ln||1;
     slide(head('Dónde está el voto',`${UK==='m'?'Municipios':'Distritos'} con más electores · ${esc(eLabel(ref))}`),`<table class="sl-t sl-tb"><thead><tr><th>${UK==='m'?'Municipio':'Distrito'}</th><th class="r">Electores</th><th>Peso</th><th>Ganó</th><th class="r">Margen</th>${party?`<th class="r">${esc(slPN(P))}</th><th class="r">Ventaja</th>`:''}</tr></thead><tbody>${U.map(u=>`<tr><td><b>${esc(u.n)}</b></td><td class="r">${fmt(u.ln)}</td><td><i class="sl-mb"><u style="width:${(100*u.ln/lnT).toFixed(1)}%;background:${AC}"></u></i>${pct(100*u.ln/lnT,0)}</td><td><i class="sl-d" style="background:${u.w?u.w.c:'#ccc'}"></i>${esc(u.w?fitT(u.w.name,20):'—')}</td><td class="r">${u.m.toFixed(1)} pts</td>${party?`<td class="r"><b style="color:${AC}">${u.pp!=null?pct(u.pp,1):'—'}</b></td><td class="r ${u.pm>=0?'up':'dn'}">${u.pm!=null?slSgn(u.pm):'—'}</td>`:''}</tr>`).join('')}</tbody></table>${U.length<5?secTop():''}`);}
+  else if(KIND==='df'||KIND==='dl'||KIND==='mun') slide(head('Dónde está el voto',`Secciones con más electores · ${esc(eLabel(ref))}`),secTop());
   /* 6 · escenario por sección */
   if(party){const CAT=[['con','Conservar','ganaría por 10 puntos o más',AC],['cui','Defender','ganaría por menos de 10',mix(AC,.45)],['dis','Disputar','perdería por menos de 10','#F46883'],['dif','Contener','perdería por 10 o más','#C9D1D1']],nT=M.length||1;
     const top=mp.dis.slice().sort((a,b)=>(a.rv-a.mine)-(b.rv-b.mine)).slice(0,8);
     slide(head('Escenario sección por sección',`${esc(pName)} con su votación de ${yr} contra la fuerza más votada de cada sección`),`<div class="sl-g2"><div>
       <div class="sl-cats sl-cbig">${CAT.map(c=>{const g=mp[c[0]]; return `<div style="--c:${c[3]}"><b>${fmt(g.length)}</b><span class="t">${c[1]}</span><span>${c[2]}</span><em>${k(g.reduce((a,x)=>a+x.ln,0))} electores · ${pct(100*g.length/nT,0)}</em></div>`;}).join('')}</div>
       ${gStack(CAT.map(c=>({l:c[1],v:mp[c[0]].length,c:c[3]})))}</div>
-      <div><h3>Secciones por disputar más cercanas</h3>${top.length?`<table class="sl-t sl-tb"><thead><tr><th>Sección</th><th>${nm>1?'Municipio':'Distrito local'}</th><th class="r">Le faltaron</th><th class="r">Participación</th></tr></thead><tbody>${top.map(x=>`<tr><td><b>${S[x.i].s}</b></td><td>${esc(nm>1?MUN[S[x.i].m]||'':'DL '+S[x.i].dl)}</td><td class="r">${fmt(Math.round(x.rv-x.mine)+1)} votos</td><td class="r">${pct(x.tp,0)}</td></tr>`).join('')}</tbody></table>`:'<p class="sl-note">No hay secciones perdidas por menos de 10 puntos.</p>'}</div></div>`);}
+      <div><h3>Secciones por disputar más cercanas</h3>${top.length?`<table class="sl-t sl-tb"><thead><tr><th>Sección</th>${CK?`<th>${CH}</th>`:''}<th class="r">Le faltaron</th><th class="r">Participación</th></tr></thead><tbody>${top.map(x=>`<tr><td><b>${S[x.i].s}</b></td>${CK?`<td>${esc(CV(x.i))}</td>`:''}<td class="r">${fmt(Math.round(x.rv-x.mine)+1)} votos</td><td class="r">${pct(x.tp,0)}</td></tr>`).join('')}</tbody></table>`:'<p class="sl-note">No hay secciones perdidas por menos de 10 puntos.</p>'}</div></div>`);}
   else{const cl=ii.map(i=>winner(ref,[i])).filter(Boolean),bands=[['Menos de 5 pts','#1C7F79',cl.filter(w=>w.m<5).length],['5 a 15 pts','#4CC1BA',cl.filter(w=>w.m>=5&&w.m<15).length],['Más de 15 pts','#C9D1D1',cl.filter(w=>w.m>=15).length]];
     slide(head('Secciones: quién gana y por cuánto',esc(eLabel(ref))),`<div class="sl-g2"><div><h3>Secciones ganadas por coalición</h3>${gHBar(560,T.bl.filter(b=>W[b.lead]).map(b=>({l:b.name,v:W[b.lead],c:b.c,hl:b===W0})),{fv:v=>fmt(v),lw:190})}</div>
       <div><h3>Qué tan competidas fueron</h3>${gStack(bands.map(b=>({l:b[0],v:b[2],c:b[1]})))}<p class="sl-note">Las secciones definidas por menos de 5 puntos son las que pueden cambiar de manos con poco movimiento.</p></div></div>`);}
@@ -1857,7 +1875,7 @@ async function slPDF(btn,SS){if(!window.jspdf||!window.html2canvas){toast('No se
   const host=document.createElement('div'); host.className='dk-print'; host.innerHTML=SS.join(''); document.body.appendChild(host);
   try{await (document.fonts?document.fonts.ready:Promise.resolve()); const {jsPDF}=window.jspdf,doc=new jsPDF({orientation:'landscape',unit:'px',format:[SLW,SLH],hotfixes:['px_scaling']}); const sl=[...host.children];
     for(let j=0;j<sl.length;j++){btn.textContent=`Generando ${j+1}/${sl.length}…`; const cv=await html2canvas(sl[j],{scale:1.6,width:SLW,height:SLH,backgroundColor:'#ffffff',logging:false}); if(j) doc.addPage([SLW,SLH],'landscape'); doc.addImage(cv.toDataURL('image/jpeg',.92),'JPEG',0,0,SLW,SLH);}
-    await saveFile(('Analisis_'+norm(slTitle())+'_'+(st.elec||'')+(st.party?'_'+st.party:'_general')).replace(/[^\w]+/g,'_')+'.pdf',doc.output('blob'));}
+    await saveFile(('Analisis_'+norm(slTitle())+'_'+slRef(scope().length?scope():ALL)+(st.party?'_'+st.party:'_general')).replace(/[^\w]+/g,'_')+'.pdf',doc.output('blob'));}
   catch(e){console.error(e); toast('No se pudo generar el PDF.');}
   finally{host.remove(); btn.disabled=false; btn.innerHTML=o;}}
 /* Informe PDF del panel = las mismas diapositivas */
