@@ -1765,8 +1765,8 @@ function slScRun(T,ii,BL){if(typeof pjBase!=='function') return null; const B=pj
   const L=BL.map((ms,j)=>{const o=ms.slice().sort((a,b)=>(pt[b]||0)-(pt[a]||0)); return {ms:o,lead:o[0],v:100*tot[j]/W,w:won[j]};}).sort((a,b)=>b.v-a.v); return {L,n:U.length,won:L.map(b=>b.w)};}
 /* ---------- armado ---------- */
 async function slBuild(){const {ii,ref,T,P,blocOf,els,won,pv}=slData(),title=slTitle(),yr=D.E[ref].year,TYP=ref.split('_')[0],CARGO=TY[TYP]||'';
-  /* proyección 2027 solo de un cargo que sí se elige en 2027 en este estado; en el estado completo sin gubernatura en 2027, el congreso local */
-  const E27={GOB:!!CFG.gob2027,DIPL:!!CFG.cong2027,AYU:!!CFG.ayu2027,DIPF:true},TP0=slKind()==='est'&&TYP==='GOB'&&!E27.GOB?(E27.DIPL&&lastOf('DIPL')?'DIPL':null):TYP;
+  /* proyección 2027 solo de un cargo que sí se elige en 2027 en este estado; en el estado completo sin gubernatura en 2027: congreso local, si no ayuntamientos, si no diputaciones federales (siempre en 2027) */
+  const E27={GOB:!!CFG.gob2027,DIPL:!!CFG.cong2027,AYU:!!CFG.ayu2027,DIPF:true},TP0=slKind()==='est'&&TYP==='GOB'&&!E27.GOB?(['DIPL','AYU','DIPF'].find(t=>E27[t]&&lastOf(t))||null):TYP;
   const T27=TP0&&typeof PJT!=='undefined'&&PJT[TP0]&&E27[TP0]&&typeof pjType==='function'&&pjOK()?TP0:null;
   const PB=P?blocOf(ref,P):null,PBT=PB?T.bl.find(b=>b.lead===PB.lead):null,AC=P?(C[P]||'#1C7F79'):'#1C7F79',party=!!(P&&PBT),W0=T.bl[0],W1=T.bl[1];
   const pName=party?(PBT.members.filter(m=>m!=='OTROS').length>1?`${slPN(P)} y aliados`:slPN(P)):'',N=[];
